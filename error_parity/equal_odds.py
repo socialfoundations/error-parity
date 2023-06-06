@@ -14,7 +14,7 @@ from typing import Callable
 import numpy as np
 from sklearn.metrics import roc_curve
 
-from .cvxpy_utils import compute_error_parity_optimum
+from .cvxpy_utils import compute_equal_odds_optimum
 from .roc_utils import (
     roc_convex_hull,
     plot_polygon_edges,
@@ -123,7 +123,18 @@ class RelaxedEqualOdds(Classifier):
             false_neg_cost=self.false_neg_cost or false_neg_cost,
         )
     
-    def error_parity_violation(self) -> float:
+    def constraint_violation(self) -> float:
+        """This method should be part of a common interface between different
+        relaxed-constraint classes.
+
+        Returns
+        -------
+        float
+            The fairness constraint violation.
+        """
+        return self.equal_odds_violation()
+
+    def equal_odds_violation(self) -> float:
         """Computes the theoretical violation of the equal odds constraint 
         (i.e., the maximum l-inf distance between the ROC point of any pair
         of groups).
@@ -131,7 +142,7 @@ class RelaxedEqualOdds(Classifier):
         Returns
         -------
         float
-            The fairness constraint violation.
+            The equal-odds constraint violation.
         """
         self._check_fit_status()
 
@@ -239,7 +250,7 @@ class RelaxedEqualOdds(Classifier):
             self._all_roc_hulls[g] = roc_convex_hull(curr_roc_points)
 
         # Find the group-wise optima that fulfill the fairness criteria
-        self._groupwise_roc_points, self._global_roc_point = compute_error_parity_optimum(
+        self._groupwise_roc_points, self._global_roc_point = compute_equal_odds_optimum(
             groupwise_roc_hulls=self._all_roc_hulls,
             fairness_tolerance=self.tolerance,
             group_sizes_label_pos=group_sizes_label_pos,

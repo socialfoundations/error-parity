@@ -152,7 +152,7 @@ def make_cvxpy_point_in_polygon_constraints(
 
 
 
-def compute_error_parity_optimum(
+def compute_equal_odds_optimum(
         groupwise_roc_hulls: Dict[int, np.ndarray],
         fairness_tolerance: float,
         group_sizes_label_pos: np.ndarray,
@@ -283,7 +283,7 @@ def compute_error_parity_optimum(
     return groupwise_roc_points, global_roc_point
 
 
-def compute_error_parity_unfair_optimum(
+def compute_equal_odds_unfair_optimum(
         groupwise_roc_hulls: Dict[int, np.ndarray],
         fairness_tolerance: float,
         group_sizes_label_pos: np.ndarray,
@@ -326,7 +326,7 @@ def compute_error_parity_unfair_optimum(
     """
     raise NotImplementedError("Not currently implemented; the problem is not convex!")
 
-    logging.warning("> compute_error_parity_unfair_optimum :: USE WITH CARE!")
+    logging.warning("> compute_equal_odds_unfair_optimum :: USE WITH CARE!")
     n_groups = len(groupwise_roc_hulls)
     assert n_groups == len(group_sizes_label_neg) == len(group_sizes_label_pos)
 
