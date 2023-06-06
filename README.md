@@ -1,6 +1,7 @@
 # error-parity
 
-![PyPI publishing status](https://github.com/AndreFCruz/error-parity/actions/workflows/python-publish.yml/badge.svg)
+![Tests status](https://github.com/AndreFCruz/error-parity/actions/workflows/python-package.yml/badge.svg)
+![PyPI status](https://github.com/AndreFCruz/error-parity/actions/workflows/python-publish.yml/badge.svg)
 ![PyPI version](https://badgen.net/pypi/v/error-parity)
 ![OSI license](https://badgen.net/pypi/license/error-parity)
 ![Python compatibility](https://badgen.net/pypi/python/error-parity)
@@ -31,6 +32,8 @@ pip install ./error-parity
 ## Getting started
 
 ```py
+from error_parity import RelaxedEqualOdds
+
 # Given any trained model that outputs real-valued scores
 fair_clf = RelaxedEqualOdds(
     predictor=lambda X: model.predict_proba(X)[:, -1],   # for sklearn API
@@ -63,8 +66,10 @@ Given a callable score-based predictor (i.e., `y_pred = predictor(X)`), and some
 We welcome community contributions for [cvxpy](https://www.cvxpy.org) implementations of other fairness constraints.
 
 Currently implemented fairness constraints:
-- [x] equality of odds [(Hardt et al., 2016)](https://proceedings.neurips.cc/paper/2016/file/9d2682367c3935defcb1f9e247a97c0d-Paper.pdf);
+- [x] equality of odds (Hardt et al., 2016);
   - i.e., equal group-specific TPR and FPR;
+
+Road-map:
 - [ ] equal opportunity;
   - i.e., equal group-specific TPR;
 - [ ] demographic parity;
