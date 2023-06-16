@@ -119,8 +119,8 @@ class RelaxedEqualOdds(Classifier):
             fpr=global_fpr,
             fnr=1 - global_tpr,
             prevalence=self._global_prevalence,
-            false_pos_cost=self.false_pos_cost or false_pos_cost,
-            false_neg_cost=self.false_neg_cost or false_neg_cost,
+            false_pos_cost=false_pos_cost or self.false_pos_cost,
+            false_neg_cost=false_neg_cost or self.false_neg_cost,
         )
     
     def constraint_violation(self) -> float:
