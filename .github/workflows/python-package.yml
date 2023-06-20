@@ -3,7 +3,12 @@
 
 name: Tests
 
-on: push
+on:
+  push:
+    paths:
+      - 'error_parity/**'
+      - 'tests/**'
+      - 'setup.py'
 
 jobs:
   build:
