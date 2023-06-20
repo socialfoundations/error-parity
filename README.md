@@ -74,3 +74,10 @@ Road-map:
   - i.e., equal group-specific TPR;
 - [ ] demographic parity;
   - i.e., equal group-specific predicted prevalence;
+
+
+## Citing
+
+This repository contains code and supplementary materials for the following preprint:
+
+> André F. Cruz and Moritz Hardt. "Unprocessing Seven Years of Algorithmic Fairness." [arXiv preprint, 2023](https://arxiv.org/pdf/2306.07261.pdf).
