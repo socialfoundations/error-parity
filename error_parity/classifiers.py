@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Callable
+from typing import Callable
 
 import numpy as np
 from scipy.spatial import ConvexHull
@@ -96,7 +96,7 @@ class EnsembleGroupwiseClassifiers(Classifier):
     """Constructs a classifier from a set of group-specific classifiers.
     """
 
-    def __init__(self, group_to_clf: Dict[int | str, Callable]):
+    def __init__(self, group_to_clf: dict[int | str, Callable]):
         """Constructs a classifier from a set of group-specific classifiers.
 
         Must be provided exactly one classifier per unique group value.
@@ -126,10 +126,11 @@ class EnsembleGroupwiseClassifiers(Classifier):
             The predictions, where the prediction for each sample is handed off
             to a group-specific classifier for that sample.
         """
-        assert len(X) == len(group)
-        num_samples = len(X)
+        if len(X) != len(group):
+            raise ValueError(f"Invalid input sizes len(X) != len(group)")
 
         # Array to store predictions
+        num_samples = len(X)
         y_pred = np.zeros(num_samples)
 
         # Filter to keep track of all samples that received a prediction
@@ -140,10 +141,10 @@ class EnsembleGroupwiseClassifiers(Classifier):
             y_pred[group_filter] = group_clf(X[group_filter])
             cumulative_filter |= group_filter
 
-        assert np.sum(cumulative_filter) == num_samples, (
-            f"Computed group-wise predictions for {np.sum(cumulative_filter)} "
-            f"samples, but got {num_samples} input samples."
-        )
+        if np.sum(cumulative_filter) != num_samples:
+            raise RuntimeError(
+                f"Computed group-wise predictions for {np.sum(cumulative_filter)} "
+                f"samples, but got {num_samples} input samples.")
 
         return y_pred
 
@@ -155,8 +156,8 @@ class RandomizedClassifier(Classifier):
 
     def __init__(
             self,
-            classifiers: List[Classifier],
-            probabilities: List[float],
+            classifiers: list[Classifier],
+            probabilities: list[float],
             seed: int = 42,
         ):
         """Constructs a randomized classifier from the given  classifiers and 
@@ -182,7 +183,11 @@ class RandomizedClassifier(Classifier):
         callable
             The corresponding randomized classifier.
         """
-        assert len(classifiers) == len(probabilities)
+        if len(classifiers) != len(probabilities):
+            raise ValueError(
+                f"Invalid arguments: len(classifiers) != len(probabilities); "
+                f"({len(classifiers)} != {len(probabilities)});")
+
         self.classifiers = classifiers
         self.probabilities = probabilities
         self.rng = np.random.default_rng(seed)
@@ -234,9 +239,11 @@ class RandomizedClassifier(Classifier):
         point_A_fpr, point_A_tpr = point_A
         point_B_fpr, point_B_tpr = point_B
         target_fpr, target_tpr = target_point
-        assert point_A_fpr <= target_fpr <= point_B_fpr, (
-            f"FALSE: {point_A_fpr} <= {target_fpr} <= {point_B_fpr}"
-        )
+        if not (point_A_fpr <= target_fpr <= point_B_fpr):
+            raise ValueError(
+                f"Invalid input. FPR should fulfill: "
+                f"({point_A_fpr} point_A_FPR) <= ({target_fpr} target_fpr) <= "
+                f"({point_B_fpr} point_B_fpr)")
 
         # Calculate weights for points A and B
         weight_A = (target_fpr - point_B_fpr) / (point_A_fpr - point_B_fpr)
@@ -244,7 +251,10 @@ class RandomizedClassifier(Classifier):
         # Result of projecting target point P directly UPWARDS towards the AB line
         weights_AB = np.array([weight_A, 1 - weight_A])
         point_P_upwards = weights_AB @ np.vstack((point_A, point_B))
-        assert np.isclose(point_P_upwards[0], target_fpr)
+        if not np.isclose(point_P_upwards[0], target_fpr):
+            raise RuntimeError(
+                "Failed projecting target_fpr to ROC hull frontier. "
+                f"Got proj. FPR={point_P_upwards[0]}; target FPR={target_fpr};")
         
         # Check if the target point lies in the AB line (and return if so)
         if all(np.isclose(point_P_upwards, target_point)):
@@ -256,13 +266,19 @@ class RandomizedClassifier(Classifier):
         # Calculate weights for P upwards and P downwards
         weight_P_upwards = (target_tpr - point_P_downwards[1]) / (point_P_upwards[1] - point_P_downwards[1])
 
-        # Sanity check...
+        # Sanity checks...
         all_points = np.vstack((point_A, point_B, point_P_downwards))
         all_weights = np.hstack((weight_P_upwards * weights_AB, 1 - weight_P_upwards))
 
-        assert np.isclose(all_weights.sum(), 1)
-        # assert all(all_weights <= 1) and all(all_weights >= 0)
-        assert all(np.isclose(target_point, all_weights @ all_points))
+        if not np.isclose(all_weights.sum(), 1):
+            raise RuntimeError(
+                f"Sum of linear interpolation weights was {all_weights.sum()}, "
+                f"should be 1!")
+
+        if not all(np.isclose(target_point, all_weights @ all_points)):
+            raise RuntimeError(
+                f"Triangulation of target point failed. "
+                f"Target was {target_point}; got {all_weights @ all_points}.")
 
         return all_weights, all_points
 
@@ -300,11 +316,17 @@ class RandomizedClassifier(Classifier):
         # Check if we have more than two ROC points
         # (3 minimum to compute convex hull)
         if len(fpr) <= 1:
-            raise ValueError(f"Invalid ROC curve data for classifier: fpr:{fpr}; tpr:{tpr};")
+            raise ValueError(
+                f"Invalid ROC curve data (only has one point): "
+                f"fpr:{fpr}; tpr:{tpr}.")
 
         if len(fpr) == 2:
             logging.warning(f"Got ROC data with only 2 points: producing a random classifier...")
-            assert np.isclose(target_roc_point[0], target_roc_point[1])
+            if not np.isclose(target_roc_point[0], target_roc_point[1]):
+                logging.error(
+                    f"Invalid target ROC point ({target_roc_point}) is not in "
+                    "diagonal ROC line, but a random-classifier ROC was provided.")
+
             return BinaryClassifierAtROCDiagonal(target_fpr=target_roc_point[0])
 
         # Compute hull of ROC curve
@@ -337,16 +359,14 @@ class RandomizedClassifier(Classifier):
         )
 
         if max(weights) > 1:
-            logging.error(f"This should never happen; got weights over 100%: w={weights}")
-            import ipdb; ipdb.set_trace()
+            logging.error(f"Got triangulation weights over 100%: w={weights};")
 
         # Instantiate classifiers for points A and B
         clf_a = BinaryClassifier(predictor, threshold=thrs[point_A_idx])
         clf_b = BinaryClassifier(predictor, threshold=thrs[point_B_idx])
 
-        # If all weight is on a single deterministic point, return that deterministic classifier
-        if len(weights) == 1:
-            assert np.isclose(max(weights), 1.0)
+        # Check if most of the probability mass is on a single classifier
+        if np.isclose(max(weights), 1.0):
             if all(np.isclose(target_roc_point, point_A_roc)):
                 return clf_a
 
@@ -354,13 +374,17 @@ class RandomizedClassifier(Classifier):
                 return clf_b
             
             else:
-                raise RuntimeError("Invalid triangulation.")
+                # differences from target point to A or B are significant enough
+                # to warrant triangulating between multiple points
+                pass
+
+        # If only one point returned, then that point should have weight==1.0
+        # (hence, should've been caught by the previous if statement)
+        if len(weights) == 1:
+            raise RuntimeError("Invalid triangulation.")
         
         # If there are two points, return a randomized classifier between the two
         elif len(weights) == 2:
-            if np.isclose(max(weights), 1.0):
-                logging.warning(f"TODO: could use a single deterministic classifier")   # TODO
-
             return RandomizedClassifier(
                 classifiers=[clf_a, clf_b],
                 probabilities=weights,
@@ -370,12 +394,16 @@ class RandomizedClassifier(Classifier):
         # If it's in the interior of the ROC curve, requires instantiating a randomized classifier at the diagonal
         elif len(weights) == 3:
             fpr_rand, tpr_rand = points[2]
-            assert fpr_rand == tpr_rand
+            if not np.isclose(fpr_rand, tpr_rand):
+                raise RuntimeError(
+                    f"Triangulation point at ROC diagonal has FPR != TPR "
+                    f"({fpr_rand} != {tpr_rand}); ")
+
             # >>> BUG this would be better but for some reason it doesn't work!
             # rng = np.random.default_rng(42)
             # clf_rand = lambda X: (rng.random(size=len(X)) >= (1 - fpr_rand)).astype(int)
             # # or...
-            # clf_rand = BinaryClassifierAtROCDiagonal(target_fpr=fpr_rand)   # BUG
+            # clf_rand = BinaryClassifierAtROCDiagonal(target_fpr=fpr_rand)
             # <<<
             clf_rand = lambda X: (np.random.random(size=len(X)) >= (1 - fpr_rand)).astype(int)
 

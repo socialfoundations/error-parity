@@ -1,9 +1,8 @@
 """A set of helper functions for using cvxpy.
 """
+from __future__ import annotations
 import logging
-import operator
 from itertools import product
-from typing import Dict, Tuple, List
 
 import numpy as np
 import cvxpy as cp
@@ -17,7 +16,7 @@ from .roc_utils import calc_cost_of_point, compute_global_roc_from_groupwise
 SOLUTION_TOLERANCE = 1e-9
 
 
-def compute_line(p1, p2):
+def compute_line(p1: np.ndarray, p2: np.ndarray) -> tuple[float, float]:
     """Computes the slope and intercept of the line that passes
     through the two given points.
     
@@ -26,7 +25,25 @@ def compute_line(p1, p2):
     
     For vertical lines just use the x-value of one of the points
     to find the intercept at y=0.
+
+    Parameters
+    ----------
+    p1 : np.ndarray
+        A 2-D point.
+    p2 : np.ndarray
+        A 2-D point.
+
+    Returns
+    -------
+    tuple[float, float]
+        A tuple pair with (slope, intercept) of the line that goes from p1 to p2.
+
+    Raises
+    ------
+    ValueError
+        Raised when input is invalid, e.g., when p1 == p2.
     """
+
     p1x, p1y = p1
     p2x, p2y = p2
     if all(p1 == p2):
@@ -68,9 +85,14 @@ def compute_halfspace_inequality(p1, p2):
     # - the sign of the constraint will depend on the vector p1->p2 pointing
     # downards (x <= b) or upwards (x >= b);
     if np.isinf(slope):
-        assert np.isclose(p1x, p2x)
+
+        # Sanity check for vertical line
+        if not np.isclose(p1x, p2x):
+            raise RuntimeError(
+                "Got infinite slope for line containing two points with "
+                "different x-axis coordinates.")
         
-        # Vector pointing downards? then, x >= b
+        # Vector pointing downwards? then, x >= b
         if p2y < p1y:
             return [-1, 0, p1x]
         
@@ -83,8 +105,12 @@ def compute_halfspace_inequality(p1, p2):
     # - may be y <= b or y >= b, depending on whether p1->p2 points
     # rightwards (y <= b) or leftwards (y >= b);
     elif np.isclose(slope, 0.0):
-        assert np.isclose(p1y, p2y)
-        assert np.isclose(p1y, intercept)
+
+        # Sanity checks for horizontal line
+        if not np.isclose(p1y, p2y) or not np.isclose(p1y, intercept):
+            raise RuntimeError(
+                f"Invalid horizontal line; points p1 and p2 should have same "
+                f"y-axis value as intercept ({p1y}, {p2y}, {intercept}).")
 
         # Vector pointing leftwards? then, y <= b
         if p2x < p1x:
@@ -109,25 +135,6 @@ def compute_halfspace_inequality(p1, p2):
         
     logging.error(f"No constraint can be concluded from points p1={p1} and p2={p2};")
     return [0, 0, 0]
-
-
-def polygon_halfspace_inequalities(points: np.ndarray) -> np.ndarray:
-    """Parses the given points of a polygon, in COUNTER CLOCK-WISE order,
-    and constructs halfspaces from each consecutive pair of points.
-    
-    Output is in scipy.spatial.HalfspaceIntersection format;
-    i.e., an ndarray of format [A; b], for Ax + b <= 0.
-    """
-    # Array of shape (num_inequalities, num_dims + 1)
-    halfspaces = np.ndarray(shape=(len(points), points.shape[-1] + 1), dtype=float)
-
-    for i in range(len(points)):
-        p1 = np.ravel(points[i])
-        p2 = np.ravel(points[(i+1) % len(points)])
-
-        halfspaces[i] = compute_halfspace_inequality(p1, p2)
-    
-    return halfspaces
 
 
 def make_cvxpy_halfspace_inequality(p1, p2, cvxpy_point: Variable):
@@ -157,14 +164,14 @@ def make_cvxpy_point_in_polygon_constraints(
 
 
 def compute_equal_odds_optimum(
-        groupwise_roc_hulls: Dict[int, np.ndarray],
+        groupwise_roc_hulls: dict[int, np.ndarray],
         fairness_tolerance: float,
         group_sizes_label_pos: np.ndarray,
         group_sizes_label_neg: np.ndarray,
         global_prevalence: float,
         false_positive_cost: float = 1.,
         false_negative_cost: float = 1.,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
     """Computes the solution to finding the optimal fair (equal odds) classifier.
 
     Can relax the equal odds constraint by some given tolerance.
@@ -198,7 +205,10 @@ def compute_equal_odds_optimum(
         2: an array with the single global ROC point for the solution.
     """
     n_groups = len(groupwise_roc_hulls)
-    assert n_groups == len(group_sizes_label_neg) == len(group_sizes_label_pos)
+    if n_groups != len(group_sizes_label_neg) or n_groups != len(group_sizes_label_pos):
+        raise ValueError(
+            f"Invalid arguments; all of the following should have the same "
+            f"length: groupwise_roc_hulls, group_sizes_label_neg, group_sizes_label_pos;")
 
     # Group-wise ROC points
     groupwise_roc_points_vars = [
@@ -259,22 +269,27 @@ def compute_equal_odds_optimum(
         for variable in prob.variables():
             logging.info(f"Variable {variable.name()}: value {variable.value}")
     else:
-        import ipdb; ipdb.set_trace()   # TODO
+        # This line should never be reached (there are always trivial fair
+        # solutions in the ROC diagonal)
         raise ValueError(f"cvxpy problem has no solution; status={prob.status}")
 
     groupwise_roc_points = np.vstack([p.value for p in groupwise_roc_points_vars])
     global_roc_point = global_roc_point_var.value
 
     # Sanity check solution cost
-    assert np.isclose(
-        prob.value,
-        calc_cost_of_point(
-            fpr=global_roc_point[0],
-            fnr=1-global_roc_point[1],
-            prevalence=global_prevalence,
-            false_pos_cost=false_positive_cost,
-            false_neg_cost=false_negative_cost,
-        ))
+    solution_cost = calc_cost_of_point(
+        fpr=global_roc_point[0],
+        fnr=1-global_roc_point[1],
+        prevalence=global_prevalence,
+        false_pos_cost=false_positive_cost,
+        false_neg_cost=false_negative_cost,
+    )
+
+    if not np.isclose(solution_cost, prob.value):
+        logging.error(
+            f"Solution was found but cost did not pass sanity check! "
+            f"Found solution ROC point {global_roc_point} with theoretical cost "
+            f"{prob.value}, but actual cost is {solution_cost};")
 
     # Sanity check congruency between group-wise ROC points and global ROC point
     global_roc_from_groupwise = compute_global_roc_from_groupwise(
@@ -282,12 +297,16 @@ def compute_equal_odds_optimum(
         groupwise_label_pos_weight=group_sizes_label_pos,
         groupwise_label_neg_weight=group_sizes_label_neg,
     )
-    assert all(np.isclose(global_roc_from_groupwise, global_roc_point))
+    if not all(np.isclose(global_roc_from_groupwise, global_roc_point)):
+        logging.error(
+            f"Solution: global ROC point ({global_roc_point}) does not seem to "
+            f"match group-wise ROC points; global should be "
+            f"({global_roc_from_groupwise}) to be consistent with group-wise;")
 
     return groupwise_roc_points, global_roc_point
 
 
-def _plot_polygons(polygons: List[np.ndarray]):
+def _plot_polygons(polygons: list[np.ndarray]):
     from matplotlib import pyplot as plt
     fig = plt.figure(dpi=200, figsize=(5, 5))
 

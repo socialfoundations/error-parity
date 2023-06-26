@@ -98,7 +98,13 @@ def compute_global_roc_from_groupwise(
     n_groups, _ = groupwise_roc_points.shape
 
     # Some initial sanity checks
-    assert len(groupwise_label_pos_weight) == len(groupwise_label_neg_weight) == n_groups
+    if (len(groupwise_label_pos_weight) != len(groupwise_label_neg_weight) or
+        len(groupwise_label_pos_weight) != n_groups):
+       raise ValueError(
+           "Invalid input shapes: length of all arguments must be equal (the "
+           "number of different sensitive groups).")
+
+    # Normalize group LP (/LN) weights by their size
     if not np.isclose(groupwise_label_pos_weight.sum(), 1.0):
         groupwise_label_pos_weight /= groupwise_label_pos_weight.sum()
     if not np.isclose(groupwise_label_neg_weight.sum(), 1.0):

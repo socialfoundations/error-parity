@@ -2,8 +2,11 @@
 .ipynb_checkpoints
 **/__pycache__
 .mypy_cache/
+.pytest_cache/
 storage/
 
 dist/
 build/
 *.egg-info/
+
+.coverage

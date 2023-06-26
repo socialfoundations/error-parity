@@ -209,7 +209,9 @@ class RelaxedEqualOdds(Classifier):
         group_sizes_label_pos = np.array([
             np.sum(y[group == g]) for g in unique_groups
         ])
-        assert np.sum(group_sizes_label_neg) + np.sum(group_sizes_label_pos) == len(y)
+
+        if np.sum(group_sizes_label_neg) + np.sum(group_sizes_label_pos) != len(y):
+            raise RuntimeError(f"Failed sanity check. Are you using non-binary labels?")
 
         # Convert to relative sizes
         group_sizes_label_neg = group_sizes_label_neg.astype(float) / np.sum(group_sizes_label_neg)

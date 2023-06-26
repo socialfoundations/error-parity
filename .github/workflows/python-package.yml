@@ -5,10 +5,11 @@ name: Tests
 
 on:
   push:
-    paths:
-      - 'error_parity/**'
-      - 'tests/**'
-      - 'setup.py'
+    paths-ignore:
+      - 'examples/**'
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
 
 jobs:
   build:
@@ -40,4 +41,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest tests
+        coverage run -m pytest tests && coverage report -m
+        # pytest tests
