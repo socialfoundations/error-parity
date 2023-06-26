@@ -62,17 +62,37 @@ def compute_line(p1: np.ndarray, p2: np.ndarray) -> tuple[float, float]:
     return slope, intercept
 
 
-def compute_halfspace_inequality(p1, p2):
-    """Computes the halfspace inequality defined by the vector p1->p2;
-    -> input points must be in COUNTER CLOCK-WISE order (right-hand rule);
-    -> as such, the inequality enforces that points must lie on the right
-    of the line defined by the p1->p2 vector;
-    -> where "right" depends on the direction of the vector;
-    
-    Return
+def compute_halfspace_inequality(
+        p1: np.ndarray,
+        p2: np.ndarray,
+    ) -> tuple[float, float, float]:
+    """Computes the halfspace inequality defined by the vector p1->p2, such that
+        Ax + b <= 0,
+        where A and b are extracted from the line that goes through p1->p2.
+
+    As such, the inequality enforces that points must lie on the LEFT of the 
+    line defined by the p1->p2 vector.
+
+    In other words, input points are assumed to be in COUNTER CLOCK-WISE order 
+    (right-hand rule).
+
+    Parameters
+    ----------
+    p1 : np.ndarray
+        A point in the halfspace.
+    p2 : np.ndarray
+        Another point in the halfspace.
+
+    Returns
+    -------
+    tuple[float, float, float]
+        Returns an array of size=(n_dims + 1), with format [A; b],
+        representing the inequality Ax + b <= 0.
+
+    Raises
     ------
-    Returns an array of size=(n_dims + 1), with format [A; b],
-    representing the inequality Ax + b <= 0.
+    RuntimeError
+        Thrown in case if inconsistent internal state variables.
     """
     slope, intercept = compute_line(p1, p2)
 
@@ -80,10 +100,8 @@ def compute_halfspace_inequality(p1, p2):
     p1x, p1y = p1
     p2x, p2y = p2
 
-    # if slope is infinity, the constraint only applies to the values of x
-    # - the b intercept value will correspond to this value of x;
-    # - the sign of the constraint will depend on the vector p1->p2 pointing
-    # downards (x <= b) or upwards (x >= b);
+    # if slope is infinity, the constraint only applies to the values of x;
+    # > the halfspace's b intercept value will correspond to this value of x;
     if np.isinf(slope):
 
         # Sanity check for vertical line
@@ -100,10 +118,8 @@ def compute_halfspace_inequality(p1, p2):
         elif p2y > p1y:
             return [1, 0, -p1x]
         
-    # elif slope is zero, the constraint only applies to the values of y
-    # - we still need to figure out the sign of y in the inequality;
-    # - may be y <= b or y >= b, depending on whether p1->p2 points
-    # rightwards (y <= b) or leftwards (y >= b);
+    # elif slope is zero, the constraint only applies to the values of y;
+    # > the halfspace's b intercept value will correspond to this value of y;
     elif np.isclose(slope, 0.0):
 
         # Sanity checks for horizontal line
@@ -137,8 +153,29 @@ def compute_halfspace_inequality(p1, p2):
     return [0, 0, 0]
 
 
-def make_cvxpy_halfspace_inequality(p1, p2, cvxpy_point: Variable):
-    """Points sorted in counter clock-wise order!
+def make_cvxpy_halfspace_inequality(
+        p1: np.ndarray,
+        p2: np.ndarray,
+        cvxpy_point: Variable,
+    ) -> Expression:
+    """Creates a single cvxpy inequality constraint that enforces the given 
+    point, `cvxpy_point`, to lie on the left of the vector p1->p2.
+
+    Points must be sorted in counter clock-wise order!
+
+    Parameters
+    ----------
+    p1 : np.ndarray
+        A point p1.
+    p2 : np.ndarray
+        Another point p2.
+    cvxpy_point : Variable
+        The cvxpy variable over which the constraint will be applied.
+
+    Returns
+    -------
+    Expression
+        A linear inequality constraint of type Ax + b <= 0.
     """
     x_coeff, y_coeff, b = compute_halfspace_inequality(p1, p2)
     return np.array([x_coeff, y_coeff]) @ cvxpy_point + b <= 0
@@ -146,12 +183,24 @@ def make_cvxpy_halfspace_inequality(p1, p2, cvxpy_point: Variable):
 
 def make_cvxpy_point_in_polygon_constraints(
         polygon_vertices: np.ndarray,
-        cvxpy_point: Variable
-    ) -> Expression:
-    """Creates the set of cvxpy constraints that force the given cvxpy variables
-    to lie within the polygon defined by the given vertices.
-    
-    Polygon points sorted in COUNTER CLOCK-WISE order!
+        cvxpy_point: Variable,
+    ) -> list[Expression]:
+    """Creates the set of cvxpy constraints that force the given cvxpy variable
+    point to lie within the polygon defined by the given vertices.
+
+    Parameters
+    ----------
+    polygon_vertices : np.ndarray
+        A sequence of points that make up a polygon.
+        Points must be sorted in COUNTER CLOCK-WISE order! (right-hand rule)
+    cvxpy_point : cvxpy.Variable
+        A cvxpy variable representing a point, over which the constraints will
+        be applied.
+
+    Returns
+    -------
+    list[Expression]
+        A list of cvxpy constraints.
     """
     return [
         make_cvxpy_halfspace_inequality(
@@ -160,7 +209,6 @@ def make_cvxpy_point_in_polygon_constraints(
         )
         for i in range(len(polygon_vertices))
     ]
-
 
 
 def compute_equal_odds_optimum(
@@ -200,7 +248,7 @@ def compute_equal_odds_optimum(
     Returns
     -------
     (groupwise_roc_points, global_roc_point) : tuple[np.ndarray, np.ndarray]
-        A pair tuple, (<1>, <2>), containing:
+        A tuple pair, (<1>, <2>), containing:
         1: an array with the group-wise ROC points for the solution.
         2: an array with the single global ROC point for the solution.
     """
@@ -252,8 +300,6 @@ def compute_equal_odds_optimum(
 
     # Define cvxpy problem
     prob = cp.Problem(obj, constraints)
-
-    # _plot_polygons([groupwise_roc_hulls[i] for i in range(n_groups)]) # NOTE: just for debugging
 
     # Run solver
     prob.solve(solver=cp.ECOS, abstol=SOLUTION_TOLERANCE, feastol=SOLUTION_TOLERANCE)

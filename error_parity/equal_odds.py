@@ -433,8 +433,6 @@ class RelaxedEqualOdds(Classifier):
 
         plt.legend(loc="lower right", borderaxespad=2)
 
-        # plt.show()
-
     def __call__(self, X: np.ndarray, group: np.ndarray) -> int:
         return self._realized_classifier(X, group)
 
