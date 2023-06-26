@@ -83,7 +83,7 @@ setup(
     },
 
     author='AndreFCruz',
-    url='https://github.com/AndreFCruz/error-parity',
+    url='https://github.com/socialfoundations/error-parity',
 
     license='MIT',
 

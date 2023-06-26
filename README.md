@@ -1,7 +1,7 @@
 # error-parity
 
-![Tests status](https://github.com/AndreFCruz/error-parity/actions/workflows/python-package.yml/badge.svg)
-![PyPI status](https://github.com/AndreFCruz/error-parity/actions/workflows/python-publish.yml/badge.svg)
+![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-package.yml/badge.svg)
+![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)
 ![PyPI version](https://badgen.net/pypi/v/error-parity)
 ![OSI license](https://badgen.net/pypi/license/error-parity)
 ![Python compatibility](https://badgen.net/pypi/python/error-parity)
@@ -24,7 +24,7 @@ pip install error-parity
 
 Or, for development, you can clone the repo and install from local sources:
 ```
-git clone https://github.com/AndreFCruz/error-parity.git
+git clone https://github.com/socialfoundations/error-parity.git
 pip install ./error-parity
 ```
 
