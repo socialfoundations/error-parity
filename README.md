@@ -31,6 +31,8 @@ pip install ./error-parity
 
 ## Getting started
 
+> See detailed example notebooks under the [**examples folder**](./examples/).
+
 ```py
 from error_parity import RelaxedThresholdOptimizer
 
