@@ -15,6 +15,20 @@ from .roc_utils import calc_cost_of_point, compute_global_roc_from_groupwise
 # Maximum distance from solution to feasibility or optimality
 SOLUTION_TOLERANCE = 1e-9
 
+# Set of all fairness constraints with a cvxpy LP implementation
+ALL_CONSTRAINTS = {
+    "equalized_odds",
+    "true_positive_rate_parity",
+    "false_positive_rate_parity",
+    "true_negative_rate_parity",
+    "false_negative_rate_parity",
+}
+
+NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE = (
+    "Currently only the following constraints are supported: {}.".format(
+        ", ".join(sorted(ALL_CONSTRAINTS))
+    )
+)
 
 def compute_line(p1: np.ndarray, p2: np.ndarray) -> tuple[float, float]:
     """Computes the slope and intercept of the line that passes
@@ -211,9 +225,11 @@ def make_cvxpy_point_in_polygon_constraints(
     ]
 
 
-def compute_equal_odds_optimum(
+def compute_fair_optimum(
+        *,
+        fairness_constraint: str,
+        tolerance: float,
         groupwise_roc_hulls: dict[int, np.ndarray],
-        fairness_tolerance: float,
         group_sizes_label_pos: np.ndarray,
         group_sizes_label_neg: np.ndarray,
         global_prevalence: float,
@@ -226,22 +242,34 @@ def compute_equal_odds_optimum(
 
     Parameters
     ----------
+    fairness_constraint : str
+        The name of the fairness constraint under which the LP will be 
+        optimized. Possible inputs are:
+
+            'equalized_odds'
+                match true positive and false positive rates across groups
+
+    tolerance : float
+        A value for the tolerance when enforcing the fairness constraint.
+
     groupwise_roc_hulls : dict[int, np.ndarray]
         A dict mapping each group to the convex hull of the group's ROC curve.
         The convex hull is an np.array of shape (n_points, 2), containing the 
         points that form the convex hull of the ROC curve, sorted in COUNTER
         CLOCK-WISE order.
-    fairness_tolerance : float
-        A value for the tolerance when enforcing the equal odds fairness 
-        constraint, i.e., equality of TPR and FPR among groups.
+
     group_sizes_label_pos : np.ndarray
         The relative or absolute number of positive samples in each group.
+
     group_sizes_label_neg : np.ndarray
         The relative or absolute number of negative samples in each group.
+
     global_prevalence : float
         The global prevalence of positive samples.
+
     false_positive_cost : float, optional
         The cost of a FALSE POSITIVE error, by default 1.
+
     false_negative_cost : float, optional
         The cost of a FALSE NEGATIVE error, by default 1.
 
@@ -252,6 +280,9 @@ def compute_equal_odds_optimum(
         1: an array with the group-wise ROC points for the solution.
         2: an array with the single global ROC point for the solution.
     """
+    if fairness_constraint not in ALL_CONSTRAINTS:
+        raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
+
     n_groups = len(groupwise_roc_hulls)
     if n_groups != len(group_sizes_label_neg) or n_groups != len(group_sizes_label_pos):
         raise ValueError(
@@ -274,14 +305,40 @@ def compute_equal_odds_optimum(
         global_roc_point_var[1] == group_sizes_label_pos @ np.array([p[1] for p in groupwise_roc_points_vars]),
     ]
 
-    # Relaxed equal odds constraints
-    # 1st option - CONSTRAINT FOR: l-inf distance between any two group's ROCs being less than epsilon
-    constraints += [
-        cp.norm_inf(groupwise_roc_points_vars[i] - groupwise_roc_points_vars[j]) <= fairness_tolerance
-        for i, j in product(range(n_groups), range(n_groups))
-        if i < j
-        # if i != j
-    ]
+    ### APPLY FAIRNESS CONSTRAINTS
+    # If "equalized_odds"
+    # > i.e., constrain l-inf distance between any two groups' ROCs being less than `tolerance`
+    if fairness_constraint == "equalized_odds":
+        constraints += [
+            cp.norm_inf(groupwise_roc_points_vars[i] - groupwise_roc_points_vars[j]) <= tolerance
+            for i, j in product(range(n_groups), range(n_groups))
+            if i < j
+        ]
+
+    # If some rate parity, i.e., parity of one of {TPR, FPR, TNR, FNR}
+    # i.e., constrain absolute distance between any two groups' rate metric
+    elif fairness_constraint.endswith("rate_parity"):
+
+        roc_idx_of_interest: int
+        if fairness_constraint == "true_positive_rate_parity" or fairness_constraint == "false_negative_rate_parity":
+            roc_idx_of_interest = 1
+
+        elif fairness_constraint == "false_positive_rate_parity" or fairness_constraint == "false_negative_rate_parity":
+            roc_idx_of_interest = 0
+        
+        else:
+            # This point should never be reached as fairness constraint was previously validated
+            raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
+
+        constraints += [
+            cp.abs(groupwise_roc_points_vars[i][roc_idx_of_interest] - groupwise_roc_points_vars[j][roc_idx_of_interest]) <= tolerance
+            for i, j in product(range(n_groups), range(n_groups))
+            if i < j
+        ]
+
+    # TODO: implement other constraints here
+    else:
+        raise NotImplementedError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
     # Constraints for points in respective group-wise ROC curves
     for idx in range(n_groups):
@@ -322,7 +379,7 @@ def compute_equal_odds_optimum(
     groupwise_roc_points = np.vstack([p.value for p in groupwise_roc_points_vars])
     global_roc_point = global_roc_point_var.value
 
-    # Sanity check solution cost
+    # Validating solution cost
     solution_cost = calc_cost_of_point(
         fpr=global_roc_point[0],
         fnr=1-global_roc_point[1],
@@ -333,11 +390,11 @@ def compute_equal_odds_optimum(
 
     if not np.isclose(solution_cost, prob.value):
         logging.error(
-            f"Solution was found but cost did not pass sanity check! "
+            f"Solution was found but cost did not pass validation! "
             f"Found solution ROC point {global_roc_point} with theoretical cost "
             f"{prob.value}, but actual cost is {solution_cost};")
 
-    # Sanity check congruency between group-wise ROC points and global ROC point
+    # Validating congruency between group-wise ROC points and global ROC point
     global_roc_from_groupwise = compute_global_roc_from_groupwise(
         groupwise_roc_points=groupwise_roc_points,
         groupwise_label_pos_weight=group_sizes_label_pos,
@@ -350,21 +407,3 @@ def compute_equal_odds_optimum(
             f"({global_roc_from_groupwise}) to be consistent with group-wise;")
 
     return groupwise_roc_points, global_roc_point
-
-
-def _plot_polygons(polygons: list[np.ndarray]):
-    from matplotlib import pyplot as plt
-    fig = plt.figure(dpi=200, figsize=(5, 5))
-
-    for i, poly in enumerate(polygons):
-
-        # Plot ROC curve
-        plt.fill(
-            poly[:, 0], poly[:, 1],
-            alpha=0.2,
-            label=f"poly {i}",
-        )
-        
-        plt.legend(loc='lower right')
-    
-    plt.plot()

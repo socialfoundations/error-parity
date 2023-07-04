@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-from error_parity import RelaxedEqualOdds
+from error_parity import RelaxedThresholdOptimizer
 from error_parity.cvxpy_utils import SOLUTION_TOLERANCE, calc_cost_of_point
 from error_parity.roc_utils import compute_roc_point_from_predictions
 
@@ -55,7 +55,15 @@ def check_metric_tolerance(theory_val: float, empirical_val, group_size: int, me
     )
 
 
-def test_equal_odds_constraint_relaxation(
+def test_invalid_constraint_name():
+    with pytest.raises(ValueError) as excinfo:
+        clf = RelaxedThresholdOptimizer(
+            predictor=print,
+            constraint="random constraint name",
+        )
+
+
+def test_equalized_odds_constraint_relaxation(
         y_true: np.ndarray,
         y_pred_scores: np.ndarray,
         sensitive_attribute: np.ndarray,
@@ -73,8 +81,9 @@ def test_equal_odds_constraint_relaxation(
     # Hence, for this example, the features are the sample indices
     X_features = np.arange(num_samples)
 
-    clf = RelaxedEqualOdds(
+    clf = RelaxedThresholdOptimizer(
         predictor=predictor,
+        constraint="equalized_odds",
         tolerance=constraint_slack,
         false_pos_cost=1,
         false_neg_cost=1,
@@ -85,14 +94,14 @@ def test_equal_odds_constraint_relaxation(
     clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
 
     # Check that theoretical solution fulfills relaxed constraint
-    assert clf.equal_odds_violation() <= constraint_slack + SOLUTION_TOLERANCE, (
+    assert clf.equalized_odds_violation() <= constraint_slack + SOLUTION_TOLERANCE, (
         f"Solution fails to hit the target EO constraint; "
-        f"got: {clf.equal_odds_violation()}; "
+        f"got: {clf.equalized_odds_violation()}; "
         f"expected less than {constraint_slack};"
     )
 
     # Optimal binarized predictions
-    y_pred_binary = clf(X_features, sensitive_attribute)
+    y_pred_binary = clf(X_features, group=sensitive_attribute)
 
     # Check realized group-specific ROC points
     actual_group_roc_points = np.vstack([
@@ -144,9 +153,9 @@ def test_equal_odds_constraint_relaxation(
         for g in unique_groups
         for labels in (y_true, 1-y_true)
     )
-    actual_equal_odds_violation = np.max(groupwise_differences)
+    actual_equalized_odds_violation = np.max(groupwise_differences)
     check_metric_tolerance(
-        empirical_val=max(actual_equal_odds_violation - constraint_slack, 0),
+        empirical_val=max(actual_equalized_odds_violation - constraint_slack, 0),
         theory_val=0.0,
         group_size=smallest_denominator,
         metric_name="EO violation above slack",
@@ -183,6 +192,16 @@ def test_equal_odds_constraint_relaxation(
         group_size=num_samples,
         metric_name="classification loss",
     )
+
+
+def test_tpr_parity_constraint():
+    # TODO: test relaxation of TPR parity constraint
+    pass
+
+
+def test_fpr_parity_constraint():
+    # TODO: test relaxation of FPR parity constraint
+    pass
 
 
 def test_unprocessing():

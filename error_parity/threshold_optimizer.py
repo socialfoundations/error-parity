@@ -1,12 +1,12 @@
 """Solver for the relaxed equal odds problem.
 
 TODO
-- Add option for constraining only equality of FPR or TPR (currently it must be 
-both -> equal odds);
 - Add option for constraining equality of positive predictions (independence
 criterion, aka demographic parity);
 
 """
+from __future__ import annotations
+
 import logging
 from itertools import product
 from typing import Callable
@@ -14,7 +14,11 @@ from typing import Callable
 import numpy as np
 from sklearn.metrics import roc_curve
 
-from .cvxpy_utils import compute_equal_odds_optimum
+from .cvxpy_utils import (
+    compute_fair_optimum,
+    ALL_CONSTRAINTS,
+    NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE,
+)
 from .roc_utils import (
     roc_convex_hull,
     plot_polygon_edges,
@@ -27,15 +31,17 @@ from .classifiers import (
 )
 
 
-class RelaxedEqualOdds(Classifier):
+class RelaxedThresholdOptimizer(Classifier):
     """Class to encapsulate all the logic needed to compute the optimal equal
     odds classifier (with possibly relaxed constraints).
     """
 
     def __init__(
             self,
+            *,
             predictor: Callable[[np.ndarray], np.ndarray],
-            tolerance: float,
+            constraint: str = "equalized_odds",
+            tolerance: float = 0.0,
             false_pos_cost: float = 1.0,
             false_neg_cost: float = 1.0,
             max_roc_ticks: int = 1000,
@@ -50,6 +56,8 @@ class RelaxedEqualOdds(Classifier):
             A trained score predictor that takes in samples, X, in shape
             (num_samples, num_features), and outputs real-valued scores, R, in
             shape (num_samples,).
+        constraint : str
+            The fairness constraint to use. By default "equalized_odds".
         tolerance : float
             The absolute tolerance for the equal odds fairness constraint.
             Will allow for `tolerance` difference between group-wise ROC points.
@@ -66,11 +74,16 @@ class RelaxedEqualOdds(Classifier):
         """
         # Save arguments
         self.predictor = predictor
+        self.constraint = constraint
         self.tolerance = tolerance
         self.false_pos_cost = false_pos_cost
         self.false_neg_cost = false_neg_cost
         self.max_roc_ticks = max_roc_ticks
         self.seed = seed
+
+        # Validate constraint
+        if self.constraint not in ALL_CONSTRAINTS:
+            raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
         # Initialize instance variables
         self._all_roc_data: dict = None
@@ -122,19 +135,74 @@ class RelaxedEqualOdds(Classifier):
             false_pos_cost=false_pos_cost or self.false_pos_cost,
             false_neg_cost=false_neg_cost or self.false_neg_cost,
         )
-    
+
     def constraint_violation(self) -> float:
-        """This method should be part of a common interface between different
-        relaxed-constraint classes.
+        """Constraint violation of the LP solution found.
 
         Returns
         -------
         float
             The fairness constraint violation.
         """
-        return self.equal_odds_violation()
+        self._check_fit_status()
 
-    def equal_odds_violation(self) -> float:
+        if self.constraint not in ALL_CONSTRAINTS:
+            raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
+
+        if self.constraint == "equalized_odds":
+            return self.equalized_odds_violation()
+
+        elif self.constraint.endswith("rate_parity"):
+            constraint_to_error_type = {
+                "true_positive_rate_parity": "fn",
+                "false_positive_rate_parity": "fp",
+                "true_negative_rate_parity": "fp",
+                "false_negative_rate_parity": "fn",
+            }
+
+            return self.error_rate_parity_constraint_violation(
+                error_type=constraint_to_error_type[self.constraint],
+            )
+
+        else:
+            raise NotImplementedError(
+                f"Standalone constraint violation not yet computed for "
+                f"constraint='{self.constraint}'."
+            )
+    
+    def error_rate_parity_constraint_violation(self, error_type: str) -> float:
+        """Computes the theoretical violation of an error-rate parity 
+        constraint.
+
+        Parameters
+        ----------
+        error_type : str
+            One of the following values:
+                "fp", for false positive errors (FPR or TNR parity);
+                "fn", for false negative errors (TPR or FNR parity).
+
+        Returns
+        -------
+        float
+            The maximum constraint violation among all groups.
+        """
+        self._check_fit_status()
+        valid_error_types = ("fp", "fn")
+        if error_type not in valid_error_types:
+            raise ValueError(
+                f"Invalid error_type='{error_type}', must be one of "
+                f"{valid_error_types}.")
+
+        roc_idx_of_interest = 0 if error_type == "fp" else 1
+
+        return self._max_l_inf_between_points(
+            points=[
+                roc_point[roc_idx_of_interest]
+                for roc_point in self.groupwise_roc_points
+            ],
+        )
+    
+    def equalized_odds_violation(self) -> float:
         """Computes the theoretical violation of the equal odds constraint 
         (i.e., the maximum l-inf distance between the ROC point of any pair
         of groups).
@@ -146,29 +214,37 @@ class RelaxedEqualOdds(Classifier):
         """
         self._check_fit_status()
 
-        n_groups = len(self.groupwise_roc_points)
+        # Compute l-inf distance between each pair of groups
+        return self._max_l_inf_between_points(
+            points=self.groupwise_roc_points,
+        )
+
+    @staticmethod
+    def _max_l_inf_between_points(points: list[float | np.ndarray]) -> float:
+
+        # Number of points (should correspond to the number of groups)
+        n_points = len(points)
 
         # Compute l-inf distance between each pair of groups
-        linf_constraint_violation = [
+        l_inf_constraint_violation = [
             (np.linalg.norm(
-                self.groupwise_roc_points[i] - self.groupwise_roc_points[j],
+                points[i] - points[j],
                 ord=np.inf), (i, j))
-            for i, j in product(range(n_groups), range(n_groups))
+            for i, j in product(range(n_points), range(n_points))
             if i < j
         ]
 
         # Return the maximum
-        max_violation, (groupA, groupB) = max(linf_constraint_violation)
+        max_violation, (groupA, groupB) = max(l_inf_constraint_violation)
         logging.info(
             f"Maximum fairness violation is between "
-            f"group={groupA} (p={self.groupwise_roc_points[groupA]}) and "
-            f"group={groupB} (p={self.groupwise_roc_points[groupB]});"
+            f"group={groupA} (p={points[groupA]}) and "
+            f"group={groupB} (p={points[groupB]});"
         )
 
         return max_violation
 
-
-    def fit(self, X: np.ndarray, y: np.ndarray, group: np.ndarray, y_scores: np.ndarray = None):
+    def fit(self, X: np.ndarray, y: np.ndarray, *, group: np.ndarray, y_scores: np.ndarray = None):
         """Fit this predictor to achieve the (possibly relaxed) equal odds 
         constraint on the provided data.
 
@@ -252,9 +328,10 @@ class RelaxedEqualOdds(Classifier):
             self._all_roc_hulls[g] = roc_convex_hull(curr_roc_points)
 
         # Find the group-wise optima that fulfill the fairness criteria
-        self._groupwise_roc_points, self._global_roc_point = compute_equal_odds_optimum(
+        self._groupwise_roc_points, self._global_roc_point = compute_fair_optimum(
+            fairness_constraint=self.constraint,
+            tolerance=self.tolerance,
             groupwise_roc_hulls=self._all_roc_hulls,
-            fairness_tolerance=self.tolerance,
             group_sizes_label_pos=group_sizes_label_pos,
             group_sizes_label_neg=group_sizes_label_neg,
             global_prevalence=self._global_prevalence,
@@ -309,6 +386,7 @@ class RelaxedEqualOdds(Classifier):
 
     def plot(
             self,
+            *,
             plot_roc_curves: bool = False,
             plot_roc_hulls: bool = True,
             plot_group_optima: bool = True,
@@ -427,14 +505,16 @@ class RelaxedEqualOdds(Classifier):
             )
 
         # Set axis settings
-        plt.title(f"Solution to {self.tolerance}-relaxed equal odds optimum")
+        plt.suptitle(f"Solution to {self.tolerance}-relaxed optimum", y=0.96)
+        plt.title(f"(fairness constraint: {self.constraint.replace('_', ' ')})", fontsize="small")
+
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
 
         plt.legend(loc="lower right", borderaxespad=2)
 
-    def __call__(self, X: np.ndarray, group: np.ndarray) -> int:
+    def __call__(self, X: np.ndarray, *, group: np.ndarray) -> int:
         return self._realized_classifier(X, group)
 
-    def predict(self, X: np.ndarray, group: np.ndarray) -> int:
-        return self(X, group)
+    def predict(self, X: np.ndarray, *, group: np.ndarray) -> int:
+        return self(X, group=group)
