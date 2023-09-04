@@ -1,5 +1,4 @@
-"""A set of helper functions for using cvxpy.
-"""
+"""A set of helper functions for using cvxpy."""
 from __future__ import annotations
 import logging
 from itertools import product

@@ -171,8 +171,7 @@ class RelaxedThresholdOptimizer(Classifier):
             )
 
     def error_rate_parity_constraint_violation(self, error_type: str) -> float:
-        """Computes the theoretical violation of an error-rate parity
-        constraint.
+        """Computes the theoretical violation of an error-rate parity constraint.
 
         Parameters
         ----------
@@ -371,6 +370,27 @@ class RelaxedThresholdOptimizer(Classifier):
         )
         return self
 
+    def __call__(self, X: np.ndarray, *, group: np.ndarray) -> np.ndarray:
+        """Generate predictions for the given input data."""
+        return self._realized_classifier(X, group)
+
+    def predict(self, X: np.ndarray, *, group: np.ndarray) -> np.ndarray:
+        """Generate predictions for the given input data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Input samples.
+        group : np.ndarray
+            Input sensitive groups.
+
+        Returns
+        -------
+        np.ndarray
+            A sequence of predictions, one per input sample and input group.
+        """
+        return self(X, group=group)
+
     def _check_fit_status(self, raise_error: bool = True) -> bool:
         """Checks whether this classifier has been fit on some data.
 
@@ -550,24 +570,3 @@ class RelaxedThresholdOptimizer(Classifier):
         plt.ylabel("True Positive Rate")
 
         plt.legend(loc="lower right", borderaxespad=2)
-
-    def __call__(self, X: np.ndarray, *, group: np.ndarray) -> np.ndarray:
-        """Generate predictions for the given input data."""
-        return self._realized_classifier(X, group)
-
-    def predict(self, X: np.ndarray, *, group: np.ndarray) -> np.ndarray:
-        """Generate predictions for the given input data.
-
-        Parameters
-        ----------
-        X : np.ndarray
-            Input samples.
-        group : np.ndarray
-            Input sensitive groups.
-
-        Returns
-        -------
-        np.ndarray
-            A sequence of predictions, one per input sample and input group.
-        """
-        return self(X, group=group)
