@@ -37,17 +37,17 @@ class RelaxedThresholdOptimizer(Classifier):
     """
 
     def __init__(
-            self,
-            *,
-            predictor: Callable[[np.ndarray], np.ndarray],
-            constraint: str = "equalized_odds",
-            tolerance: float = 0.0,
-            false_pos_cost: float = 1.0,
-            false_neg_cost: float = 1.0,
-            max_roc_ticks: int = 1000,
-            seed: int = 42,
-            # distance: str = 'max',    # TODO: add option to use l1 or linf distances
-        ):
+        self,
+        *,
+        predictor: Callable[[np.ndarray], np.ndarray],
+        constraint: str = "equalized_odds",
+        tolerance: float = 0.0,
+        false_pos_cost: float = 1.0,
+        false_neg_cost: float = 1.0,
+        max_roc_ticks: int = 1000,
+        seed: int = 42,
+        # distance: str = 'max',    # TODO: add option to use l1 or linf distances
+    ):
         """Initializes the relaxed equal odds wrapper.
 
         Parameters
@@ -102,13 +102,13 @@ class RelaxedThresholdOptimizer(Classifier):
         return self._global_roc_point
 
     def cost(
-            self,
-            false_pos_cost: float = None,
-            false_neg_cost: float = None,
-        ) -> float:
+        self,
+        false_pos_cost: float = None,
+        false_neg_cost: float = None,
+    ) -> float:
         """Computes the theoretical cost of the solution found.
 
-        NOTE: use false_pos_cost==false_neg_cost==1 for the 0-1 loss (the 
+        NOTE: use false_pos_cost==false_neg_cost==1 for the 0-1 loss (the
         standard error rate), which is equal to `1 - accuracy`.
 
         Parameters
@@ -169,9 +169,9 @@ class RelaxedThresholdOptimizer(Classifier):
                 f"Standalone constraint violation not yet computed for "
                 f"constraint='{self.constraint}'."
             )
-    
+
     def error_rate_parity_constraint_violation(self, error_type: str) -> float:
-        """Computes the theoretical violation of an error-rate parity 
+        """Computes the theoretical violation of an error-rate parity
         constraint.
 
         Parameters
@@ -191,7 +191,8 @@ class RelaxedThresholdOptimizer(Classifier):
         if error_type not in valid_error_types:
             raise ValueError(
                 f"Invalid error_type='{error_type}', must be one of "
-                f"{valid_error_types}.")
+                f"{valid_error_types}."
+            )
 
         roc_idx_of_interest = 0 if error_type == "fp" else 1
 
@@ -201,9 +202,9 @@ class RelaxedThresholdOptimizer(Classifier):
                 for roc_point in self.groupwise_roc_points
             ],
         )
-    
+
     def equalized_odds_violation(self) -> float:
-        """Computes the theoretical violation of the equal odds constraint 
+        """Computes the theoretical violation of the equal odds constraint
         (i.e., the maximum l-inf distance between the ROC point of any pair
         of groups).
 
@@ -221,15 +222,12 @@ class RelaxedThresholdOptimizer(Classifier):
 
     @staticmethod
     def _max_l_inf_between_points(points: list[float | np.ndarray]) -> float:
-
         # Number of points (should correspond to the number of groups)
         n_points = len(points)
 
         # Compute l-inf distance between each pair of groups
         l_inf_constraint_violation = [
-            (np.linalg.norm(
-                points[i] - points[j],
-                ord=np.inf), (i, j))
+            (np.linalg.norm(points[i] - points[j], ord=np.inf), (i, j))
             for i, j in product(range(n_points), range(n_points))
             if i < j
         ]
@@ -244,8 +242,15 @@ class RelaxedThresholdOptimizer(Classifier):
 
         return max_violation
 
-    def fit(self, X: np.ndarray, y: np.ndarray, *, group: np.ndarray, y_scores: np.ndarray = None):
-        """Fit this predictor to achieve the (possibly relaxed) equal odds 
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        *,
+        group: np.ndarray,
+        y_scores: np.ndarray = None,
+    ):
+        """Fit this predictor to achieve the (possibly relaxed) equal odds
         constraint on the provided data.
 
         Parameters
@@ -259,7 +264,7 @@ class RelaxedThresholdOptimizer(Classifier):
             Assumes groups are numbered [0, 1, ..., num_groups-1].
         y_scores : np.ndarray, optional
             The pre-computed model predictions on this data.
-        
+
         Returns
         -------
         callable
@@ -271,7 +276,7 @@ class RelaxedThresholdOptimizer(Classifier):
 
         unique_groups = np.unique(group)
         num_groups = len(unique_groups)
-        if np.max(unique_groups) > num_groups-1:
+        if np.max(unique_groups) > num_groups - 1:
             raise ValueError(
                 f"Groups should be numbered starting at 0, and up to "
                 f"num_groups-1. Got {num_groups} groups, but max value is "
@@ -279,19 +284,21 @@ class RelaxedThresholdOptimizer(Classifier):
             )
 
         # Relative group sizes for LN and LP samples
-        group_sizes_label_neg = np.array([
-            np.sum(1 - y[group == g]) for g in unique_groups
-        ])
-        group_sizes_label_pos = np.array([
-            np.sum(y[group == g]) for g in unique_groups
-        ])
+        group_sizes_label_neg = np.array(
+            [np.sum(1 - y[group == g]) for g in unique_groups]
+        )
+        group_sizes_label_pos = np.array([np.sum(y[group == g]) for g in unique_groups])
 
         if np.sum(group_sizes_label_neg) + np.sum(group_sizes_label_pos) != len(y):
             raise RuntimeError(f"Failed sanity check. Are you using non-binary labels?")
 
         # Convert to relative sizes
-        group_sizes_label_neg = group_sizes_label_neg.astype(float) / np.sum(group_sizes_label_neg)
-        group_sizes_label_pos = group_sizes_label_pos.astype(float) / np.sum(group_sizes_label_pos)
+        group_sizes_label_neg = group_sizes_label_neg.astype(float) / np.sum(
+            group_sizes_label_neg
+        )
+        group_sizes_label_pos = group_sizes_label_pos.astype(float) / np.sum(
+            group_sizes_label_pos
+        )
 
         # Compute group-wise ROC curves
         if y_scores is None:
@@ -309,11 +316,17 @@ class RelaxedThresholdOptimizer(Classifier):
             # Check if max_roc_ticks is exceeded
             fpr, tpr, thrs = roc_curve_data
             if self.max_roc_ticks is not None and len(fpr) > self.max_roc_ticks:
-                indices_to_keep = np.arange(0, len(fpr), len(fpr) / self.max_roc_ticks).astype(int)
+                indices_to_keep = np.arange(
+                    0, len(fpr), len(fpr) / self.max_roc_ticks
+                ).astype(int)
 
                 # Bottom-left (0,0) and top-right (1,1) points must be kept
                 indices_to_keep[-1] = len(fpr) - 1
-                roc_curve_data = (fpr[indices_to_keep], tpr[indices_to_keep], thrs[indices_to_keep])
+                roc_curve_data = (
+                    fpr[indices_to_keep],
+                    tpr[indices_to_keep],
+                    thrs[indices_to_keep],
+                )
 
             self._all_roc_data[g] = roc_curve_data
 
@@ -323,7 +336,9 @@ class RelaxedThresholdOptimizer(Classifier):
             group_fpr, group_tpr, _group_thresholds = self._all_roc_data[g]
 
             curr_roc_points = np.stack((group_fpr, group_tpr), axis=1)
-            curr_roc_points = np.vstack((curr_roc_points, [1, 0]))  # Add point (1, 0) to ROC curve
+            curr_roc_points = np.vstack(
+                (curr_roc_points, [1, 0])
+            )  # Add point (1, 0) to ROC curve
 
             self._all_roc_hulls[g] = roc_convex_hull(curr_roc_points)
 
@@ -351,16 +366,18 @@ class RelaxedThresholdOptimizer(Classifier):
         }
 
         # Construct the global classifier (can be used for all groups)
-        self._realized_classifier = EnsembleGroupwiseClassifiers(group_to_clf=all_rand_clfs)
+        self._realized_classifier = EnsembleGroupwiseClassifiers(
+            group_to_clf=all_rand_clfs
+        )
         return self
-    
+
     def _check_fit_status(self, raise_error: bool = True) -> bool:
         """Checks whether this classifier has been fit on some data.
-        
+
         Parameters
         ----------
         raise_error : bool, optional
-            Whether to raise an error if the classifier is uninitialized 
+            Whether to raise an error if the classifier is uninitialized
             (otherwise will just return False), by default True.
 
         Returns
@@ -379,27 +396,28 @@ class RelaxedThresholdOptimizer(Classifier):
                 return False
 
             raise RuntimeError(
-                "There's nothing to plot: this classifier has not yet been "
-                "fitted to any data. Call clf.fit(...) before clf.plot().")
+                "This classifier has not yet been fitted to any data."
+            )
 
         return True
 
     def plot(
-            self,
-            *,
-            plot_roc_curves: bool = False,
-            plot_roc_hulls: bool = True,
-            plot_group_optima: bool = True,
-            plot_group_triangulation: bool = True,
-            plot_global_optimum: bool = True,
-            plot_diagonal: bool = True,
-            plot_relaxation: bool = False,
-            group_name_map: dict = None,
-            figure = None,
-            **fig_kwargs,
-        ):
+        self,
+        *,
+        plot_roc_curves: bool = False,
+        plot_roc_hulls: bool = True,
+        plot_group_optima: bool = True,
+        plot_group_triangulation: bool = True,
+        plot_global_optimum: bool = True,
+        plot_diagonal: bool = True,
+        plot_relaxation: bool = False,
+        group_name_map: dict = None,
+        figure=None,
+        **fig_kwargs,
+    ):
+        """Plots the group-specific solutions found by this predictor."""
         self._check_fit_status()
-    
+
         from matplotlib import pyplot as plt
         from matplotlib.patches import Rectangle
         import seaborn as sns
@@ -415,7 +433,7 @@ class RelaxedThresholdOptimizer(Classifier):
 
         # For each group `idx`
         for idx in range(n_groups):
-            group_ls = (['--', ':', '-.'] * (1 + n_groups // 3))[idx]
+            group_ls = (["--", ":", "-."] * (1 + n_groups // 3))[idx]
             group_color = all_group_colors[idx]
 
             # Plot group-wise (actual) ROC curves
@@ -440,47 +458,61 @@ class RelaxedThresholdOptimizer(Classifier):
             group_optimum = self._groupwise_roc_points[idx]
             if plot_group_optima:
                 plt.plot(
-                    group_optimum[0], group_optimum[1],
+                    group_optimum[0],
+                    group_optimum[1],
                     label=group_name_map[idx] if group_name_map else f"group {idx}",
                     color=group_color,
-                    marker="^", markersize=5,
+                    marker="^",
+                    markersize=5,
                     lw=0,
                 )
 
             # Plot triangulation of target point
             if plot_group_triangulation:
-                _weights, triangulated_points = RandomizedClassifier.find_points_for_target_ROC(
+                (
+                    _weights,
+                    triangulated_points,
+                ) = RandomizedClassifier.find_points_for_target_ROC(
                     roc_curve_data=self._all_roc_data[idx],
                     target_roc_point=group_optimum,
                 )
                 plt.plot(
-                    triangulated_points[:, 0], triangulated_points[:, 1],
+                    triangulated_points[:, 0],
+                    triangulated_points[:, 1],
                     color=group_color,
-                    marker='x', lw=0,
+                    marker="x",
+                    lw=0,
                 )
 
                 plt.fill(
-                    triangulated_points[:, 0], triangulated_points[:, 1],
+                    triangulated_points[:, 0],
+                    triangulated_points[:, 1],
                     color=group_color,
                     alpha=0.1,
                 )
 
-
         # Plot global optimum
         if plot_global_optimum:
             plt.plot(
-                self._global_roc_point[0], self._global_roc_point[1],
+                self._global_roc_point[0],
+                self._global_roc_point[1],
                 label="global",
-                marker="*", color=global_color, alpha=0.6,
-                markersize=5, lw=0,
+                marker="*",
+                color=global_color,
+                alpha=0.6,
+                markersize=5,
+                lw=0,
             )
 
         # Plot rectangle to visualize constraint relaxation
         if plot_relaxation:
-
             # Get rectangle points
-            min_x, max_x = np.min(self._groupwise_roc_points[:, 0]), np.max(self._groupwise_roc_points[:, 0])
-            min_y, max_y = np.min(self._groupwise_roc_points[:, 1]), np.max(self._groupwise_roc_points[:, 1])
+            min_x, max_x = np.min(self._groupwise_roc_points[:, 0]), np.max(
+                self._groupwise_roc_points[:, 0]
+            )
+            min_y, max_y = np.min(self._groupwise_roc_points[:, 1]), np.max(
+                self._groupwise_roc_points[:, 1]
+            )
 
             # Draw relaxation rectangle
             rect = Rectangle(
@@ -499,22 +531,43 @@ class RelaxedThresholdOptimizer(Classifier):
         # Plot diagonal
         if plot_diagonal:
             plt.plot(
-                [0, 1], [0, 1],
-                ls='--', color="grey", alpha=0.5,
+                [0, 1],
+                [0, 1],
+                ls="--",
+                color="grey",
+                alpha=0.5,
                 label="random clf.",
             )
 
         # Set axis settings
         plt.suptitle(f"Solution to {self.tolerance}-relaxed optimum", y=0.96)
-        plt.title(f"(fairness constraint: {self.constraint.replace('_', ' ')})", fontsize="small")
+        plt.title(
+            f"(fairness constraint: {self.constraint.replace('_', ' ')})",
+            fontsize="small",
+        )
 
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
 
         plt.legend(loc="lower right", borderaxespad=2)
 
-    def __call__(self, X: np.ndarray, *, group: np.ndarray) -> int:
+    def __call__(self, X: np.ndarray, *, group: np.ndarray) -> np.ndarray:
+        """Generate predictions for the given input data."""
         return self._realized_classifier(X, group)
 
-    def predict(self, X: np.ndarray, *, group: np.ndarray) -> int:
+    def predict(self, X: np.ndarray, *, group: np.ndarray) -> np.ndarray:
+        """Generate predictions for the given input data.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Input samples.
+        group : np.ndarray
+            Input sensitive groups.
+
+        Returns
+        -------
+        np.ndarray
+            A sequence of predictions, one per input sample and input group.
+        """
         return self(X, group=group)
