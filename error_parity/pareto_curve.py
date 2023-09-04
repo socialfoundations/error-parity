@@ -21,17 +21,35 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 from error_parity import RelaxedThresholdOptimizer
 from error_parity.roc_utils import compute_roc_point_from_predictions
-from hpt.evaluation import evaluate_predictions, evaluate_predictions_bootstrap
 
+from .evaluation import evaluate_predictions, evaluate_predictions_bootstrap
 from ._commons import join_dictionaries, get_convexhull_indices
 
 
-def eval_accuracy_fairness(
+def eval_accuracy_and_equalized_odds(
         y_true: np.ndarray,
         y_pred_binary: np.ndarray,
         sensitive_attr: np.ndarray,
         display: bool = False,
     ) -> tuple[float, float]:
+    """Evaluate accuracy and equalized odds of the given predictions.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        The true class labels.
+    y_pred_binary : np.ndarray
+        The predicted class labels.
+    sensitive_attr : np.ndarray
+        The sensitive attribute data.
+    display : bool, optional
+        Whether to print results or not, by default False.
+
+    Returns
+    -------
+    tuple[float, float]
+        A tuple of (fairness, equalized odds violation).
+    """
     n_groups = len(np.unique(sensitive_attr))
 
     roc_points = [
@@ -50,16 +68,16 @@ def eval_accuracy_fairness(
     ]
 
     acc_val = accuracy_score(y_true, y_pred_binary)
-    fairness_violation = max(linf_constraint_violation)
+    eq_odds_violation = max(linf_constraint_violation)
 
     if display:
         print(f"\tAccuracy:   {acc_val:.2%}")
-        print(f"\tUnfairness: {fairness_violation:.2%}")
+        print(f"\tUnfairness: {eq_odds_violation:.2%}")
 
-    return (acc_val, fairness_violation)
+    return (acc_val, eq_odds_violation)
 
 
-def fit_relaxed_postprocessing(
+def fit_and_evaluate_postprocessing(
         predictor: callable,
         tolerance: float,
         fit_data: tuple,
@@ -69,14 +87,57 @@ def fit_relaxed_postprocessing(
         false_neg_cost: float = 1.,
         max_roc_ticks: int = 200,
         seed: int = 42,
-        y_fit_pred_scores: np.ndarray = None,    # pre-computed predictions for validation data
+        y_fit_pred_scores: np.ndarray = None,    # pre-computed predictions on the fit data
         bootstrap: bool = True,
         bootstrap_kwargs: dict = None,
-    ) -> tuple:
-    """Fits a relaxed postprocessing on the given predictor to fulfill a given
-    fairness criterion (with possible tolerance/relaxation).
-    """
+    ) -> dict[str, dict]:
+    """Fit and evaluate a postprocessing intervention on the given predictor.
 
+    Parameters
+    ----------
+    predictor : callable
+        The callable predictor to fit postprocessing on.
+    tolerance : float
+        The tolerance (or slack) for fairness constraint fulfillment.
+    fit_data : tuple
+        The data used to fit postprocessing.
+    eval_data : tuple or dict[tuple]
+        The data or sequence of data to evaluate postprocessing on.
+        If a tuple is provided, will call it "eval" data in the returned results
+        dictionary; if a dict is provided, will assume {<key_1>: <data_1>, ...}.
+    fairness_constraint : str, optional
+        The name of the fairness constraint to use, by default "equalized_odds".
+    false_pos_cost : float, optional
+        The cost of a false positive error, by default 1.
+    false_neg_cost : float, optional
+        The cost of a false negative error, by default 1.
+    max_roc_ticks : int, optional
+        The maximum number of ticks (precision) to use when computing
+        group-specific ROC curves, by default 200.
+    seed : int, optional
+        The random seed, by default 42
+    y_fit_pred_scores : np.ndarray, optional
+        The pre-computed predicted scores for the `fit_data`; if provided, will
+        avoid re-computing these predictions for each function call.
+    bootstrap : bool, optional
+        Whether to use bootstrapping when computing metric results for
+        postprocessing, by default True.
+    bootstrap_kwargs : dict, optional
+        Any extra arguments to pass on to the bootstrapping function, by default
+        None.
+
+    Returns
+    -------
+    results : dict[str, dict]
+        A dictionary of results, whose keys are the data type, and values the
+        metric values obtained by postprocessing on that data type.
+
+        For example:
+        >>> {
+        >>>     "validation": {"accuracy": 0.7, ...},
+        >>>     "test": {"accuracy": 0.65, ...},
+        >>> }
+    """
     clf = RelaxedThresholdOptimizer(
         predictor=predictor,
         constraint=fairness_constraint,
@@ -111,14 +172,14 @@ def fit_relaxed_postprocessing(
     )
 
     def _evaluate_on_data(data: tuple):
-        """Helper function to evaluate on the given data tuple.
-        """
+        """Helper function to evaluate on the given data tuple."""
         X, Y, S = data
 
         if bootstrap:
             kwargs = bootstrap_kwargs or dict(
                 confidence_pct=95,
                 seed=seed,
+                threshold=0.50,
             )
 
             eval_func = partial(
@@ -163,7 +224,7 @@ def compute_postprocessing_curve(
     n_jobs : int, optional
         Number of parallel jobs to use, if omitted will use `os.cpu_count()-1`.
     bootstrap : bool, optional
-        Whether to compute uncertainty estimates via bootstrapping, by default 
+        Whether to compute uncertainty estimates via bootstrapping, by default
         False.
     tolerance_tick_step : float, optional
         Distance between constraint tolerances in the adjustment curve, by
@@ -182,7 +243,7 @@ def compute_postprocessing_curve(
     """
     def _func_call(tol: float):
         try:
-            return fit_relaxed_postprocessing(
+            return fit_and_evaluate_postprocessing(
                 predictor=lambda X: getattr(model, predict_method)(X)[:, -1],
                 tolerance=tol,
                 bootstrap=bootstrap,

@@ -3,8 +3,11 @@ and fairness metrics, possibly at a specified FPR or FNR target.
 
 Based on: https://github.com/AndreFCruz/hpt/blob/main/src/hpt/evaluation.py
 """
+from __future__ import annotations
+
+import logging
 import statistics
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from sklearn.metrics import confusion_matrix, log_loss, mean_squared_error
@@ -14,8 +17,13 @@ from ._commons import join_dictionaries
 
 
 def _safe_division(a: float, b: float, *, worst_result: float):
-    """Division operation that returns `worst_result` if the denominator is 0."""
-    return 0 if b == 0 else a / b
+    """Tries to divide the given arguments and returns `worst_result` if unsuccessful."""
+    try:
+        return a / b
+
+    except Exception as err:
+        logging.warning(f"Trying to divide {a} / {b}; got '{err}'")
+        return worst_result
 
 
 def evaluate_performance(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
@@ -248,7 +256,30 @@ def evaluate_predictions_bootstrap(
     confidence_pct: float = 95,
     seed: int = 42,
     **threshold_target,
-) -> Tuple[dict, dict]:
+) -> dict:
+    """Computes bootstrap estimates of several metrics for the given predictions.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        The true labels.
+    y_pred_scores : np.ndarray
+        The score predictions.
+    sensitive_attribute : np.ndarray
+        The sensitive attribute data.
+    k : int, optional
+        How many bootstrap samples to draw, by default 200.
+    confidence_pct : float, optional
+        How large of a confidence interval to use when reporting lower and upper
+        bounds, by default 95 (i.e., 2.5 to 97.5 percentile of results).
+    seed : int, optional
+        The random seed, by default 42.
+
+    Returns
+    -------
+    dict
+        A dictionary of results
+    """
     assert len(y_true) == len(y_pred_scores)
     rng = np.random.default_rng(seed=seed)
 

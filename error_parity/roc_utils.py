@@ -159,10 +159,3 @@ def roc_convex_hull(roc_points: np.ndarray) -> np.ndarray:
     )
 
     return roc_points[hull_indices]
-
-
-def plot_polygon_edges(polygon_points, **kwargs):
-    from matplotlib import pyplot as plt
-
-    point_to_plot = np.vstack((polygon_points, polygon_points[0]))
-    plt.plot(point_to_plot[:, 0], point_to_plot[:, 1], **kwargs)

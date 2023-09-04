@@ -21,7 +21,6 @@ from .cvxpy_utils import (
 )
 from .roc_utils import (
     roc_convex_hull,
-    plot_polygon_edges,
     calc_cost_of_point,
 )
 from .classifiers import (
@@ -86,8 +85,8 @@ class RelaxedThresholdOptimizer(Classifier):
             raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
         # Initialize instance variables
-        self._all_roc_data: dict = None
-        self._all_roc_hulls: dict = None
+        self._groupwise_roc_data: dict = None
+        self._groupwise_roc_hulls: dict = None
         self._groupwise_roc_points: np.ndarray = None
         self._global_roc_point: np.ndarray = None
         self._global_prevalence: float = None
@@ -95,11 +94,23 @@ class RelaxedThresholdOptimizer(Classifier):
 
     @property
     def groupwise_roc_points(self) -> np.ndarray:
+        """Group-specific ROC points achieved by solution."""
         return self._groupwise_roc_points
 
     @property
     def global_roc_point(self) -> np.ndarray:
+        """Global ROC point achieved by solution."""
         return self._global_roc_point
+
+    @property
+    def groupwise_roc_hulls(self) -> dict:
+        """Group-specific ROC convex hulls achieved by underlying predictor."""
+        return self._groupwise_roc_hulls
+
+    @property
+    def groupwise_roc_data(self) -> dict:
+        """Group-specific ROC data containing (FPR, TPR, threshold) triplets."""
+        return self._groupwise_roc_data
 
     def cost(
         self,
@@ -303,7 +314,7 @@ class RelaxedThresholdOptimizer(Classifier):
         if y_scores is None:
             y_scores = self.predictor(X)
 
-        self._all_roc_data = dict()
+        self._groupwise_roc_data = dict()
         for g in unique_groups:
             group_filter = group == g
 
@@ -327,25 +338,25 @@ class RelaxedThresholdOptimizer(Classifier):
                     thrs[indices_to_keep],
                 )
 
-            self._all_roc_data[g] = roc_curve_data
+            self._groupwise_roc_data[g] = roc_curve_data
 
         # Compute convex hull of each ROC curve
-        self._all_roc_hulls = dict()
+        self._groupwise_roc_hulls = dict()
         for g in unique_groups:
-            group_fpr, group_tpr, _group_thresholds = self._all_roc_data[g]
+            group_fpr, group_tpr, _group_thresholds = self._groupwise_roc_data[g]
 
             curr_roc_points = np.stack((group_fpr, group_tpr), axis=1)
             curr_roc_points = np.vstack(
                 (curr_roc_points, [1, 0])
             )  # Add point (1, 0) to ROC curve
 
-            self._all_roc_hulls[g] = roc_convex_hull(curr_roc_points)
+            self._groupwise_roc_hulls[g] = roc_convex_hull(curr_roc_points)
 
         # Find the group-wise optima that fulfill the fairness criteria
         self._groupwise_roc_points, self._global_roc_point = compute_fair_optimum(
             fairness_constraint=self.constraint,
             tolerance=self.tolerance,
-            groupwise_roc_hulls=self._all_roc_hulls,
+            groupwise_roc_hulls=self._groupwise_roc_hulls,
             group_sizes_label_pos=group_sizes_label_pos,
             group_sizes_label_neg=group_sizes_label_neg,
             global_prevalence=self._global_prevalence,
@@ -357,7 +368,7 @@ class RelaxedThresholdOptimizer(Classifier):
         all_rand_clfs = {
             g: RandomizedClassifier.construct_at_target_ROC(
                 predictor=self.predictor,
-                roc_curve_data=self._all_roc_data[g],
+                roc_curve_data=self._groupwise_roc_data[g],
                 target_roc_point=self._groupwise_roc_points[g],
                 seed=self.seed,
             )
@@ -420,153 +431,3 @@ class RelaxedThresholdOptimizer(Classifier):
             )
 
         return True
-
-    def plot(
-        self,
-        *,
-        plot_roc_curves: bool = False,
-        plot_roc_hulls: bool = True,
-        plot_group_optima: bool = True,
-        plot_group_triangulation: bool = True,
-        plot_global_optimum: bool = True,
-        plot_diagonal: bool = True,
-        plot_relaxation: bool = False,
-        group_name_map: dict = None,
-        figure=None,
-        **fig_kwargs,
-    ):
-        """Plots the group-specific solutions found by this predictor."""
-        self._check_fit_status()
-
-        from matplotlib import pyplot as plt
-        from matplotlib.patches import Rectangle
-        import seaborn as sns
-
-        n_groups = len(self._all_roc_hulls)
-
-        # Set group-wise colors and global color
-        palette = sns.color_palette(n_colors=n_groups + 1)
-        global_color = palette[0]
-        all_group_colors = palette[1:]
-
-        fig = figure if figure is not None else plt.figure(**fig_kwargs)
-
-        # For each group `idx`
-        for idx in range(n_groups):
-            group_ls = (["--", ":", "-."] * (1 + n_groups // 3))[idx]
-            group_color = all_group_colors[idx]
-
-            # Plot group-wise (actual) ROC curves
-            if plot_roc_curves:
-                roc_points = np.stack(self._all_roc_data[idx], axis=1)[:, 0:2]
-                plot_polygon_edges(
-                    np.vstack((roc_points, [1, 0])),
-                    color=group_color,
-                    ls=group_ls,
-                    alpha=0.5,
-                )
-
-            # Plot group-wise ROC hulls
-            if plot_roc_hulls:
-                plot_polygon_edges(
-                    self._all_roc_hulls[idx],
-                    color=group_color,
-                    ls=group_ls,
-                )
-
-            # Plot group-wise fair optimum
-            group_optimum = self._groupwise_roc_points[idx]
-            if plot_group_optima:
-                plt.plot(
-                    group_optimum[0],
-                    group_optimum[1],
-                    label=group_name_map[idx] if group_name_map else f"group {idx}",
-                    color=group_color,
-                    marker="^",
-                    markersize=5,
-                    lw=0,
-                )
-
-            # Plot triangulation of target point
-            if plot_group_triangulation:
-                (
-                    _weights,
-                    triangulated_points,
-                ) = RandomizedClassifier.find_points_for_target_ROC(
-                    roc_curve_data=self._all_roc_data[idx],
-                    target_roc_point=group_optimum,
-                )
-                plt.plot(
-                    triangulated_points[:, 0],
-                    triangulated_points[:, 1],
-                    color=group_color,
-                    marker="x",
-                    lw=0,
-                )
-
-                plt.fill(
-                    triangulated_points[:, 0],
-                    triangulated_points[:, 1],
-                    color=group_color,
-                    alpha=0.1,
-                )
-
-        # Plot global optimum
-        if plot_global_optimum:
-            plt.plot(
-                self._global_roc_point[0],
-                self._global_roc_point[1],
-                label="global",
-                marker="*",
-                color=global_color,
-                alpha=0.6,
-                markersize=5,
-                lw=0,
-            )
-
-        # Plot rectangle to visualize constraint relaxation
-        if plot_relaxation:
-            # Get rectangle points
-            min_x, max_x = np.min(self._groupwise_roc_points[:, 0]), np.max(
-                self._groupwise_roc_points[:, 0]
-            )
-            min_y, max_y = np.min(self._groupwise_roc_points[:, 1]), np.max(
-                self._groupwise_roc_points[:, 1]
-            )
-
-            # Draw relaxation rectangle
-            rect = Rectangle(
-                xy=(min_x, min_y),
-                width=max_x - min_x,
-                height=max_y - min_y,
-                facecolor="grey",
-                alpha=0.3,
-                label="relaxation",
-            )
-
-            # Add the patch to the Axes
-            ax = plt.gca()
-            ax.add_patch(rect)
-
-        # Plot diagonal
-        if plot_diagonal:
-            plt.plot(
-                [0, 1],
-                [0, 1],
-                ls="--",
-                color="grey",
-                alpha=0.5,
-                label="random clf.",
-            )
-
-        # Set axis settings
-        plt.suptitle(f"Solution to {self.tolerance}-relaxed optimum", y=0.96)
-        plt.title(
-            f"(fairness constraint: {self.constraint.replace('_', ' ')})",
-            fontsize="small",
-        )
-
-        plt.xlabel("False Positive Rate")
-        plt.ylabel("True Positive Rate")
-
-        plt.legend(loc="lower right", borderaxespad=2)
