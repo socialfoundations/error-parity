@@ -153,11 +153,14 @@ def fit_and_evaluate_postprocessing(
 
 def compute_postprocessing_curve(
         model: object,
-        n_jobs: int = None,
+        fit_data: tuple,
+        eval_data: tuple or dict[tuple],
+        fairness_constraint: str = "equalized_odds",
         bootstrap: bool = True,
         tolerance_tick_step: float = 1e-2,
         tolerance_ticks: list = None,
         predict_method: str = "predict_proba",
+        n_jobs: int = None,
         **kwargs) -> pd.DataFrame:
     """Computes the fairness and performance of the given classifier after
     adjusting (postprocessing) for varying levels of fairness tolerance.
@@ -166,8 +169,15 @@ def compute_postprocessing_curve(
     ----------
     model : object
         The model to use.
-    n_jobs : int, optional
-        Number of parallel jobs to use, if omitted will use `os.cpu_count()-1`.
+    fit_data : tuple
+        Data triplet to use to fit postprocessing intervention, (X, Y, S),
+        respectively containing the features, labels, and sensitive attribute.
+    eval_data : tuple or dict[tuple]
+        Data triplet to use to evaluate postprocessing intervention on (same
+        format as `fit_data`), or a dictionary of <data_name>-><data_triplet>
+        containing multiple datasets to evaluate on.
+    fairness_constraint : str, optional
+        _description_, by default "equalized_odds"
     bootstrap : bool, optional
         Whether to compute uncertainty estimates via bootstrapping, by default
         False.
@@ -180,6 +190,8 @@ def compute_postprocessing_curve(
         -spaced ticks.
     predict_method : str, optional
         Which method to call to obtain predictions out of the given model.
+    n_jobs : int, optional
+        Number of parallel jobs to use, if omitted will use `os.cpu_count()-1`.
 
     Returns
     -------
@@ -191,6 +203,9 @@ def compute_postprocessing_curve(
             return fit_and_evaluate_postprocessing(
                 predictor=lambda X: getattr(model, predict_method)(X)[:, -1],
                 tolerance=tol,
+                fit_data=fit_data,
+                eval_data=eval_data,
+                fairness_constraint=fairness_constraint,
                 bootstrap=bootstrap,
                 **kwargs)
 
