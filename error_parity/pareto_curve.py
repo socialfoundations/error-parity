@@ -11,70 +11,15 @@ from __future__ import annotations
 
 import os
 import logging
-from itertools import product
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
 
-from sklearn.metrics import accuracy_score
-from error_parity import RelaxedThresholdOptimizer
-from error_parity.roc_utils import compute_roc_point_from_predictions
-
+from .threshold_optimizer import RelaxedThresholdOptimizer
 from .evaluation import evaluate_predictions, evaluate_predictions_bootstrap
 from ._commons import join_dictionaries, get_convexhull_indices
-
-
-def eval_accuracy_and_equalized_odds(
-        y_true: np.ndarray,
-        y_pred_binary: np.ndarray,
-        sensitive_attr: np.ndarray,
-        display: bool = False,
-    ) -> tuple[float, float]:
-    """Evaluate accuracy and equalized odds of the given predictions.
-
-    Parameters
-    ----------
-    y_true : np.ndarray
-        The true class labels.
-    y_pred_binary : np.ndarray
-        The predicted class labels.
-    sensitive_attr : np.ndarray
-        The sensitive attribute data.
-    display : bool, optional
-        Whether to print results or not, by default False.
-
-    Returns
-    -------
-    tuple[float, float]
-        A tuple of (fairness, equalized odds violation).
-    """
-    n_groups = len(np.unique(sensitive_attr))
-
-    roc_points = [
-        compute_roc_point_from_predictions(
-            y_true[sensitive_attr == i],
-            y_pred_binary[sensitive_attr == i])
-        for i in range(n_groups)
-    ]
-
-    roc_points = np.vstack(roc_points)
-
-    linf_constraint_violation = [
-        np.linalg.norm(roc_points[i] - roc_points[j], ord=np.inf)
-        for i, j in product(range(n_groups), range(n_groups))
-        if i < j
-    ]
-
-    acc_val = accuracy_score(y_true, y_pred_binary)
-    eq_odds_violation = max(linf_constraint_violation)
-
-    if display:
-        print(f"\tAccuracy:   {acc_val:.2%}")
-        print(f"\tUnfairness: {eq_odds_violation:.2%}")
-
-    return (acc_val, eq_odds_violation)
 
 
 def fit_and_evaluate_postprocessing(
