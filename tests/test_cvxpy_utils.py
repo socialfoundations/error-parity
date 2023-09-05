@@ -12,7 +12,6 @@ from error_parity import cvxpy_utils
 @pytest.mark.parametrize("slope", [0, 2, -3])
 @pytest.mark.parametrize("intercept", [0, -1, 1])
 def test_compute_line(slope: float, intercept: float, rng: np.random.Generator):
-
     # Generate two points on this line
     X = rng.uniform(low=-1e10, high=1e10, size=2)
 
@@ -29,9 +28,8 @@ def test_compute_line(slope: float, intercept: float, rng: np.random.Generator):
 
 
 def test_compute_line_inf_slope(rng: np.random.Generator):
-
     # Generate a random x value
-    x, = rng.uniform(low=-1e10, high=1e10, size=1)
+    (x,) = rng.uniform(low=-1e10, high=1e10, size=1)
 
     # Generate two random y values
     y1, y2 = rng.uniform(low=-1e10, high=1e10, size=2)

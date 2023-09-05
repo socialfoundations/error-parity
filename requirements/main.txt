@@ -1,7 +1,8 @@
 pandas
 numpy
-scipy==1.10     # current incompatibility between cvxpy and scipy>1.10; see: https://github.com/cvxpy/cvxpy/issues/2158
-scikit-learn
-cvxpy
+scipy
+tqdm
+scikit-learn<1.5
+cvxpy>=1.3.2
 matplotlib
 seaborn

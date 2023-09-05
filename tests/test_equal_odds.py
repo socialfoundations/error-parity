@@ -14,17 +14,18 @@ from error_parity.roc_utils import compute_roc_point_from_predictions
 
 
 def test_synthetic_data_generation(
-        y_true: np.ndarray,
-        y_pred_scores: np.ndarray,
-        sensitive_attribute: np.ndarray,
-    ):
+    y_true: np.ndarray,
+    y_pred_scores: np.ndarray,
+    sensitive_attribute: np.ndarray,
+):
     # Check that group-wise ROC AUC makes sense
     unique_groups = np.unique(sensitive_attribute)
     for g in unique_groups:
         group_filter = sensitive_attribute == g
 
         group_auc = roc_auc_score(
-            y_true=y_true[group_filter], y_score=y_pred_scores[group_filter],
+            y_true=y_true[group_filter],
+            y_score=y_pred_scores[group_filter],
         )
         # print(f"Group {g} AUC: {group_auc:.3}")
 
@@ -41,18 +42,19 @@ def get_metric_abs_tolerance(group_size: int) -> float:
     """Reasonable value for metric fulfillment given the inherent randomization
     of predictions and the size of the group over which the metric is computed.
     """
-    return (0.1 * group_size) ** (-1/1.5)
+    return (0.1 * group_size) ** (-1 / 1.5)
     # return group_size ** (-1/2)
 
 
-def check_metric_tolerance(theory_val: float, empirical_val, group_size: int, metric_name: str = "") -> bool:
+def check_metric_tolerance(
+    theory_val: float, empirical_val, group_size: int, metric_name: str = ""
+) -> bool:
     assert np.isclose(
-        theory_val, empirical_val,
+        theory_val,
+        empirical_val,
         atol=get_metric_abs_tolerance(group_size),
         rtol=0.01,
-    ), (
-        f"> '{metric_name}' mismatch; expected {theory_val:.3}; got {empirical_val:.3};"
-    )
+    ), f"> '{metric_name}' mismatch; expected {theory_val:.3}; got {empirical_val:.3};"
 
 
 def test_invalid_constraint_name():
@@ -64,14 +66,16 @@ def test_invalid_constraint_name():
 
 
 def test_equalized_odds_constraint_relaxation(
-        y_true: np.ndarray,
-        y_pred_scores: np.ndarray,
-        sensitive_attribute: np.ndarray,
-        constraint_slack: float,
-        random_seed: int,
-    ):
+    y_true: np.ndarray,
+    y_pred_scores: np.ndarray,
+    sensitive_attribute: np.ndarray,
+    constraint_slack: float,
+    random_seed: int,
+):
     num_samples = len(y_true)
-    unique_groups = np.unique(sensitive_attribute)  # return is sorted in ascending order
+    unique_groups = np.unique(
+        sensitive_attribute
+    )  # return is sorted in ascending order
     label_prevalence = np.mean(y_true)
 
     # Predictor function
@@ -104,13 +108,15 @@ def test_equalized_odds_constraint_relaxation(
     y_pred_binary = clf(X_features, group=sensitive_attribute)
 
     # Check realized group-specific ROC points
-    actual_group_roc_points = np.vstack([
-        compute_roc_point_from_predictions(
-            y_true=y_true[sensitive_attribute == g],
-            y_pred_binary=y_pred_binary[sensitive_attribute == g],
-        )
-        for g in unique_groups
-    ])
+    actual_group_roc_points = np.vstack(
+        [
+            compute_roc_point_from_predictions(
+                y_true=y_true[sensitive_attribute == g],
+                y_pred_binary=y_pred_binary[sensitive_attribute == g],
+            )
+            for g in unique_groups
+        ]
+    )
 
     for g in unique_groups:
         g_filter = sensitive_attribute == g
@@ -136,7 +142,6 @@ def test_equalized_odds_constraint_relaxation(
             metric_name=f"group {g} TPR",
         )
 
-
     # Check realized constraint violation
     groupwise_differences = [
         np.linalg.norm(
@@ -151,7 +156,7 @@ def test_equalized_odds_constraint_relaxation(
     smallest_denominator = min(
         np.sum(labels[sensitive_attribute == g])
         for g in unique_groups
-        for labels in (y_true, 1-y_true)
+        for labels in (y_true, 1 - y_true)
     )
     actual_equalized_odds_violation = np.max(groupwise_differences)
     check_metric_tolerance(
@@ -164,15 +169,18 @@ def test_equalized_odds_constraint_relaxation(
     # Check realized global ROC point
     target_fpr, target_tpr = clf.global_roc_point
     actual_fpr, actual_tpr = compute_roc_point_from_predictions(
-        y_true=y_true, y_pred_binary=y_pred_binary,
+        y_true=y_true,
+        y_pred_binary=y_pred_binary,
     )
     check_metric_tolerance(
-        target_fpr, actual_fpr,
-        group_size=np.sum(1-y_true),
+        target_fpr,
+        actual_fpr,
+        group_size=np.sum(1 - y_true),
         metric_name="global FPR",
     )
     check_metric_tolerance(
-        target_tpr, actual_tpr,
+        target_tpr,
+        actual_tpr,
         group_size=np.sum(y_true),
         metric_name="global TPR",
     )
@@ -188,7 +196,8 @@ def test_equalized_odds_constraint_relaxation(
     )
 
     check_metric_tolerance(
-        theoretical_cost, actual_cost,
+        theoretical_cost,
+        actual_cost,
         group_size=num_samples,
         metric_name="classification loss",
     )

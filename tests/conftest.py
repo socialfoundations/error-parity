@@ -34,25 +34,33 @@ def y_pred_scores(num_samples: int, rng) -> np.ndarray:
     return rng.random(size=num_samples)
 
 
-@pytest.fixture(params=[0.2, 0.5, (0.3, 0.3, 0.4), (0.1, 0.2, 0.7), (0.1, 0.1, 0.2, 0.6), (0.1, 0.1, 0.1, 0.2, 0.5)])
+@pytest.fixture(
+    params=[
+        0.2,
+        0.5,
+        (0.3, 0.3, 0.4),
+        (0.1, 0.2, 0.7),
+        (0.1, 0.1, 0.2, 0.6),
+        (0.1, 0.1, 0.1, 0.2, 0.5),
+    ]
+)
 def group_relative_size(request) -> tuple[float, ...]:
-    """The relative size of each group in the population.
-    """
+    """The relative size of each group in the population."""
     prev = request.param
     if isinstance(prev, float):
-        return (prev, 1-prev)
+        return (prev, 1 - prev)
     else:
         assert isinstance(prev, Iterable)
-        assert sum(prev) == 1   # sanity check
+        assert sum(prev) == 1  # sanity check
         return prev
 
 
 @pytest.fixture
 def sensitive_attribute(
-        group_relative_size: tuple[float, ...],
-        num_samples: int,
-        rng: np.random.Generator,
-    ) -> np.ndarray:
+    group_relative_size: tuple[float, ...],
+    num_samples: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
     """Randomly generates sensitive attribute following a provided distribution.
 
     Parameters
@@ -80,30 +88,32 @@ def sensitive_attribute(
 
 @pytest.fixture
 def y_true(
-        y_pred_scores: np.ndarray,
-        sensitive_attribute: np.ndarray,
-        rng) -> np.ndarray:
-    """Randomly generate labels and predictions with different group-wise 
+    y_pred_scores: np.ndarray, sensitive_attribute: np.ndarray, rng
+) -> np.ndarray:
+    """Randomly generate labels and predictions with different group-wise
     classification performance.
     """
     n_groups = len(np.unique(sensitive_attribute))
     n_samples = len(sensitive_attribute)
-    
+
     # Different levels of gaussian noise per group
-    group_noise = [0.2 + rng.random()/2 for _ in range(n_groups)]
+    group_noise = [0.2 + rng.random() / 2 for _ in range(n_groups)]
 
     # Generate predictions
-    label_prevalence = 0.2 + (rng.random() * .6) # in [0.2, 0.8]
+    label_prevalence = 0.2 + (rng.random() * 0.6)  # in [0.2, 0.8]
 
     # Generate labels with different noise levels for each group
     y_true = np.zeros(n_samples)
 
     for i in range(n_groups):
         group_filter = sensitive_attribute == i
-        y_true_groupwise = ((
-            y_pred_scores[group_filter] +
-            rng.normal(size=np.sum(group_filter), scale=group_noise[i])
-        ) > (1-label_prevalence)).astype(int)
+        y_true_groupwise = (
+            (
+                y_pred_scores[group_filter]
+                + rng.normal(size=np.sum(group_filter), scale=group_noise[i])
+            )
+            > (1 - label_prevalence)
+        ).astype(int)
 
         y_true[group_filter] = y_true_groupwise
 
