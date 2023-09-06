@@ -18,14 +18,18 @@ from .binarize import compute_binary_predictions
 from ._commons import join_dictionaries
 
 
+def _is_valid_number(num) -> bool:
+    return isinstance(num, (float, int, np.number)) and not np.isnan(num)
+
+
 def _safe_division(a: float, b: float, *, worst_result: float):
     """Tries to divide the given arguments and returns `worst_result` if unsuccessful."""
-    try:
-        return a / b
-
-    except Exception as err:
-        logging.warning(f"Trying to divide {a} / {b}; got '{err}'")
+    if b == 0 or not _is_valid_number(a) or not _is_valid_number(b):
+        logging.warning(f"Error in the following division: {a} / {b}")
         return worst_result
+
+    else:
+        return a / b
 
 
 def eval_accuracy_and_equalized_odds(
