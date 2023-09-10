@@ -19,7 +19,7 @@ import pandas as pd
 
 from .threshold_optimizer import RelaxedThresholdOptimizer
 from .evaluation import evaluate_predictions, evaluate_predictions_bootstrap
-from ._commons import join_dictionaries, get_convexhull_indices
+from ._commons import join_dictionaries, get_cost_envelope
 
 
 def fit_and_evaluate_postprocessing(
@@ -268,6 +268,7 @@ def get_envelope_of_postprocessing_frontier(
         perf_col: str = "accuracy_mean_test",
         disp_col: str = "equalized_odds_diff_mean_test",
         constant_clf_perf: float = 0.5,
+        constant_clf_disp: float = 0.0,
     ) -> np.ndarray:
     """Computes points in envelope of the given postprocessing frontier results.
 
@@ -280,8 +281,12 @@ def get_envelope_of_postprocessing_frontier(
     disp_col : str, optional
         Name of column containing disparity results, by default "equalized_odds_diff_mean_test"
     constant_clf_perf : float, optional
-        The performance (in the same metric as `perf_col`) of a dummy/constant
-        classifier, by default 0.5.
+        The performance of a dummy constant classifier (in the same metric as
+        `perf_col`), by default 0.5.
+    constant_clf_disp : float, optional
+        The disparity of a dummy constant classifier (in the same metric as
+        `disp_col`), by default 0.0; assumes a constant classifier fulfills
+        fairness!
 
     Returns
     -------
@@ -291,36 +296,40 @@ def get_envelope_of_postprocessing_frontier(
     # Add bottom left point (postprocessing to constant classifier is always trivial)
     postproc_results_df = pd.concat(
         objs=(
-            postproc_results_df,
             pd.DataFrame(
                 {
                     perf_col: [constant_clf_perf],
-                    disp_col: [0.0],
+                    disp_col: [constant_clf_disp],
                 },
-            )
+            ),
+            postproc_results_df,
         ),
         ignore_index=True,
     )
 
-    hull_indices = get_convexhull_indices(
-        postproc_results_df,
-        perf_metric=perf_col,
-        disp_metric=disp_col,
+    # Make costs array
+    costs = np.stack(
+        (
+            1 - postproc_results_df[perf_col],
+            postproc_results_df[disp_col],
+        ),
+        axis=1,
     )
-    hull_indices.sort()
-    postproc_results_df = postproc_results_df.iloc[hull_indices]
 
-    adjustment_frontier = postproc_results_df[[perf_col, disp_col]].to_numpy()
+    # Get points in the envelope of the Pareto frontier
+    costs_envelope = get_cost_envelope(costs)
 
-    # Sort by x-axis to plot properly
+    # Get original metric values back
+    adjustment_frontier = np.stack(
+        (
+            1 - costs_envelope[:, 0],     # flip perf values back to original metric
+            costs_envelope[:, 1],         # keep disparity values (were already costs)
+        ),
+        axis=1,
+    )
+
+    # Sort by x-axis to plot properly (should already be sorted but, just making sure...)
     adjustment_frontier = adjustment_frontier[np.argsort(adjustment_frontier[:, 0])]
-
-    # Drop points with higher disparity than that of the highest acc. point
-    # (this is a quick fix for the fact that these points make the convex hull but shouldn't be on the plot)
-    adjustment_frontier = adjustment_frontier[
-        adjustment_frontier[:, 1] <= adjustment_frontier[-1, 1] + 1e-9
-    ]
-
     return adjustment_frontier
 
 
