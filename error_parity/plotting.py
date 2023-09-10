@@ -18,7 +18,7 @@ def plot_polygon_edges(polygon_points, **kwargs):
 
 def plot_postprocessing_solution(
     *,
-    postproc_clf: RelaxedThresholdOptimizer,
+    postprocessed_clf: RelaxedThresholdOptimizer,
     plot_roc_curves: bool = False,
     plot_roc_hulls: bool = True,
     plot_group_optima: bool = True,
@@ -31,13 +31,13 @@ def plot_postprocessing_solution(
     **fig_kwargs,
 ):
     """Plots the group-specific solutions found by this predictor."""
-    postproc_clf._check_fit_status()
+    postprocessed_clf._check_fit_status()
 
     from matplotlib import pyplot as plt
     from matplotlib.patches import Rectangle
     import seaborn as sns
 
-    n_groups = len(postproc_clf.groupwise_roc_hulls)
+    n_groups = len(postprocessed_clf.groupwise_roc_hulls)
 
     # Set group-wise colors and global color
     palette = sns.color_palette(n_colors=n_groups + 1)
@@ -53,7 +53,7 @@ def plot_postprocessing_solution(
 
         # Plot group-wise (actual) ROC curves
         if plot_roc_curves:
-            roc_points = np.stack(postproc_clf.groupwise_roc_data[idx], axis=1)[:, 0:2]
+            roc_points = np.stack(postprocessed_clf.groupwise_roc_data[idx], axis=1)[:, 0:2]
             plot_polygon_edges(
                 np.vstack((roc_points, [1, 0])),
                 color=group_color,
@@ -64,13 +64,13 @@ def plot_postprocessing_solution(
         # Plot group-wise ROC hulls
         if plot_roc_hulls:
             plot_polygon_edges(
-                postproc_clf.groupwise_roc_hulls[idx],
+                postprocessed_clf.groupwise_roc_hulls[idx],
                 color=group_color,
                 ls=group_ls,
             )
 
         # Plot group-wise fair optimum
-        group_optimum = postproc_clf.groupwise_roc_points[idx]
+        group_optimum = postprocessed_clf.groupwise_roc_points[idx]
         if plot_group_optima:
             plt.plot(
                 group_optimum[0],
@@ -88,7 +88,7 @@ def plot_postprocessing_solution(
                 _weights,
                 triangulated_points,
             ) = RandomizedClassifier.find_points_for_target_ROC(
-                roc_curve_data=postproc_clf._groupwise_roc_data[idx],
+                roc_curve_data=postprocessed_clf._groupwise_roc_data[idx],
                 target_roc_point=group_optimum,
             )
             plt.plot(
@@ -109,8 +109,8 @@ def plot_postprocessing_solution(
     # Plot global optimum
     if plot_global_optimum:
         plt.plot(
-            postproc_clf.global_roc_point[0],
-            postproc_clf.global_roc_point[1],
+            postprocessed_clf.global_roc_point[0],
+            postprocessed_clf.global_roc_point[1],
             label="global",
             marker="*",
             color=global_color,
@@ -127,12 +127,12 @@ def plot_postprocessing_solution(
     if plot_relaxation:
         # Get rectangle points
         min_x, max_x = (
-            np.min(postproc_clf.groupwise_roc_points[:, 0]),
-            np.max(postproc_clf.groupwise_roc_points[:, 0]),
+            np.min(postprocessed_clf.groupwise_roc_points[:, 0]),
+            np.max(postprocessed_clf.groupwise_roc_points[:, 0]),
         )
         min_y, max_y = (
-            np.min(postproc_clf.groupwise_roc_points[:, 1]),
-            np.max(postproc_clf.groupwise_roc_points[:, 1])
+            np.min(postprocessed_clf.groupwise_roc_points[:, 1]),
+            np.max(postprocessed_clf.groupwise_roc_points[:, 1])
         )
 
         # Draw relaxation rectangle
@@ -161,9 +161,9 @@ def plot_postprocessing_solution(
         )
 
     # Set axis settings
-    plt.suptitle(f"Solution to {postproc_clf.tolerance}-relaxed optimum", y=0.96)
+    plt.suptitle(f"Solution to {postprocessed_clf.tolerance}-relaxed optimum", y=0.96)
     plt.title(
-        f"(fairness constraint: {postproc_clf.constraint.replace('_', ' ')})",
+        f"(fairness constraint: {postprocessed_clf.constraint.replace('_', ' ')})",
         fontsize="small",
     )
 
@@ -179,7 +179,7 @@ def plot_postprocessing_frontier(
         disp_metric: str,
         show_data_type: str,
         model_name: str,
-        constant_clf_accuracy: float,
+        constant_clf_perf: float,
         color: str = "black",
     ):
     """Helper to plot the given post-processing frontier results with confidence intervals."""
@@ -188,7 +188,7 @@ def plot_postprocessing_frontier(
         postproc_results_df,
         perf_col=f"{perf_metric}_mean_{show_data_type}",
         disp_col=f"{disp_metric}_mean_{show_data_type}",
-        constant_clf_accuracy=constant_clf_accuracy,
+        constant_clf_perf=constant_clf_perf,
     )
 
     # Get inner and outer confidence intervals
@@ -198,7 +198,7 @@ def plot_postprocessing_frontier(
             perf_metric=perf_metric,
             disp_metric=disp_metric,
             data_type=show_data_type,
-            constant_clf_accuracy=constant_clf_accuracy,
+            constant_clf_perf=constant_clf_perf,
         )
 
     # Draw upper right portion of the line (dominated but not feasible)

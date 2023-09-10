@@ -267,22 +267,34 @@ def get_envelope_of_postprocessing_frontier(
         postproc_results_df: pd.DataFrame,
         perf_col: str = "accuracy_mean_test",
         disp_col: str = "equalized_odds_diff_mean_test",
-        constant_clf_accuracy: float = None,
+        constant_clf_perf: float = 0.5,
     ) -> np.ndarray:
+    """Computes points in envelope of the given postprocessing frontier results.
 
-    if constant_clf_accuracy is not None and constant_clf_accuracy < 0.5:
-        raise ValueError(
-            f"In binary classification, a constant classifier can always achieve "
-            f"above 0.5 accuracy, got dummy_clf_accuracy={constant_clf_accuracy}"
-        )
+    Parameters
+    ----------
+    postproc_results_df : pd.DataFrame
+        The postprocessing frontier results DF.
+    perf_col : str, optional
+        Name of the column containing performance results, by default "accuracy_mean_test"
+    disp_col : str, optional
+        Name of column containing disparity results, by default "equalized_odds_diff_mean_test"
+    constant_clf_perf : float, optional
+        The performance (in the same metric as `perf_col`) of a dummy/constant
+        classifier, by default 0.5.
 
+    Returns
+    -------
+    np.ndarray
+        A 2-D array containing the points in the convex hull of the Pareto curve.
+    """
     # Add bottom left point (postprocessing to constant classifier is always trivial)
     postproc_results_df = pd.concat(
         objs=(
             postproc_results_df,
             pd.DataFrame(
                 {
-                    perf_col: [constant_clf_accuracy or 0.5],
+                    perf_col: [constant_clf_perf],
                     disp_col: [0.0],
                 },
             )
@@ -317,7 +329,7 @@ def compute_inner_and_outer_adjustment_ci(
         perf_metric: str,
         disp_metric: str,
         data_type: str = "test",    # by default, fetch results on test data
-        constant_clf_accuracy: float = None,
+        constant_clf_perf: float = None,
     ) -> tuple:
     """Computes the interior/inner and exterior/outer adjustment curves,
     corresponding to the confidence intervals (by default 95% c.i.).
@@ -350,13 +362,13 @@ def compute_inner_and_outer_adjustment_ci(
         interior_adjusted_df,
         perf_col=perf_metric,
         disp_col=disp_metric,
-        constant_clf_accuracy=constant_clf_accuracy,
+        constant_clf_perf=constant_clf_perf,
     )
     outer_adj_frontier = get_envelope_of_postprocessing_frontier(
         outer_adjusted_df,
         perf_col=perf_metric,
         disp_col=disp_metric,
-        constant_clf_accuracy=constant_clf_accuracy,
+        constant_clf_perf=constant_clf_perf,
     )
 
     # Create functions that interpolate points within each frontier (interior or outer)
