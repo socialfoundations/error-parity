@@ -1,0 +1,6 @@
+scipy
+matplotlib
+seaborn
+jupyter
+tqdm
+ipdb

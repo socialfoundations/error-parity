@@ -1,0 +1,31 @@
+FAIRLEARN_EXPONENTIATED_GRADIENT_REDUCTION:
+
+    classpath: utils.wrappers.fairlearn.FairlearnClassifier
+
+    kwargs:
+
+        fairlearn_reduction: fairlearn.reductions.ExponentiatedGradient
+
+        constraint: fairlearn.reductions.EqualizedOdds
+
+        ### ### ###
+        ### Fairlearn hyperparameters
+        eps:
+            type: float
+            range: [ 0.01, 0.2 ]
+            log: True
+
+        max_iter:
+            - 10            # Run 10 EG iterations
+            # - 50            # Exhaustive search, but possibly unfair w.r.t. other competing models
+            # - 2             # For faster testing...
+
+        # I'm not sure about changing this parameter, maybe we can keep the default eta0=2.0
+        eta0:
+            type: float
+            range: [ 0.5, 5.0 ]
+            log: False
+
+        run_linprog_step:
+            - False
+            - True

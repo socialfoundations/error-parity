@@ -1,0 +1,7 @@
+pandas
+numpy
+folktables
+scikit-learn
+hyperparameter-tuning~=0.3.1
+error-parity~=0.3.4
+cloudpickle

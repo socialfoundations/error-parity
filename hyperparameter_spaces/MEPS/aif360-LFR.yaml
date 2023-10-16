@@ -1,0 +1,29 @@
+AIF360_PREPROCESSING_LFR:
+
+    classpath: utils.wrappers.aif360.preprocessing.AIF360SklearnPreprocessing
+
+    kwargs:
+
+        preprocessing_class: aif360.sklearn.preprocessing.LearnedFairRepresentations
+
+        ### ### ###
+        ### aif360.LFR hyperparameters
+        ### ### ###
+
+        # privileged_group: 1         # use with aif360 preprocessing
+        privileged_group: 0         # use with our 3-group preprocessing
+
+        fairness_weight:
+            type: float
+            range: [ 90.0, 100.0 ]
+            log: False
+
+        max_iter:
+            type: int
+            range: [ 200, 5000 ]
+            log: True
+
+        n_prototypes:
+            type: int
+            range: [ 5, 10 ]
+            log: False

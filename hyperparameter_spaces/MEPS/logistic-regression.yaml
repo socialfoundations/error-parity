@@ -1,0 +1,21 @@
+LogisticRegression:
+    classpath: sklearn.linear_model.LogisticRegression
+
+    kwargs:
+        n_jobs: 1
+        
+        solver: "liblinear"
+
+        penalty:
+            - "l2"
+            - "l1"
+
+        C:
+            type: float
+            range: [ 0.25, 10.0 ]
+            log: True
+
+        max_iter:
+            type: int
+            range: [ 100, 10000 ]
+            log: True

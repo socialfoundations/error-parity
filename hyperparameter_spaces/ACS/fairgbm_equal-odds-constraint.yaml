@@ -1,0 +1,79 @@
+FairGBM:
+
+    classpath: fairgbm.FairGBMClassifier
+
+    kwargs:
+
+        #################################
+        #   General GBM key-word args   #
+        #################################
+
+        n_jobs: 1
+        # n_jobs: 4       # NOTE: use for faster debugging
+    
+        boosting_type:
+            - goss
+            - gbdt
+
+        enable_bundle:
+            - False
+
+        # Number of base estimators
+        n_estimators:
+            type: int
+            range: [ 100, 10000 ]
+            # range: [ 50, 500 ]   # NOTE: use for faster debugging
+            log: True
+
+        # Max tree leaves for base learners
+        num_leaves:
+            type: int
+            range: [ 10, 100 ]
+            log: True
+
+        # min_data_in_leaf
+        min_child_samples:
+            type: int
+            range: [ 10, 1000 ]
+            log: True
+
+        # Max depth for base learners
+        max_depth:
+            type: int
+            range: [ 2, 20 ]
+            log: False
+
+        learning_rate:
+            type: float
+            range: [ 0.01, 0.2 ]
+            log: True
+
+        # Regularization
+        reg_alpha:
+            type: float
+            range: [ 0.0001, 0.1 ]
+            log: True
+
+        reg_lambda:
+            type: float
+            range: [ 0.0001, 0.1 ]
+            log: True
+
+
+        ######################################
+        #   FairGBM-specific key-word args   #
+        ######################################
+
+        # Fairness constraint parameters
+        constraint_type:
+            - "FNR,FPR"
+            # - "FPR"           # fairness criterion: equal FPR
+            # - "FNR"           # fairness criterion: equal TPR
+
+        # Search for a good multipliers' learning rate
+        multiplier_learning_rate:
+            type: float
+            range: [0.00001, 0.01]
+            log: True
+            # range: [0.00001, 0.01]    # for larger datasets with small sub-groups
+            # range: [0.001, 0.1]       # better suited for larger sub-groups (i.e., less groups)

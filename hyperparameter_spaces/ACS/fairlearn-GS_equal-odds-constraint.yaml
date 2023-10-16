@@ -1,0 +1,23 @@
+FAIRLEARN_GRID_SEARCH:
+
+    classpath: utils.wrappers.fairlearn.FairlearnClassifier
+
+    kwargs:
+
+        fairlearn_reduction: fairlearn.reductions.GridSearch
+
+        constraint: fairlearn.reductions.EqualizedOdds
+
+        ### ### ###
+        ### Fairlearn hyperparameters
+        grid_size:
+            type: int
+            range: [ 5, 25 ]
+            log: True
+
+        grid_limit:
+            type: float
+            range: [ 1.0, 4.0 ]
+            log: False
+
+        constraint_weight: 0.9

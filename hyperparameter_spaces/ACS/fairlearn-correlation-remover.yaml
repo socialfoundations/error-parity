@@ -1,0 +1,9 @@
+CorrelationRemover:
+
+    classpath: fairlearn.preprocessing.CorrelationRemover
+
+    kwargs:
+
+        # let's just leave this hardcoded
+        # even at alpha=1.0 (max. fairness), this still doesn't work well...
+        alpha: 1.0

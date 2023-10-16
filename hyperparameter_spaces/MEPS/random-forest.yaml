@@ -1,0 +1,29 @@
+RandomForest:
+    classpath: sklearn.ensemble.RandomForestClassifier
+
+    kwargs:
+
+        n_jobs: 1
+
+        # Number of base estimators
+        n_estimators:
+            type: int
+            range: [ 50, 5000 ]
+            log: True
+
+        # Max depth for base learners
+        max_depth:
+            type: int
+            range: [ 4, 24 ]
+            log: True
+
+        min_samples_leaf:
+            type: int
+            range: [ 5, 250 ]
+            log: True
+
+        criterion:
+            - "gini"
+            - "gini"
+            - "entropy"
+            - "log_loss"
