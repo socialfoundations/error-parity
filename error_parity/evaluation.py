@@ -286,7 +286,10 @@ def evaluate_predictions(
             "squared_loss": mean_squared_error(y_true, y_pred_scores),
             "log_loss": log_loss(
                 y_true, y_pred_scores,
-                eps=np.finfo(y_pred_scores.dtype).eps,  # NOTE: `eps` parameter will be removed in sklearn 1.5
+                # eps=np.finfo(y_pred_scores.dtype).eps,
+
+                # NOTE: this parameterization of `eps` is no longer useful as
+                # per sklearn 1.2, and will be removed in sklearn 1.5;
             ),
         }
     )
