@@ -49,7 +49,7 @@ class BinaryClassifier(Classifier):
         y_pred_binary : np.ndarray[int]
             The predicted class for each input sample.
         """
-        return (self.score_predictor(X) >= self.threshold).astype(int)
+        return (self.score_predictor(X).ravel() >= self.threshold).astype(int)
 
 
 class BinaryClassifierAtROCDiagonal(Classifier):
@@ -125,7 +125,7 @@ class EnsembleGroupwiseClassifiers(Classifier):
             to a group-specific classifier for that sample.
         """
         if len(X) != len(group):
-            raise ValueError(f"Invalid input sizes len(X) != len(group)")
+            raise ValueError(f"Invalid input sizes: len(X) != len(group), {len(X)} != {len(group)}.")
 
         # Array to store predictions
         num_samples = len(X)

@@ -208,7 +208,7 @@ class RelaxedThresholdOptimizer(Classifier):
 
         return self._max_l_inf_between_points(
             points=[
-                roc_point[roc_idx_of_interest]
+                np.reshape(roc_point[roc_idx_of_interest], newshape=(1,))
                 for roc_point in self.groupwise_roc_points
             ],
         )
@@ -313,6 +313,10 @@ class RelaxedThresholdOptimizer(Classifier):
         # Compute group-wise ROC curves
         if y_scores is None:
             y_scores = self.predictor(X)
+
+        # Flatten y_scores array if needed
+        if isinstance(y_scores, np.ndarray) and len(y_scores.shape) > 1:
+            y_scores = y_scores.ravel()
 
         self._groupwise_roc_data = dict()
         for g in unique_groups:

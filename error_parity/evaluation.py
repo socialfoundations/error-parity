@@ -252,6 +252,10 @@ def evaluate_predictions(
 
     Will only evaluate fairness if `sensitive_attribute` is provided.
 
+    Note
+    ----
+    The value of `log_loss` may be inaccurate when using `scikit-learn<1.2`.
+
     Parameters
     ----------
     y_true : np.ndarray
@@ -286,7 +290,7 @@ def evaluate_predictions(
             "squared_loss": mean_squared_error(y_true, y_pred_scores),
             "log_loss": log_loss(
                 y_true, y_pred_scores,
-                # eps=np.finfo(y_pred_scores.dtype).eps,
+                # eps=np.finfo(y_pred_scores.dtype).eps,    # NOTE: for sklearn<1.2
 
                 # NOTE: this parameterization of `eps` is no longer useful as
                 # per sklearn 1.2, and will be removed in sklearn 1.5;

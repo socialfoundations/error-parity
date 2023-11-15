@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import logging
+import traceback
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 
@@ -19,7 +20,13 @@ import pandas as pd
 
 from .threshold_optimizer import RelaxedThresholdOptimizer
 from .evaluation import evaluate_predictions, evaluate_predictions_bootstrap
-from ._commons import join_dictionaries, get_cost_envelope
+from ._commons import join_dictionaries, get_cost_envelope, arrays_are_equal
+
+
+DEFAULT_TOLERANCE_TICKS = np.hstack((
+    np.arange(0.0, 0.2, 1e-2),      # [0.00, 0.01, 0.02, ..., 0.19]
+    np.arange(0.2, 1.0, 1e-1),      # [0.20, 0.30, 0.40, ...]
+))
 
 
 def fit_and_evaluate_postprocessing(
@@ -157,8 +164,8 @@ def compute_postprocessing_curve(
         eval_data: tuple or dict[tuple],
         fairness_constraint: str = "equalized_odds",
         bootstrap: bool = True,
-        tolerance_tick_step: float = 1e-2,
-        tolerance_ticks: list = None,
+        tolerance_ticks: list = DEFAULT_TOLERANCE_TICKS,
+        tolerance_tick_step: float = None,
         predict_method: str = "predict_proba",
         n_jobs: int = None,
         **kwargs) -> pd.DataFrame:
@@ -181,15 +188,19 @@ def compute_postprocessing_curve(
     bootstrap : bool, optional
         Whether to compute uncertainty estimates via bootstrapping, by default
         False.
-    tolerance_tick_step : float, optional
-        Distance between constraint tolerances in the adjustment curve, by
-        default 1e-2.
     tolerance_ticks : list, optional
         List of constraint tolerances to use when computing adjustment curve.
-        If not provided, will use `tolerance_tick_step` to construct evenly-
-        -spaced ticks.
+        By default will use higher granularity/precision for lower levels of
+        disparity, and lower granularity for higher levels of disparity.
+        Should correspond to a sorted list of values between 0 and 1.
+        Will be ignored if `tolerance_tick_step` is provided.
+    tolerance_tick_step : float, optional
+        Distance between constraint tolerances in the adjustment curve.
+        Will override `tolerance_ticks` if provided!
     predict_method : str, optional
         Which method to call to obtain predictions out of the given model.
+        Use `predict_method="__call__"` for a callable predictor, or the default
+        `predict_method="predict_proba"` for a predictor with sklearn interface.
     n_jobs : int, optional
         Number of parallel jobs to use, if omitted will use `os.cpu_count()-1`.
 
@@ -210,7 +221,9 @@ def compute_postprocessing_curve(
                 **kwargs)
 
         except Exception as exc:
-            logging.error(f"FAILED fit_relaxed_postprocessing with `tolerance={tol}`: {exc}")
+            logging.error(
+                f"FAILED `fit_and_evaluate_postprocessing(.)` with `tolerance={tol}`; "
+                f"{''.join(traceback.TracebackException.from_exception(exc).format())}")
 
         return {}   # return empty dictionary
 
@@ -220,7 +233,26 @@ def compute_postprocessing_curve(
     logging.info(f"Using `n_jobs={n_jobs}` to compute adjustment curve.")
 
     from tqdm.auto import tqdm
-    tolerances = tolerance_ticks if tolerance_ticks is not None else np.arange(0.0, 1.0, tolerance_tick_step)
+    # Use `tolerance_tick_step` kwarg
+    if tolerance_tick_step is not None:
+        tolerances = np.arange(0.0, 1.0, tolerance_tick_step)
+
+        if (
+            # > `tolerance_ticks` was provided
+            tolerance_ticks is not None
+            # > and `tolerance_ticks` was set to a non-default value
+            and not arrays_are_equal(tolerance_ticks, DEFAULT_TOLERANCE_TICKS)
+        ):
+            logging.error("Please provide only one of `tolerance_ticks` and `tolerance_tick_step`.")
+
+        logging.warning("Use of `tolerance_tick_step` overrides the use of `tolerance_ticks`.")
+
+    # Use `tolerance_ticks` kwarg
+    else:
+        tolerances = tolerance_ticks
+
+    # Log tolerances used
+    logging.info(f"Computing postprocessing for the following constraint tolerances: {tolerances}.")
 
     with ThreadPoolExecutor(max_workers=n_jobs) as executor:
         func_call_results = list(

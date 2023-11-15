@@ -1,9 +1,33 @@
+from __future__ import annotations
+
 import logging
 import operator
 from functools import reduce
 
 import numpy as np
 from scipy.spatial import qhull, ConvexHull
+
+
+def arrays_are_equal(*arrays: list[np.ndarray]) -> bool:
+    """Compares two or more arrays and returns whether they are equal."""
+    assert len(arrays) >= 2, \
+        f"At least two arguments must be provided, got {len(arrays)}."
+
+    # Reference array
+    ref_array = arrays[0]
+    ref_array_np = np.array(ref_array)
+
+    for curr_arr in arrays[1:]:
+        curr_arr_np = np.array(curr_arr)
+
+        # Check shape and contents
+        if (ref_array_np.shape != curr_arr_np.shape
+            or not np.allclose(ref_array_np, curr_arr_np)
+            ):
+            return False    # arrays are not equal
+
+    # All checks passed, return True (arrays are equal)
+    return True
 
 
 def join_dictionaries(*dicts) -> dict:
