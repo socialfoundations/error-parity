@@ -328,7 +328,7 @@ class RandomizedClassifier(Classifier):
 
         if len(fpr) == 2:
             logging.warning(
-                f"Got ROC data with only 2 points: producing a random classifier..."
+                "Got ROC data with only 2 points: producing a random classifier..."
             )
             if not np.isclose(target_roc_point[0], target_roc_point[1]):
                 logging.error(

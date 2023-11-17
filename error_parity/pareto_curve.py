@@ -209,10 +209,15 @@ def compute_postprocessing_curve(
     postproc_results_df : pd.DataFrame
         A DataFrame containing the results, one row per tolerance tick.
     """
+    def callable_predictor(X) -> np.ndarray:
+        preds = getattr(model, predict_method)(X)
+        assert 1 <= len(preds.shape) <= 2, f"Model outputs predictions in shape {preds.shape}"
+        return preds if len(preds.shape) == 1 else preds[:, -1]
+
     def _func_call(tol: float):
         try:
             return fit_and_evaluate_postprocessing(
-                predictor=lambda X: getattr(model, predict_method)(X)[:, -1],
+                predictor=callable_predictor,
                 tolerance=tol,
                 fit_data=fit_data,
                 eval_data=eval_data,
