@@ -2,6 +2,7 @@
 
 ![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-package.yml/badge.svg)
 ![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)
+![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg)
 ![PyPI version](https://badgen.net/pypi/v/error-parity)
 ![OSI license](https://badgen.net/pypi/license/error-parity)
 ![Python compatibility](https://badgen.net/pypi/python/error-parity)
@@ -13,6 +14,8 @@ Fast postprocessing of any score-based predictor to meet fairness criteria.
 
 The `error-parity` package can achieve strict or relaxed fairness constraint fulfillment, 
 which can be useful to compare ML models at equal fairness levels.
+
+Package documentation available [here](https://socialfoundations.github.io/error-parity/).
 
 
 ## Installing

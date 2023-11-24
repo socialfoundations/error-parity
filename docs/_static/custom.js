@@ -5,8 +5,10 @@
  * instead of opening on the current user window.
  */
 window.onload = function () {
-    var links = document.getElementsByTagName('a');
-    for (var i = 0; i < links.length; i++) {
-        links[i].target = '_blank'; // Open links in a new tab
+    let links = document.getElementsByTagName('a');
+    for (let l of links) {
+        if (l.classList.contains("reference") && l.classList.contains("external")) {
+            l.target = '_blank'; // Open links in a new tab
+        }
     }
 };
