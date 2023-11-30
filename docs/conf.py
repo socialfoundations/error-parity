@@ -32,6 +32,7 @@ extensions = [
     # 'sphinx_autopackagesummary',
     'myst_parser',
     'sphinx.ext.viewcode',
+    'sphinx.ext.githubpages',
 ]
 
 templates_path = ['_templates']
