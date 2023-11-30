@@ -13,8 +13,7 @@ author = 'AndreFCruz'
 # Import package version programmatically
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../myproj/'))
-# sys.path.insert(1, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../'))
 from error_parity._version import __version__
 release = __version__
 version = __version__
