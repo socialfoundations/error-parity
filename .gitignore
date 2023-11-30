@@ -7,8 +7,11 @@ storage/
 
 dist/
 build/
-_build/
-docs/_build/
 *.egg-info/
 
 .coverage
+
+# Documentation artifacts
+_build/
+docs/_build/
+docs/examples/

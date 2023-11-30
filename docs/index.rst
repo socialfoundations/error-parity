@@ -21,6 +21,7 @@ Check out the following sub-pages:
 
    Readme file <readme>
    API reference <modules>
+   Example notebooks <notebooks>
 
 
 Citing
