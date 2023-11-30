@@ -5,6 +5,7 @@ myst-parser
 sphinx-copybutton
 readthedocs-sphinx-search
 nbsphinx
+sphinx_gallery
 numpydoc
 sphinx-autodoc-typehints
 IPython
