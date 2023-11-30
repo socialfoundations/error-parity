@@ -18,6 +18,10 @@ from error_parity._version import __version__
 release = __version__
 version = __version__
 
+# Copy examples folder to the documentation folder
+import shutil
+shutil.copytree(src="../examples", dst="examples", dirs_exist_ok=True)
+
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
@@ -33,6 +37,9 @@ extensions = [
     'myst_parser',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    'nbsphinx',             # for rendering jupyter notebooks
+    'sphinx_gallery.load_style',
+    'IPython.sphinxext.ipython_console_highlighting',   # current work-around for syntax-highlighting on jupyter notebooks
 ]
 
 templates_path = ['_templates']
@@ -48,3 +55,9 @@ html_static_path = ['_static']
 html_js_files = [
     'custom.js',    # custom JS file
 ]
+
+# nbsphinx configuration
+nbsphinx_execute = 'never'  # Set to 'always' if you want to execute the notebooks during the build process
+
+# numpydoc configuration
+numpydoc_show_class_members = False
