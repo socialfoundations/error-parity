@@ -32,6 +32,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     'sphinx.ext.autosectionlabel',
+    'sphinx_autodoc_typehints',  # needs to be AFTER napoleon
+    'numpydoc',
     'sphinx_copybutton',
     # 'sphinx_autopackagesummary',
     'myst_parser',
