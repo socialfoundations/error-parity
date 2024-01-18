@@ -1,6 +1,5 @@
 # Supplementary Materials for "Unprocessing Seven Years of Algorithmic Fairness"
-
-> Note: only tested on a Linux environment.
+> Published as a conference [paper at ICLR 2024](https://arxiv.org/abs/2306.07261).
 
 **Table of contents:**
 
@@ -17,3 +16,5 @@
   - All experiments can be launched using the [`scripts/launch_experiments_ACS.py`](scripts/launch_experiments_ACS.py) script for all ACS datasets, or using [`scripts/launch_experiments_MEPS.py`](scripts/launch_experiments_MEPS.py) for the MEPS dataset (_note_: experiments were ran using an `htcondor` cluster setup);
 - All results gathered from the paper's experiments can be found under folder [`results`](results);
 - Python packages required to re-run experiments or notebooks: see varied requirements files under folder [requirements](/requirements/);
+
+**Note:** scripts and notebooks only tested on a Linux environment.
