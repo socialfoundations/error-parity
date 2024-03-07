@@ -31,24 +31,23 @@ The :code:`error-parity` package is the basis for the following `publication`_:
 
 .. code-block:: bib
 
-   @misc{cruz2023unprocessing,
-         title={Unprocessing Seven Years of Algorithmic Fairness}, 
-         author={Andr{\'{e}} F. Cruz and Moritz Hardt},
-         year={2023},
-         eprint={2306.07261},
-         archivePrefix={arXiv},
-         primaryClass={cs.LG}
+   @inproceedings{
+   cruz2024unprocessing,
+   title={Unprocessing Seven Years of Algorithmic Fairness},
+   author={Andr{\'e} Cruz and Moritz Hardt},
+   booktitle={The Twelfth International Conference on Learning Representations},
+   year={2024},
+   url={https://openreview.net/forum?id=jr03SfWsBS}
    }
 
 All additional supplementary materials are available on the `supp-materials`_ branch of the `GitHub repository`_.
 
 
-Indices and tables
-==================
+Indices
+=======
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
 
 
 .. _GitHub repository: https://github.com/socialfoundations/error-parity

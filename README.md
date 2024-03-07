@@ -10,6 +10,9 @@
 <!-- ![OSI license](https://img.shields.io/pypi/l/error-parity) -->
 <!-- ![Compatible python versions](https://img.shields.io/pypi/pyversions/error-parity) -->
 
+> Work presented as an _oral at ICLR 2024_, titled ["Unprocessing Seven Years of Algorithmic Fairness"](https://openreview.net/forum?id=jr03SfWsBS).
+
+
 Fast postprocessing of any score-based predictor to meet fairness criteria.
 
 The `error-parity` package can achieve strict or relaxed fairness constraint fulfillment, 
@@ -89,6 +92,13 @@ Road-map:
 
 ## Citing
 
-This repository contains code and supplementary materials for the following preprint:
-
-> André F. Cruz and Moritz Hardt. "Unprocessing Seven Years of Algorithmic Fairness." [arXiv preprint, 2023](https://arxiv.org/pdf/2306.07261.pdf).
+```
+@inproceedings{
+  cruz2024unprocessing,
+  title={Unprocessing Seven Years of Algorithmic Fairness},
+  author={Andr{\'e} Cruz and Moritz Hardt},
+  booktitle={The Twelfth International Conference on Learning Representations},
+  year={2024},
+  url={https://openreview.net/forum?id=jr03SfWsBS}
+}
+```
