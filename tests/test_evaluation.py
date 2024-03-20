@@ -24,3 +24,16 @@ def test_valid_safe_division(caplog, rng):
         div_result = _safe_division(a, b, worst_result=float("nan"))
         assert div_result == a / b
         assert "error" not in caplog.text.lower()
+
+
+def test_equalized_odds_measure():
+    pass
+    # # Check realized constraint violation
+    # groupwise_differences = [
+    #     np.linalg.norm(
+    #         actual_group_roc_points[i] - actual_group_roc_points[j],
+    #         ord=np.inf,
+    #     )
+    #     for i, j in product(unique_groups, unique_groups)
+    #     if i < j
+    # ]
