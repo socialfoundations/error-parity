@@ -88,19 +88,15 @@ class RelaxedThresholdOptimizer(Classifier):
         self._groupwise_roc_data: dict = None
         self._groupwise_roc_hulls: dict = None
         self._groupwise_roc_points: np.ndarray = None
+        self._groupwise_prevalence: np.ndarray = None
         self._global_roc_point: np.ndarray = None
         self._global_prevalence: float = None
         self._realized_classifier: EnsembleGroupwiseClassifiers = None
 
     @property
-    def groupwise_roc_points(self) -> np.ndarray:
-        """Group-specific ROC points achieved by solution."""
-        return self._groupwise_roc_points
-
-    @property
-    def global_roc_point(self) -> np.ndarray:
-        """Global ROC point achieved by solution."""
-        return self._global_roc_point
+    def groupwise_roc_data(self) -> dict:
+        """Group-specific ROC data containing (FPR, TPR, threshold) triplets."""
+        return self._groupwise_roc_data
 
     @property
     def groupwise_roc_hulls(self) -> dict:
@@ -108,9 +104,24 @@ class RelaxedThresholdOptimizer(Classifier):
         return self._groupwise_roc_hulls
 
     @property
-    def groupwise_roc_data(self) -> dict:
-        """Group-specific ROC data containing (FPR, TPR, threshold) triplets."""
-        return self._groupwise_roc_data
+    def groupwise_roc_points(self) -> np.ndarray:
+        """Group-specific ROC points achieved by solution."""
+        return self._groupwise_roc_points
+
+    @property
+    def groupwise_prevalence(self) -> np.ndarray:
+        """Group-specific prevalence, i.e., P(Y=1|A=a)"""
+        return self._groupwise_prevalence
+
+    @property
+    def global_roc_point(self) -> np.ndarray:
+        """Global ROC point achieved by solution."""
+        return self._global_roc_point
+
+    @property
+    def global_prevalence(self) -> np.ndarray:
+        """Global prevalence, i.e., P(Y=1)."""
+        return self._global_prevalence
 
     def cost(
         self,
@@ -175,6 +186,9 @@ class RelaxedThresholdOptimizer(Classifier):
                 error_type=constraint_to_error_type[self.constraint],
             )
 
+        elif self.constraint == "demographic_parity":
+            return self.demographic_parity_violation()
+
         else:
             raise NotImplementedError(
                 f"Standalone constraint violation not yet computed for "
@@ -228,6 +242,28 @@ class RelaxedThresholdOptimizer(Classifier):
         # Compute l-inf distance between each pair of groups
         return self._max_l_inf_between_points(
             points=self.groupwise_roc_points,
+        )
+
+    def demographic_parity_violation(self) -> float:
+        """Computes the theoretical violation of the demographic parity constraint.
+
+        That is, the maximum distance between groups' PPR (positive prediction
+        rate).
+
+        Returns
+        -------
+        float
+            The demographic parity constraint violation.
+        """
+        self._check_fit_status()
+
+        import ipdb; ipdb.set_trace()
+        # Compute groups' PPR (positive prediction rate)
+        return self._max_l_inf_between_points(  # TODO: check
+            points=[
+                group_tpr * group_prev + group_fpr * (1 - group_prev)
+                for (group_fpr, group_tpr), group_prev in zip(self.groupwise_roc_points, self.groupwise_prevalence)
+            ],
         )
 
     @staticmethod
@@ -300,7 +336,7 @@ class RelaxedThresholdOptimizer(Classifier):
         group_sizes_label_pos = np.array([np.sum(y[group == g]) for g in unique_groups])
 
         if np.sum(group_sizes_label_neg) + np.sum(group_sizes_label_pos) != len(y):
-            raise RuntimeError(f"Failed sanity check. Are you using non-binary labels?")
+            raise RuntimeError("Failed sanity check. Are you using non-binary labels?")
 
         # Convert to relative sizes
         group_sizes_label_neg = group_sizes_label_neg.astype(float) / np.sum(
@@ -308,6 +344,11 @@ class RelaxedThresholdOptimizer(Classifier):
         )
         group_sizes_label_pos = group_sizes_label_pos.astype(float) / np.sum(
             group_sizes_label_pos
+        )
+
+        # Compute group-wise prevalence rates
+        self._groupwise_prevalence = np.array(
+            [np.mean(y[group == g]) for g in unique_groups]
         )
 
         # Compute group-wise ROC curves

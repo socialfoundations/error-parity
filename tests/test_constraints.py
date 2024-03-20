@@ -1,7 +1,6 @@
 """Test the relaxed equal odds constraint fulfillment.
 """
 
-import logging
 from itertools import product
 
 import pytest
@@ -32,12 +31,6 @@ def test_synthetic_data_generation(
         assert 0.52 < group_auc < 0.98
 
 
-@pytest.fixture(params=[0.01, 0.02, 0.05, 0.1, 0.2, 1.0])
-def constraint_slack(request) -> float:
-    """aka. fairness tolerance"""
-    return request.param
-
-
 def get_metric_abs_tolerance(group_size: int) -> float:
     """Reasonable value for metric fulfillment given the inherent randomization
     of predictions and the size of the group over which the metric is computed.
@@ -49,6 +42,7 @@ def get_metric_abs_tolerance(group_size: int) -> float:
 def check_metric_tolerance(
     theory_val: float, empirical_val, group_size: int, metric_name: str = ""
 ) -> bool:
+    """Checks that the empirical value is within a reasonable tolerance of the expected theoretical value."""
     assert np.isclose(
         theory_val,
         empirical_val,
@@ -65,13 +59,15 @@ def test_invalid_constraint_name():
         )
 
 
-def test_equalized_odds_constraint_relaxation(
+def test_constraint_fulfillment(
     y_true: np.ndarray,
     y_pred_scores: np.ndarray,
     sensitive_attribute: np.ndarray,
+    fairness_constraint: str,
     constraint_slack: float,
     random_seed: int,
 ):
+    """Tests fairness constraint fulfillment at the given slack level."""
     num_samples = len(y_true)
     unique_groups = np.unique(
         sensitive_attribute
@@ -87,7 +83,7 @@ def test_equalized_odds_constraint_relaxation(
 
     clf = RelaxedThresholdOptimizer(
         predictor=predictor,
-        constraint="equalized_odds",
+        constraint=fairness_constraint,
         tolerance=constraint_slack,
         false_pos_cost=1,
         false_neg_cost=1,
@@ -98,9 +94,9 @@ def test_equalized_odds_constraint_relaxation(
     clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
 
     # Check that theoretical solution fulfills relaxed constraint
-    assert clf.equalized_odds_violation() <= constraint_slack + SOLUTION_TOLERANCE, (
-        f"Solution fails to hit the target EO constraint; "
-        f"got: {clf.equalized_odds_violation()}; "
+    assert clf.constraint_violation() <= constraint_slack + SOLUTION_TOLERANCE, (
+        f"Solution fails to fulfill the '{fairness_constraint}' inequality; "
+        f"got: {clf.constraint_violation()}; "
         f"expected less than {constraint_slack};"
     )
 
@@ -158,8 +154,11 @@ def test_equalized_odds_constraint_relaxation(
         for g in unique_groups
         for labels in (y_true, 1 - y_true)
     )
+
+    # Check realized constraint violation
     actual_equalized_odds_violation = np.max(groupwise_differences)
     check_metric_tolerance(
+        # NOTE: it's fine if actual violation is below slack (and not fine if above)
         empirical_val=max(actual_equalized_odds_violation - constraint_slack, 0),
         theory_val=0.0,
         group_size=smallest_denominator,
@@ -172,12 +171,16 @@ def test_equalized_odds_constraint_relaxation(
         y_true=y_true,
         y_pred_binary=y_pred_binary,
     )
+
+    # Check realized global FPR
     check_metric_tolerance(
         target_fpr,
         actual_fpr,
         group_size=np.sum(1 - y_true),
         metric_name="global FPR",
     )
+
+    # Check realized global TPR
     check_metric_tolerance(
         target_tpr,
         actual_tpr,
