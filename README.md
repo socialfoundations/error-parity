@@ -45,9 +45,9 @@ from error_parity import RelaxedThresholdOptimizer
 # Given any trained model that outputs real-valued scores
 fair_clf = RelaxedThresholdOptimizer(
     predictor=lambda X: model.predict_proba(X)[:, -1],   # for sklearn API
-    # predictor=model,  # use this for a callable model
-    constraint="equalized_odds",
-    tolerance=0.05,     # fairness constraint tolerance
+    # predictor=model,            # use this for a callable model
+    constraint="equalized_odds",  # other constraints are available
+    tolerance=0.05,               # fairness constraint tolerance
 )
 
 # Fit the fairness adjustment on some data
@@ -84,10 +84,9 @@ Currently implemented fairness constraints:
 - [x] predictive equality;
   - i.e., equal group-specific FPR;
   - use `constraint="false_positive_rate_parity"`;
-
-Road-map:
-- [ ] demographic parity;
+- [x] demographic parity;
   - i.e., equal group-specific predicted prevalence;
+  - use `constraint="demographic_parity"`;
 
 
 ## Citing
