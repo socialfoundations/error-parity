@@ -158,8 +158,14 @@ class RelaxedThresholdOptimizer(Classifier):
             false_neg_cost=false_neg_cost or self.false_neg_cost,
         )
 
-    def constraint_violation(self) -> float:
-        """Constraint violation of the LP solution found.
+    def constraint_violation(self, constraint_name: str = None) -> float:
+        """Theoretical constraint violation of the LP solution found.
+
+        Parameters
+        ----------
+        constraint_name : str, optional
+            Optionally, may provide another constraint name that will be used
+            instead of this classifier's self.constraint;
 
         Returns
         -------
@@ -168,13 +174,21 @@ class RelaxedThresholdOptimizer(Classifier):
         """
         self._check_fit_status()
 
-        if self.constraint not in ALL_CONSTRAINTS:
+        if constraint_name is not None:
+            logging.warning(
+                f"Calculating constraint violation for {constraint_name} constraint;\n"
+                f"Note: this classifier was fitted with a {self.constraint} constraint;"
+            )
+        else:
+            constraint_name = self.constraint
+
+        if constraint_name not in ALL_CONSTRAINTS:
             raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
-        if self.constraint == "equalized_odds":
+        if constraint_name == "equalized_odds":
             return self.equalized_odds_violation()
 
-        elif self.constraint.endswith("rate_parity"):
+        elif constraint_name.endswith("rate_parity"):
             constraint_to_error_type = {
                 "true_positive_rate_parity": "fn",
                 "false_positive_rate_parity": "fp",
@@ -183,16 +197,16 @@ class RelaxedThresholdOptimizer(Classifier):
             }
 
             return self.error_rate_parity_constraint_violation(
-                error_type=constraint_to_error_type[self.constraint],
+                error_type=constraint_to_error_type[constraint_name],
             )
 
-        elif self.constraint == "demographic_parity":
+        elif constraint_name == "demographic_parity":
             return self.demographic_parity_violation()
 
         else:
             raise NotImplementedError(
                 f"Standalone constraint violation not yet computed for "
-                f"constraint='{self.constraint}'."
+                f"constraint='{constraint_name}'."
             )
 
     def error_rate_parity_constraint_violation(self, error_type: str) -> float:
