@@ -222,7 +222,9 @@ class RelaxedThresholdOptimizer(Classifier):
 
         return self._max_l_inf_between_points(
             points=[
-                np.reshape(roc_point[roc_idx_of_interest], newshape=(1,))
+                np.reshape(     # NOTE: must pass an array object, not scalars
+                    roc_point[roc_idx_of_interest],  # use only FPR or TPR (whichever was constrained)
+                    newshape=(1,))
                 for roc_point in self.groupwise_roc_points
             ],
         )
@@ -257,11 +259,14 @@ class RelaxedThresholdOptimizer(Classifier):
         """
         self._check_fit_status()
 
-        import ipdb; ipdb.set_trace()
         # Compute groups' PPR (positive prediction rate)
         return self._max_l_inf_between_points(  # TODO: check
             points=[
-                group_tpr * group_prev + group_fpr * (1 - group_prev)
+                # NOTE: must pass an array object, not scalars
+                np.reshape(
+                    group_tpr * group_prev + group_fpr * (1 - group_prev),
+                    newshape=(1,),
+                )
                 for (group_fpr, group_tpr), group_prev in zip(self.groupwise_roc_points, self.groupwise_prevalence)
             ],
         )
@@ -404,7 +409,8 @@ class RelaxedThresholdOptimizer(Classifier):
             groupwise_roc_hulls=self._groupwise_roc_hulls,
             group_sizes_label_pos=group_sizes_label_pos,
             group_sizes_label_neg=group_sizes_label_neg,
-            global_prevalence=self._global_prevalence,
+            groupwise_prevalence=self.groupwise_prevalence,
+            global_prevalence=self.global_prevalence,
             false_positive_cost=self.false_pos_cost,
             false_negative_cost=self.false_neg_cost,
         )
@@ -472,7 +478,6 @@ class RelaxedThresholdOptimizer(Classifier):
                 return False
 
             raise RuntimeError(
-                "This classifier has not yet been fitted to any data."
-            )
+                "This classifier has not yet been fitted to any data.")
 
         return True

@@ -233,6 +233,7 @@ def compute_fair_optimum(
     groupwise_roc_hulls: dict[int, np.ndarray],
     group_sizes_label_pos: np.ndarray,
     group_sizes_label_neg: np.ndarray,
+    groupwise_prevalence: np.ndarray,
     global_prevalence: float,
     false_positive_cost: float = 1.0,
     false_negative_cost: float = 1.0,
@@ -292,7 +293,7 @@ def compute_fair_optimum(
             f"got: {len(groupwise_roc_hulls)}, {len(group_sizes_label_neg)}, {len(group_sizes_label_pos)};"
         )
 
-    # Group-wise ROC points
+    # Group-wise ROC points --- in the form (FPR, TPR)
     groupwise_roc_points_vars = [
         cp.Variable(shape=2, name=f"ROC point for group {i}", nonneg=True)
         for i in range(n_groups)
@@ -356,11 +357,20 @@ def compute_fair_optimum(
     # note: this ignores the labels Y and only considers predictions Y_hat
     elif fairness_constraint == "demographic_parity":
 
-        # Retrieve group-wise PPR (positive prediction rates)
-        # PPR = TPR * prevalence + FPR * (1 - prevalence)
-        constraints += [    # TODO!!
-            cp.norm_inf(groupwise_roc_points_vars[i] - groupwise_roc_points_vars[j])
-            <= tolerance
+        # NOTE: PPR = TPR * prevalence + FPR * (1 - prevalence)
+        def group_positive_prediction_rate(group_idx: int):
+            """Computes group-wise PPR as a function of the ROC cvxpy vars."""
+            group_prevalence = groupwise_prevalence[group_idx]
+            group_tpr = groupwise_roc_points_vars[group_idx][1]
+            group_fpr = groupwise_roc_points_vars[group_idx][0]
+
+            return group_tpr * group_prevalence + group_fpr * (1 - group_prevalence)
+
+        # Add constraints on the absolute difference between group-wos
+        constraints += [
+            cp.abs(
+                group_positive_prediction_rate(i) - group_positive_prediction_rate(j)
+            ) <= tolerance
             for i, j in product(range(n_groups), range(n_groups))
             if i < j
         ]
