@@ -88,19 +88,15 @@ class RelaxedThresholdOptimizer(Classifier):
         self._groupwise_roc_data: dict = None
         self._groupwise_roc_hulls: dict = None
         self._groupwise_roc_points: np.ndarray = None
+        self._groupwise_prevalence: np.ndarray = None
         self._global_roc_point: np.ndarray = None
         self._global_prevalence: float = None
         self._realized_classifier: EnsembleGroupwiseClassifiers = None
 
     @property
-    def groupwise_roc_points(self) -> np.ndarray:
-        """Group-specific ROC points achieved by solution."""
-        return self._groupwise_roc_points
-
-    @property
-    def global_roc_point(self) -> np.ndarray:
-        """Global ROC point achieved by solution."""
-        return self._global_roc_point
+    def groupwise_roc_data(self) -> dict:
+        """Group-specific ROC data containing (FPR, TPR, threshold) triplets."""
+        return self._groupwise_roc_data
 
     @property
     def groupwise_roc_hulls(self) -> dict:
@@ -108,9 +104,24 @@ class RelaxedThresholdOptimizer(Classifier):
         return self._groupwise_roc_hulls
 
     @property
-    def groupwise_roc_data(self) -> dict:
-        """Group-specific ROC data containing (FPR, TPR, threshold) triplets."""
-        return self._groupwise_roc_data
+    def groupwise_roc_points(self) -> np.ndarray:
+        """Group-specific ROC points achieved by solution."""
+        return self._groupwise_roc_points
+
+    @property
+    def groupwise_prevalence(self) -> np.ndarray:
+        """Group-specific prevalence, i.e., P(Y=1|A=a)"""
+        return self._groupwise_prevalence
+
+    @property
+    def global_roc_point(self) -> np.ndarray:
+        """Global ROC point achieved by solution."""
+        return self._global_roc_point
+
+    @property
+    def global_prevalence(self) -> np.ndarray:
+        """Global prevalence, i.e., P(Y=1)."""
+        return self._global_prevalence
 
     def cost(
         self,
@@ -147,8 +158,14 @@ class RelaxedThresholdOptimizer(Classifier):
             false_neg_cost=false_neg_cost or self.false_neg_cost,
         )
 
-    def constraint_violation(self) -> float:
-        """Constraint violation of the LP solution found.
+    def constraint_violation(self, constraint_name: str = None) -> float:
+        """Theoretical constraint violation of the LP solution found.
+
+        Parameters
+        ----------
+        constraint_name : str, optional
+            Optionally, may provide another constraint name that will be used
+            instead of this classifier's self.constraint;
 
         Returns
         -------
@@ -157,13 +174,21 @@ class RelaxedThresholdOptimizer(Classifier):
         """
         self._check_fit_status()
 
-        if self.constraint not in ALL_CONSTRAINTS:
+        if constraint_name is not None:
+            logging.warning(
+                f"Calculating constraint violation for {constraint_name} constraint;\n"
+                f"Note: this classifier was fitted with a {self.constraint} constraint;"
+            )
+        else:
+            constraint_name = self.constraint
+
+        if constraint_name not in ALL_CONSTRAINTS:
             raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
-        if self.constraint == "equalized_odds":
+        if constraint_name == "equalized_odds":
             return self.equalized_odds_violation()
 
-        elif self.constraint.endswith("rate_parity"):
+        elif constraint_name.endswith("rate_parity"):
             constraint_to_error_type = {
                 "true_positive_rate_parity": "fn",
                 "false_positive_rate_parity": "fp",
@@ -172,13 +197,16 @@ class RelaxedThresholdOptimizer(Classifier):
             }
 
             return self.error_rate_parity_constraint_violation(
-                error_type=constraint_to_error_type[self.constraint],
+                error_type=constraint_to_error_type[constraint_name],
             )
+
+        elif constraint_name == "demographic_parity":
+            return self.demographic_parity_violation()
 
         else:
             raise NotImplementedError(
                 f"Standalone constraint violation not yet computed for "
-                f"constraint='{self.constraint}'."
+                f"constraint='{constraint_name}'."
             )
 
     def error_rate_parity_constraint_violation(self, error_type: str) -> float:
@@ -208,7 +236,9 @@ class RelaxedThresholdOptimizer(Classifier):
 
         return self._max_l_inf_between_points(
             points=[
-                np.reshape(roc_point[roc_idx_of_interest], newshape=(1,))
+                np.reshape(     # NOTE: must pass an array object, not scalars
+                    roc_point[roc_idx_of_interest],  # use only FPR or TPR (whichever was constrained)
+                    newshape=(1,))
                 for roc_point in self.groupwise_roc_points
             ],
         )
@@ -228,6 +258,31 @@ class RelaxedThresholdOptimizer(Classifier):
         # Compute l-inf distance between each pair of groups
         return self._max_l_inf_between_points(
             points=self.groupwise_roc_points,
+        )
+
+    def demographic_parity_violation(self) -> float:
+        """Computes the theoretical violation of the demographic parity constraint.
+
+        That is, the maximum distance between groups' PPR (positive prediction
+        rate).
+
+        Returns
+        -------
+        float
+            The demographic parity constraint violation.
+        """
+        self._check_fit_status()
+
+        # Compute groups' PPR (positive prediction rate)
+        return self._max_l_inf_between_points(  # TODO: check
+            points=[
+                # NOTE: must pass an array object, not scalars
+                np.reshape(
+                    group_tpr * group_prev + group_fpr * (1 - group_prev),
+                    newshape=(1,),
+                )
+                for (group_fpr, group_tpr), group_prev in zip(self.groupwise_roc_points, self.groupwise_prevalence)
+            ],
         )
 
     @staticmethod
@@ -300,7 +355,7 @@ class RelaxedThresholdOptimizer(Classifier):
         group_sizes_label_pos = np.array([np.sum(y[group == g]) for g in unique_groups])
 
         if np.sum(group_sizes_label_neg) + np.sum(group_sizes_label_pos) != len(y):
-            raise RuntimeError(f"Failed sanity check. Are you using non-binary labels?")
+            raise RuntimeError("Failed sanity check. Are you using non-binary labels?")
 
         # Convert to relative sizes
         group_sizes_label_neg = group_sizes_label_neg.astype(float) / np.sum(
@@ -308,6 +363,11 @@ class RelaxedThresholdOptimizer(Classifier):
         )
         group_sizes_label_pos = group_sizes_label_pos.astype(float) / np.sum(
             group_sizes_label_pos
+        )
+
+        # Compute group-wise prevalence rates
+        self._groupwise_prevalence = np.array(
+            [np.mean(y[group == g]) for g in unique_groups]
         )
 
         # Compute group-wise ROC curves
@@ -363,7 +423,8 @@ class RelaxedThresholdOptimizer(Classifier):
             groupwise_roc_hulls=self._groupwise_roc_hulls,
             group_sizes_label_pos=group_sizes_label_pos,
             group_sizes_label_neg=group_sizes_label_neg,
-            global_prevalence=self._global_prevalence,
+            groupwise_prevalence=self.groupwise_prevalence,
+            global_prevalence=self.global_prevalence,
             false_positive_cost=self.false_pos_cost,
             false_negative_cost=self.false_neg_cost,
         )
@@ -431,7 +492,6 @@ class RelaxedThresholdOptimizer(Classifier):
                 return False
 
             raise RuntimeError(
-                "This classifier has not yet been fitted to any data."
-            )
+                "This classifier has not yet been fitted to any data.")
 
         return True

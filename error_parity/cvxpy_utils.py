@@ -16,11 +16,12 @@ SOLUTION_TOLERANCE = 1e-9
 
 # Set of all fairness constraints with a cvxpy LP implementation
 ALL_CONSTRAINTS = {
-    "equalized_odds",
-    "true_positive_rate_parity",
-    "false_positive_rate_parity",
-    "true_negative_rate_parity",
-    "false_negative_rate_parity",
+    "equalized_odds",           # equal TPR and equal FPR across groups
+    "true_positive_rate_parity",    # TPR parity, same as FNR parity
+    "false_positive_rate_parity",   # FPR parity, same as TNR parity
+    "true_negative_rate_parity",    # TNR parity, same as FPR parity
+    "false_negative_rate_parity",   # FNR parity, same as TPR parity
+    "demographic_parity",       # equal positive prediction rates across groups
 }
 
 NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE = (
@@ -232,6 +233,7 @@ def compute_fair_optimum(
     groupwise_roc_hulls: dict[int, np.ndarray],
     group_sizes_label_pos: np.ndarray,
     group_sizes_label_neg: np.ndarray,
+    groupwise_prevalence: np.ndarray,
     global_prevalence: float,
     false_positive_cost: float = 1.0,
     false_negative_cost: float = 1.0,
@@ -286,11 +288,12 @@ def compute_fair_optimum(
     n_groups = len(groupwise_roc_hulls)
     if n_groups != len(group_sizes_label_neg) or n_groups != len(group_sizes_label_pos):
         raise ValueError(
-            f"Invalid arguments; all of the following should have the same "
-            f"length: groupwise_roc_hulls, group_sizes_label_neg, group_sizes_label_pos;"
+            "Invalid arguments; all of the following should have the same "
+            "length: groupwise_roc_hulls, group_sizes_label_neg, group_sizes_label_pos;"
+            f"got: {len(groupwise_roc_hulls)}, {len(group_sizes_label_neg)}, {len(group_sizes_label_pos)};"
         )
 
-    # Group-wise ROC points
+    # Group-wise ROC points --- in the form (FPR, TPR)
     groupwise_roc_points_vars = [
         cp.Variable(shape=2, name=f"ROC point for group {i}", nonneg=True)
         for i in range(n_groups)
@@ -307,7 +310,9 @@ def compute_fair_optimum(
         == group_sizes_label_pos @ np.array([p[1] for p in groupwise_roc_points_vars]),
     ]
 
-    ### APPLY FAIRNESS CONSTRAINTS
+    # ** APPLY FAIRNESS CONSTRAINTS **
+    # NOTE: feature request: compatibility with multiple constraints simultaneously
+
     # If "equalized_odds"
     # > i.e., constrain l-inf distance between any two groups' ROCs being less than `tolerance`
     if fairness_constraint == "equalized_odds":
@@ -323,19 +328,19 @@ def compute_fair_optimum(
     elif fairness_constraint.endswith("rate_parity"):
         roc_idx_of_interest: int
         if (
-            fairness_constraint == "true_positive_rate_parity"
-            or fairness_constraint == "false_negative_rate_parity"
+            fairness_constraint == "true_positive_rate_parity"      # TPR
+            or fairness_constraint == "false_negative_rate_parity"  # FNR
         ):
             roc_idx_of_interest = 1
 
         elif (
-            fairness_constraint == "false_positive_rate_parity"
-            or fairness_constraint == "false_negative_rate_parity"
+            fairness_constraint == "false_positive_rate_parity"     # FPR
+            or fairness_constraint == "true_negative_rate_parity"   # TNR
         ):
             roc_idx_of_interest = 0
 
         else:
-            # This point should never be reached as fairness constraint was previously validated
+            # This point should never be reached as fairness_constraint was previously validated
             raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
         constraints += [
@@ -344,6 +349,28 @@ def compute_fair_optimum(
                 - groupwise_roc_points_vars[j][roc_idx_of_interest]
             )
             <= tolerance
+            for i, j in product(range(n_groups), range(n_groups))
+            if i < j
+        ]
+
+    # If demographic parity, i.e., equal positive prediction rates across groups
+    # note: this ignores the labels Y and only considers predictions Y_hat
+    elif fairness_constraint == "demographic_parity":
+
+        # NOTE: PPR = TPR * prevalence + FPR * (1 - prevalence)
+        def group_positive_prediction_rate(group_idx: int):
+            """Computes group-wise PPR as a function of the ROC cvxpy vars."""
+            group_prevalence = groupwise_prevalence[group_idx]
+            group_tpr = groupwise_roc_points_vars[group_idx][1]
+            group_fpr = groupwise_roc_points_vars[group_idx][0]
+
+            return group_tpr * group_prevalence + group_fpr * (1 - group_prevalence)
+
+        # Add constraints on the absolute difference between group-wos
+        constraints += [
+            cp.abs(
+                group_positive_prediction_rate(i) - group_positive_prediction_rate(j)
+            ) <= tolerance
             for i, j in product(range(n_groups), range(n_groups))
             if i < j
         ]

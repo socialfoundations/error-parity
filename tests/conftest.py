@@ -13,6 +13,8 @@ from typing import Iterable
 import pytest
 import numpy as np
 
+from error_parity.cvxpy_utils import ALL_CONSTRAINTS
+
 
 @pytest.fixture(params=[42])
 def random_seed(request) -> int:
@@ -22,6 +24,18 @@ def random_seed(request) -> int:
 @pytest.fixture
 def rng(random_seed: int) -> np.random.Generator:
     return np.random.default_rng(random_seed)
+
+
+@pytest.fixture(params=[0.01, 0.02, 0.05, 0.1, 0.2, 1.0])
+def constraint_slack(request) -> float:
+    """Fixture for constraint slack/violation (fairness tolerance)."""
+    return request.param
+
+
+@pytest.fixture(params=list(ALL_CONSTRAINTS))
+def fairness_constraint(request) -> float:
+    """Fixture for the fairness constraint to test."""
+    return request.param
 
 
 @pytest.fixture(params=[1_000, 10_000, 100_000])
