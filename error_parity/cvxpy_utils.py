@@ -328,14 +328,14 @@ def compute_fair_optimum(
     elif fairness_constraint.endswith("rate_parity"):
         roc_idx_of_interest: int
         if (
-            fairness_constraint == "true_positive_rate_parity"
-            or fairness_constraint == "false_negative_rate_parity"
+            fairness_constraint == "true_positive_rate_parity"      # TPR
+            or fairness_constraint == "false_negative_rate_parity"  # FNR
         ):
             roc_idx_of_interest = 1
 
         elif (
-            fairness_constraint == "false_positive_rate_parity"
-            or fairness_constraint == "false_negative_rate_parity"
+            fairness_constraint == "false_positive_rate_parity"     # FPR
+            or fairness_constraint == "true_negative_rate_parity"   # TNR
         ):
             roc_idx_of_interest = 0
 

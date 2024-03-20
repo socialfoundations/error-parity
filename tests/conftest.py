@@ -32,9 +32,7 @@ def constraint_slack(request) -> float:
     return request.param
 
 
-# @pytest.fixture(params=list(ALL_CONSTRAINTS))
-# @pytest.fixture(params=["equalized_odds"])
-@pytest.fixture(params=["demographic_parity"])
+@pytest.fixture(params=list(ALL_CONSTRAINTS))
 def fairness_constraint(request) -> float:
     """Fixture for the fairness constraint to test."""
     return request.param
