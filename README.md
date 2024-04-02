@@ -1,6 +1,6 @@
 # error-parity
 
-![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-package.yml/badge.svg)
+![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg)
 ![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)
 ![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg)
 ![PyPI version](https://badgen.net/pypi/v/error-parity)
