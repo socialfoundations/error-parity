@@ -223,42 +223,42 @@ def test_constraint_fulfillment(
     )
 
 
-# def test_unprocessing(
-#     y_true: np.ndarray,
-#     y_pred_scores: np.ndarray,
-#     sensitive_attribute: np.ndarray,
-#     random_seed: int,
-# ):
-#     """Tests that unprocessing strictly increases accuracy.
-#     """
-#     # Predictor function
-#     # # > predicts the generated scores from the sample indices
-#     def predictor(idx):
-#         return y_pred_scores[idx]
+def test_unprocessing(
+    y_true: np.ndarray,
+    y_pred_scores: np.ndarray,
+    sensitive_attribute: np.ndarray,
+    random_seed: int,
+):
+    """Tests that unprocessing strictly increases accuracy.
+    """
+    # Predictor function
+    # # > predicts the generated scores from the sample indices
+    def predictor(idx):
+        return y_pred_scores[idx]
 
-#     # Hence, for this example, the features are the sample indices
-#     num_samples = len(y_true)
-#     X_features = np.arange(num_samples)
+    # Hence, for this example, the features are the sample indices
+    num_samples = len(y_true)
+    X_features = np.arange(num_samples)
 
-#     clf = RelaxedThresholdOptimizer(
-#         predictor=predictor,
-#         tolerance=1,
-#         false_pos_cost=1,
-#         false_neg_cost=1,
-#         seed=random_seed,
-#     )
+    clf = RelaxedThresholdOptimizer(
+        predictor=predictor,
+        tolerance=1,
+        false_pos_cost=1,
+        false_neg_cost=1,
+        seed=random_seed,
+    )
 
-#     # Fit postprocessing to data
-#     clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
+    # Fit postprocessing to data
+    clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
 
-#     # Optimal binarized predictions
-#     y_pred_binary = clf(X_features, group=sensitive_attribute)
+    # Optimal binarized predictions
+    y_pred_binary = clf(X_features, group=sensitive_attribute)
 
-#     # Original accuracy (using group-blind thresholds)
-#     original_acc = accuracy_score(y_true, (y_pred_scores >= 0.5).astype(int))
+    # Original accuracy (using group-blind thresholds)
+    original_acc = accuracy_score(y_true, (y_pred_scores >= 0.5).astype(int))
 
-#     # Unprocessed accuracy (using group-dependent thresholds)
-#     unprocessed_acc = accuracy_score(y_true, y_pred_binary)
+    # Unprocessed accuracy (using group-dependent thresholds)
+    unprocessed_acc = accuracy_score(y_true, y_pred_binary)
 
-#     # Assert that unprocessing always improves (or maintains) accuracy
-#     assert unprocessed_acc >= original_acc
+    # Assert that unprocessing always improves (or maintains) accuracy
+    assert unprocessed_acc >= original_acc

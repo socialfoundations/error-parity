@@ -202,7 +202,7 @@ class RandomizedClassifier(Classifier):
 
         # Run predictions for all classifiers on all samples
         y_pred_choices = [clf(X) for clf in self.classifiers]
-        # TODO:
+        # TODO improvement:
         # we could actually just run the classifier for the samples that get
         # matched with it... similar to the EnsembleGroupwiseClassifiers call
         # method.

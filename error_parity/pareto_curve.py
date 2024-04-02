@@ -1,10 +1,5 @@
 """Utils for computing the fairness-accuracy Pareto frontier of a classifier.
 
-TODO:
-- review this whole file and make a minimal example for the README;
-- plus make a notebook example (repurposed from EDS);
-
-Based on: https://github.com/socialfoundations/error-parity/blob/supp-materials/scripts/utils/postprocessing.py
 """
 
 from __future__ import annotations
@@ -86,8 +81,8 @@ def fit_and_evaluate_postprocessing(
 
         For example:
         >>> {
-        >>>     "validation": {"accuracy": 0.7, ...},
-        >>>     "test": {"accuracy": 0.65, ...},
+        >>>     "validation": {"accuracy": 0.7, "...": "..."},
+        >>>     "test": {"accuracy": 0.65, "...": "..."},
         >>> }
     """
     clf = RelaxedThresholdOptimizer(

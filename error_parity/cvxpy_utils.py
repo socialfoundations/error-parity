@@ -375,7 +375,7 @@ def compute_fair_optimum(   # noqa: C901
             if i < j
         ]
 
-    # TODO: implement other constraints here
+    # NOTE: implement other constraints here
     else:
         raise NotImplementedError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
