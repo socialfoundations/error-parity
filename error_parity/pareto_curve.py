@@ -30,19 +30,19 @@ DEFAULT_TOLERANCE_TICKS = np.hstack((
 
 
 def fit_and_evaluate_postprocessing(
-        predictor: callable,
-        tolerance: float,
-        fit_data: tuple,
-        eval_data: tuple or dict[tuple],
-        fairness_constraint: str = "equalized_odds",
-        false_pos_cost: float = 1.,
-        false_neg_cost: float = 1.,
-        max_roc_ticks: int = 200,
-        seed: int = 42,
-        y_fit_pred_scores: np.ndarray = None,    # pre-computed predictions on the fit data
-        bootstrap: bool = True,
-        bootstrap_kwargs: dict = None,
-    ) -> dict[str, dict]:
+    predictor: callable,
+    tolerance: float,
+    fit_data: tuple,
+    eval_data: tuple | dict[tuple],
+    fairness_constraint: str = "equalized_odds",
+    false_pos_cost: float = 1.,
+    false_neg_cost: float = 1.,
+    max_roc_ticks: int = 200,
+    seed: int = 42,
+    y_fit_pred_scores: np.ndarray = None,    # pre-computed predictions on the fit data
+    bootstrap: bool = True,
+    bootstrap_kwargs: dict = None,
+) -> dict[str, dict]:
     """Fit and evaluate a postprocessing intervention on the given predictor.
 
     Parameters
@@ -159,16 +159,17 @@ def fit_and_evaluate_postprocessing(
 
 
 def compute_postprocessing_curve(
-        model: object,
-        fit_data: tuple,
-        eval_data: tuple or dict[tuple],
-        fairness_constraint: str = "equalized_odds",
-        bootstrap: bool = True,
-        tolerance_ticks: list = DEFAULT_TOLERANCE_TICKS,
-        tolerance_tick_step: float = None,
-        predict_method: str = "predict_proba",
-        n_jobs: int = None,
-        **kwargs) -> pd.DataFrame:
+    model: object,
+    fit_data: tuple,
+    eval_data: tuple or dict[tuple],
+    fairness_constraint: str = "equalized_odds",
+    bootstrap: bool = True,
+    tolerance_ticks: list = DEFAULT_TOLERANCE_TICKS,
+    tolerance_tick_step: float = None,
+    predict_method: str = "predict_proba",
+    n_jobs: int = None,
+    **kwargs,
+) -> pd.DataFrame:
     """Computes the fairness and performance of the given classifier after
     adjusting (postprocessing) for varying levels of fairness tolerance.
 
@@ -301,12 +302,12 @@ def _parse_postprocessing_curve(postproc_curve_dict: dict) -> pd.DataFrame:
 
 
 def get_envelope_of_postprocessing_frontier(
-        postproc_results_df: pd.DataFrame,
-        perf_col: str = "accuracy_mean_test",
-        disp_col: str = "equalized_odds_diff_mean_test",
-        constant_clf_perf: float = 0.5,
-        constant_clf_disp: float = 0.0,
-    ) -> np.ndarray:
+    postproc_results_df: pd.DataFrame,
+    perf_col: str = "accuracy_mean_test",
+    disp_col: str = "equalized_odds_diff_mean_test",
+    constant_clf_perf: float = 0.5,
+    constant_clf_disp: float = 0.0,
+) -> np.ndarray:
     """Computes points in envelope of the given postprocessing frontier results.
 
     Parameters
@@ -371,12 +372,12 @@ def get_envelope_of_postprocessing_frontier(
 
 
 def compute_inner_and_outer_adjustment_ci(
-        postproc_results_df,
-        perf_metric: str,
-        disp_metric: str,
-        data_type: str = "test",    # by default, fetch results on test data
-        constant_clf_perf: float = None,
-    ) -> tuple:
+    postproc_results_df,
+    perf_metric: str,
+    disp_metric: str,
+    data_type: str = "test",    # by default, fetch results on test data
+    constant_clf_perf: float = None,
+) -> tuple:
     """Computes the interior/inner and exterior/outer adjustment curves,
     corresponding to the confidence intervals (by default 95% c.i.).
 

@@ -1,11 +1,11 @@
 """Test the relaxed equal odds constraint fulfillment.
 """
 
-from itertools import product
+import logging
 
 import pytest
 import numpy as np
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
 
 from error_parity import RelaxedThresholdOptimizer
 from error_parity.cvxpy_utils import SOLUTION_TOLERANCE, calc_cost_of_point
@@ -18,6 +18,7 @@ def test_synthetic_data_generation(
     y_pred_scores: np.ndarray,
     sensitive_attribute: np.ndarray,
 ):
+    """Tests the synthetic data generated for the constraints' tests."""
     # Check that group-wise ROC AUC makes sense
     unique_groups = np.unique(sensitive_attribute)
     for g in unique_groups:
@@ -27,9 +28,10 @@ def test_synthetic_data_generation(
             y_true=y_true[group_filter],
             y_score=y_pred_scores[group_filter],
         )
-        # print(f"Group {g} AUC: {group_auc:.3}")
+        logging.info(f"Group {g} AUC: {group_auc:.3}")
 
-        assert 0.52 < group_auc < 0.98
+        assert 0.52 < group_auc < 0.98, \
+            f"Synthetic data generated has group-{g} AUC of {group_auc}"
 
 
 def get_metric_abs_tolerance(group_size: int) -> float:
@@ -53,8 +55,8 @@ def check_metric_tolerance(
 
 
 def test_invalid_constraint_name():
-    with pytest.raises(ValueError) as excinfo:
-        clf = RelaxedThresholdOptimizer(
+    with pytest.raises(ValueError):
+        _ = RelaxedThresholdOptimizer(
             predictor=print,
             constraint="random constraint name",
         )
@@ -69,6 +71,7 @@ def test_constraint_fulfillment(
     random_seed: int,
 ):
     """Tests fairness constraint fulfillment at the given slack level."""
+    # Dataset metadata
     num_samples = len(y_true)
     unique_groups = np.unique(
         sensitive_attribute
@@ -77,7 +80,8 @@ def test_constraint_fulfillment(
 
     # Predictor function
     # # > predicts the generated scores from the sample indices
-    predictor = lambda idx: y_pred_scores[idx]
+    def predictor(idx):
+        return y_pred_scores[idx]
 
     # Hence, for this example, the features are the sample indices
     X_features = np.arange(num_samples)
@@ -219,16 +223,42 @@ def test_constraint_fulfillment(
     )
 
 
-def test_tpr_parity_constraint():
-    # TODO: test relaxation of TPR parity constraint
-    pass
+# def test_unprocessing(
+#     y_true: np.ndarray,
+#     y_pred_scores: np.ndarray,
+#     sensitive_attribute: np.ndarray,
+#     random_seed: int,
+# ):
+#     """Tests that unprocessing strictly increases accuracy.
+#     """
+#     # Predictor function
+#     # # > predicts the generated scores from the sample indices
+#     def predictor(idx):
+#         return y_pred_scores[idx]
 
+#     # Hence, for this example, the features are the sample indices
+#     num_samples = len(y_true)
+#     X_features = np.arange(num_samples)
 
-def test_fpr_parity_constraint():
-    # TODO: test relaxation of FPR parity constraint
-    pass
+#     clf = RelaxedThresholdOptimizer(
+#         predictor=predictor,
+#         tolerance=1,
+#         false_pos_cost=1,
+#         false_neg_cost=1,
+#         seed=random_seed,
+#     )
 
+#     # Fit postprocessing to data
+#     clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
 
-def test_unprocessing():
-    # TODO: test that unconstrained postprocessing strictly increases accuracy, whichever the input
-    pass
+#     # Optimal binarized predictions
+#     y_pred_binary = clf(X_features, group=sensitive_attribute)
+
+#     # Original accuracy (using group-blind thresholds)
+#     original_acc = accuracy_score(y_true, (y_pred_scores >= 0.5).astype(int))
+
+#     # Unprocessed accuracy (using group-dependent thresholds)
+#     unprocessed_acc = accuracy_score(y_true, y_pred_binary)
+
+#     # Assert that unprocessing always improves (or maintains) accuracy
+#     assert unprocessed_acc >= original_acc

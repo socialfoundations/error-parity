@@ -1,7 +1,6 @@
 """Tests the cvxpy utils.
 """
 
-import scipy
 import numpy as np
 
 import pytest
@@ -42,6 +41,6 @@ def test_compute_line_inf_slope(rng: np.random.Generator):
 
 
 def test_compute_line_invalid_args(rng: np.random.Generator):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         random_point = rng.random(size=2)
         cvxpy_utils.compute_line(random_point, random_point)

@@ -1,9 +1,5 @@
 """Solver for the relaxed equal odds problem.
 
-TODO
-- Add option for constraining equality of positive predictions (independence
-criterion, aka demographic parity);
-
 """
 from __future__ import annotations
 
@@ -45,7 +41,7 @@ class RelaxedThresholdOptimizer(Classifier):
         false_neg_cost: float = 1.0,
         max_roc_ticks: int = 1000,
         seed: int = 42,
-        # distance: str = 'max',    # TODO: add option to use l1 or linf distances
+        # distance: str = 'max',    # TODO: add option to use l_1 or l_inf distances
     ):
         """Initializes the relaxed equal odds wrapper.
 
@@ -274,7 +270,7 @@ class RelaxedThresholdOptimizer(Classifier):
         self._check_fit_status()
 
         # Compute groups' PPR (positive prediction rate)
-        return self._max_l_inf_between_points(  # TODO: check
+        return self._max_l_inf_between_points(
             points=[
                 # NOTE: must pass an array object, not scalars
                 np.reshape(

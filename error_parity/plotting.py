@@ -18,19 +18,19 @@ def plot_polygon_edges(polygon_points, **kwargs):
 
 
 def plot_postprocessing_solution(
-        *,
-        postprocessed_clf: RelaxedThresholdOptimizer,
-        plot_roc_curves: bool = False,
-        plot_roc_hulls: bool = True,
-        plot_group_optima: bool = True,
-        plot_group_triangulation: bool = True,
-        plot_global_optimum: bool = True,
-        plot_diagonal: bool = True,
-        plot_relaxation: bool = False,
-        group_name_map: dict = None,
-        figure: matplotlib.figure.Figure = None,
-        **fig_kwargs,
-    ):
+    *,
+    postprocessed_clf: RelaxedThresholdOptimizer,
+    plot_roc_curves: bool = False,
+    plot_roc_hulls: bool = True,
+    plot_group_optima: bool = True,
+    plot_group_triangulation: bool = True,
+    plot_global_optimum: bool = True,
+    plot_diagonal: bool = True,
+    plot_relaxation: bool = False,
+    group_name_map: dict = None,
+    figure: matplotlib.figure.Figure = None,
+    **fig_kwargs,
+):
     """Plots the group-specific solutions found for this predictor.
 
     Parameters
@@ -203,15 +203,15 @@ def plot_postprocessing_solution(
 
 
 def plot_postprocessing_frontier(
-        postproc_results_df: pd.DataFrame,
-        *,
-        perf_metric: str,
-        disp_metric: str,
-        show_data_type: str,
-        constant_clf_perf: float,
-        model_name: str = None,
-        color: str = "black",
-    ):
+    postproc_results_df: pd.DataFrame,
+    *,
+    perf_metric: str,
+    disp_metric: str,
+    show_data_type: str,
+    constant_clf_perf: float,
+    model_name: str = None,
+    color: str = "black",
+):
     """Helper to plot the given post-processing frontier results.
 
     Will use bootstrapped results if available, including plotting confidence

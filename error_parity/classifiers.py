@@ -288,7 +288,7 @@ class RandomizedClassifier(Classifier):
         return all_weights, all_points
 
     @staticmethod
-    def construct_at_target_ROC(
+    def construct_at_target_ROC(    # noqa: C901
         predictor: callable,
         roc_curve_data: tuple,
         target_roc_point: np.ndarray,
@@ -417,7 +417,7 @@ class RandomizedClassifier(Classifier):
             # # or...
             # clf_rand = BinaryClassifierAtROCDiagonal(target_fpr=fpr_rand)
             # <<<
-            clf_rand = lambda X: (
+            clf_rand = lambda X: (  # noqa
                 np.random.random(size=len(X)) >= (1 - fpr_rand)
             ).astype(int)
 

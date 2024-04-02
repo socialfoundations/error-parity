@@ -33,11 +33,11 @@ def _safe_division(a: float, b: float, *, worst_result: float):
 
 
 def eval_accuracy_and_equalized_odds(
-        y_true: np.ndarray,
-        y_pred_binary: np.ndarray,
-        sensitive_attr: np.ndarray,
-        display: bool = False,
-    ) -> tuple[float, float]:
+    y_true: np.ndarray,
+    y_pred_binary: np.ndarray,
+    sensitive_attr: np.ndarray,
+    display: bool = False,
+) -> tuple[float, float]:
     """Evaluate accuracy and equalized odds of the given predictions.
 
     Parameters

@@ -77,7 +77,7 @@ def compute_line(p1: np.ndarray, p2: np.ndarray) -> tuple[float, float]:
     return slope, intercept
 
 
-def compute_halfspace_inequality(
+def compute_halfspace_inequality(   # noqa: C901
     p1: np.ndarray,
     p2: np.ndarray,
 ) -> tuple[float, float, float]:
@@ -226,7 +226,7 @@ def make_cvxpy_point_in_polygon_constraints(
     ]
 
 
-def compute_fair_optimum(
+def compute_fair_optimum(   # noqa: C901
     *,
     fairness_constraint: str,
     tolerance: float,
