@@ -234,6 +234,9 @@ def evaluate_fairness(
         results["fpr_diff"],  # same as TNR diff
     )
 
+    # as well as average difference
+    results["avg_odds_diff"] = (results["tpr_diff"] + results["fpr_diff"]) / 2
+
     # Optionally, return group-wise metrics as well
     if return_groupwise_metrics:
         results.update(groupwise_metrics)

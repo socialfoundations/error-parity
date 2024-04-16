@@ -183,6 +183,9 @@ class RelaxedThresholdOptimizer(Classifier):
 
         if constraint_name == "equalized_odds":
             return self.equalized_odds_violation()
+        
+        elif constraint_name == "average_odds":
+            return self.average_odds_violation()
 
         elif constraint_name.endswith("rate_parity"):
             constraint_to_error_type = {
@@ -254,6 +257,25 @@ class RelaxedThresholdOptimizer(Classifier):
         # Compute l-inf distance between each pair of groups
         return self._max_l_inf_between_points(
             points=self.groupwise_roc_points,
+        )
+    
+    def average_odds_violation(self) -> float:
+        """
+        Computes the average odds constraint, which is a relaxed version of equalized odds.
+        (mean between TPR and FPR must) 
+        """
+        self._check_fit_status()
+
+        # Compute average between TPR and FPR
+        return self._max_l_inf_between_points(
+            points=[
+                # NOTE: must pass an array object, not scalars
+                np.reshape(
+                    (group_tpr + group_fpr) / 2,
+                    newshape=(1,),
+                )
+                for group_fpr, group_tpr in self.groupwise_roc_points
+            ],
         )
 
     def demographic_parity_violation(self) -> float:

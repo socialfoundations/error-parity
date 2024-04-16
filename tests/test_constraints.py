@@ -161,6 +161,9 @@ def test_constraint_fulfillment(
     if fairness_constraint == "equalized_odds":
         empirical_constraint_violation = empirical_fairness_results["equalized_odds_diff"]
 
+    elif fairness_constraint == "average_odds":
+        empirical_constraint_violation = empirical_fairness_results["average_odds_diff"]
+
     elif fairness_constraint in {"true_positive_rate_parity", "false_negative_rate_parity"}:
         empirical_constraint_violation = empirical_fairness_results["tpr_diff"]
 

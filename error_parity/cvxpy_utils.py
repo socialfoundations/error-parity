@@ -22,6 +22,7 @@ ALL_CONSTRAINTS = {
     "true_negative_rate_parity",    # TNR parity, same as FPR parity
     "false_negative_rate_parity",   # FNR parity, same as TPR parity
     "demographic_parity",       # equal positive prediction rates across groups
+    "average_odds",             # equal average of TPR and FPR across groups
 }
 
 NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE = (
@@ -370,6 +371,25 @@ def compute_fair_optimum(   # noqa: C901
         constraints += [
             cp.abs(
                 group_positive_prediction_rate(i) - group_positive_prediction_rate(j)
+            ) <= tolerance
+            for i, j in product(range(n_groups), range(n_groups))
+            if i < j
+        ]
+
+    # If average odds, i.e., equal average tpr and fpr across groups
+    elif fairness_constraint == "average_odds":
+
+        # NOTE: (TPR + FPR) / 2
+        def average_tpr_fpr(group_idx: int):
+            group_tpr = groupwise_roc_points_vars[group_idx][1]
+            group_fpr = groupwise_roc_points_vars[group_idx][0]
+
+            return (group_tpr + group_fpr) / 2
+
+        # Add constraints on the absolute difference between group-wos
+        constraints += [
+            cp.abs(
+                average_tpr_fpr(i) - average_tpr_fpr(j)
             ) <= tolerance
             for i, j in product(range(n_groups), range(n_groups))
             if i < j
