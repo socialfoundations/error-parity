@@ -11,6 +11,9 @@ on:
       - 'LICENSE'
       - '.gitignore'
 
+  pull_request:
+    types: [opened, synchronize, reopened, edited, review_requested]  # run tests on all PRs
+
 jobs:
   build:
 
