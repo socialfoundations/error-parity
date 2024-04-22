@@ -221,18 +221,38 @@ def evaluate_fairness(
         diff_name = f"{metric_name}_diff"
         results[diff_name] = max(curr_metric_results) - min(curr_metric_results)
 
-    # Equal odds: maximum constraint violation for TPR and FPR equality
-    # i.e., the smallest ratio
+    # ** Equalized odds **
+    # default value: use maximum constraint violation for TPR and FPR equality
     results["equalized_odds_ratio"] = min(
         results["fnr_ratio"],
         results["fpr_ratio"],
     )
-
-    # or the largest absolute difference
     results["equalized_odds_diff"] = max(
         results["tpr_diff"],  # same as FNR diff
         results["fpr_diff"],  # same as TNR diff
     )
+
+    # Evaluate equalized odds using other l-p norms
+    # (default value corresponds to l-infinity norm)
+    available_norms = [1, 2, np.inf]
+    for norm in available_norms:
+        metric_name = f"equalized_odds_diff_l{norm}"
+        results[metric_name] = max(
+            np.linalg.norm(
+                [
+                    # TPR diff
+                    groupwise_metrics[group_metric_name("tpr", group_a)]
+                    - groupwise_metrics[group_metric_name("tpr", group_b)],
+
+                    # FPR diff
+                    groupwise_metrics[group_metric_name("fpr", group_a)]
+                    - groupwise_metrics[group_metric_name("fpr", group_b)],
+                ],
+                ord=norm,
+            )
+            for group_a, group_b in product(unique_groups, unique_groups)
+            if group_a < group_b
+        )
 
     # Optionally, return group-wise metrics as well
     if return_groupwise_metrics:

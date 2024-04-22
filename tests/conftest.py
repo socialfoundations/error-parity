@@ -38,6 +38,12 @@ def fairness_constraint(request) -> float:
     return request.param
 
 
+@pytest.fixture(params=[1, 2, np.inf])
+def l_p_norm(request) -> int:
+    """Fixture for the l-p norm to test."""
+    return request.param
+
+
 @pytest.fixture(params=[1_000, 10_000, 100_000])
 def num_samples(request) -> int:
     return request.param
@@ -46,6 +52,24 @@ def num_samples(request) -> int:
 @pytest.fixture
 def y_pred_scores(num_samples: int, rng) -> np.ndarray:
     return rng.random(size=num_samples)
+
+
+# TODO: eventually add other predictors as different fixture instantiations (?)
+@pytest.fixture
+def predictor(y_pred_scores: np.ndarray):
+    """Predictor function: predicts the generated scores from the sample indices."""
+    def predictor_func(idx):
+        return y_pred_scores[idx]
+
+    return predictor_func
+
+
+@pytest.fixture
+def X_features(num_samples: int) -> np.ndarray:
+    """The sample features are the sample indices.
+    This must match the `predictor` fixture functionality.
+    """
+    return np.arange(num_samples)
 
 
 @pytest.fixture(

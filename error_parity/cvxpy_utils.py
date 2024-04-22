@@ -237,6 +237,7 @@ def compute_fair_optimum(   # noqa: C901
     global_prevalence: float,
     false_positive_cost: float = 1.0,
     false_negative_cost: float = 1.0,
+    l_p_norm: int | str = np.inf,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Computes the solution to finding the optimal fair (equal odds) classifier.
 
@@ -274,6 +275,15 @@ def compute_fair_optimum(   # noqa: C901
 
     false_negative_cost : float, optional
         The cost of a FALSE NEGATIVE error, by default 1.
+
+    l_p_norm : int | str, optional
+        The type of l-p norm to use when computing the distance between two ROC
+        points. Used only for the "equalized_odds" constraint. By default uses
+        `np.inf` (l-infinity distance): the maximum between groups' TPR and FPR
+        differences. Using `l_p_norm=1` will correspond to the
+        `average_abs_odds_difference`.
+        See the following link for more information on this parameter:
+        https://www.cvxpy.org/api_reference/cvxpy.atoms.other_atoms.html#norm
 
     Returns
     -------
@@ -314,10 +324,14 @@ def compute_fair_optimum(   # noqa: C901
     # NOTE: feature request: compatibility with multiple constraints simultaneously
 
     # If "equalized_odds"
-    # > i.e., constrain l-inf distance between any two groups' ROCs being less than `tolerance`
+    # - i.e., l-p distance between any two groups' ROC points must be less than `tolerance`;
+    # - DEFAULT: l-infinity distance (max distance between any two points in the ROC curve);
     if fairness_constraint == "equalized_odds":
         constraints += [
-            cp.norm_inf(groupwise_roc_points_vars[i] - groupwise_roc_points_vars[j])
+            cp.norm(
+                groupwise_roc_points_vars[i] - groupwise_roc_points_vars[j],
+                p=l_p_norm,
+            )
             <= tolerance
             for i, j in product(range(n_groups), range(n_groups))
             if i < j
