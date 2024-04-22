@@ -39,9 +39,9 @@ class RelaxedThresholdOptimizer(Classifier):
         tolerance: float = 0.0,
         false_pos_cost: float = 1.0,
         false_neg_cost: float = 1.0,
+        l_p_norm: int = np.inf,
         max_roc_ticks: int = 1000,
         seed: int = 42,
-        # distance: str = 'max',    # TODO: add option to use l_1 or l_inf distances
     ):
         """Initializes the relaxed equal odds wrapper.
 
@@ -60,6 +60,11 @@ class RelaxedThresholdOptimizer(Classifier):
             The cost of a FALSE POSITIVE error, by default 1.0.
         false_neg_cost : float, optional
             The cost of a FALSE NEGATIVE error, by default 1.0.
+        l_p_norm : int, optional
+            The l-p norm to use when computing distances between group ROC points.
+            Used only for the "equalized odds" constraint (different l-p norms
+            lead to different equalized-odds relaxations).
+            By default np.inf, which corresponds to the l-inf norm.
         max_roc_ticks : int, optional
             The maximum number of ticks (points) in each group's ROC, when
             computing the optimal fair classifier, by default 1000.
@@ -73,12 +78,24 @@ class RelaxedThresholdOptimizer(Classifier):
         self.tolerance = tolerance
         self.false_pos_cost = false_pos_cost
         self.false_neg_cost = false_neg_cost
+        self.l_p_norm = l_p_norm
         self.max_roc_ticks = max_roc_ticks
         self.seed = seed
 
         # Validate constraint
         if self.constraint not in ALL_CONSTRAINTS:
             raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
+
+        if self.l_p_norm != np.inf and self.constraint != "equalized_odds":
+            raise ValueError(
+                f"l-p norm is only supported for the 'equalized_odds' constraint. "
+                f"Got constraint='{self.constraint}' and l_p_norm={self.l_p_norm}."
+            )
+
+        if not (isinstance(self.l_p_norm, int) or self.l_p_norm == np.inf):
+            raise ValueError(
+                f"Invalid l-p norm={self.l_p_norm}. Must be an integer or np.inf."
+            )
 
         # Initialize instance variables
         self._groupwise_roc_data: dict = None
@@ -154,7 +171,11 @@ class RelaxedThresholdOptimizer(Classifier):
             false_neg_cost=false_neg_cost or self.false_neg_cost,
         )
 
-    def constraint_violation(self, constraint_name: str = None) -> float:
+    def constraint_violation(
+        self,
+        constraint_name: str = None,
+        l_p_norm: int = None,
+    ) -> float:
         """Theoretical constraint violation of the LP solution found.
 
         Parameters
@@ -163,6 +184,10 @@ class RelaxedThresholdOptimizer(Classifier):
             Optionally, may provide another constraint name that will be used
             instead of this classifier's self.constraint;
 
+        l_p_norm : int, optional
+            Which l-p norm to use when computing distances between group ROC
+            points. Used only for the "equalized odds" constraint.
+
         Returns
         -------
         float
@@ -170,19 +195,28 @@ class RelaxedThresholdOptimizer(Classifier):
         """
         self._check_fit_status()
 
-        if constraint_name is not None:
+        # Warn if provided a different constraint
+        constraint_name = constraint_name or self.constraint
+        if constraint_name != self.constraint:
             logging.warning(
                 f"Calculating constraint violation for {constraint_name} constraint;\n"
                 f"Note: this classifier was fitted with a {self.constraint} constraint;"
             )
-        else:
-            constraint_name = self.constraint
 
+        # Warn if provided a different l-p norm
+        l_p_norm = l_p_norm or self.l_p_norm
+        if l_p_norm != self.l_p_norm:
+            logging.warning(
+                f"Calculating constraint violation with l-{l_p_norm} norm;\n"
+                f"Note: this classifier was fitted with l-{self.l_p_norm} norm;"
+            )
+
+        # Validate constraint
         if constraint_name not in ALL_CONSTRAINTS:
             raise ValueError(NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE)
 
         if constraint_name == "equalized_odds":
-            return self.equalized_odds_violation()
+            return self.equalized_odds_violation(l_p_norm=l_p_norm)
 
         elif constraint_name.endswith("rate_parity"):
             constraint_to_error_type = {
@@ -230,19 +264,26 @@ class RelaxedThresholdOptimizer(Classifier):
 
         roc_idx_of_interest = 0 if error_type == "fp" else 1
 
-        return self._max_l_inf_between_points(
+        return self._max_l_p_between_points(
             points=[
                 np.reshape(     # NOTE: must pass an array object, not scalars
                     roc_point[roc_idx_of_interest],  # use only FPR or TPR (whichever was constrained)
                     newshape=(1,))
                 for roc_point in self.groupwise_roc_points
             ],
+            l_p_norm=np.inf,
         )
 
-    def equalized_odds_violation(self) -> float:
+    def equalized_odds_violation(self, l_p_norm: int = None) -> float:
         """Computes the theoretical violation of the equal odds constraint
         (i.e., the maximum l-inf distance between the ROC point of any pair
         of groups).
+
+        Parameters
+        ----------
+        l_p_norm : int, optional
+            Which l-p norm to use when computing distances between group ROC
+            points.
 
         Returns
         -------
@@ -251,9 +292,18 @@ class RelaxedThresholdOptimizer(Classifier):
         """
         self._check_fit_status()
 
-        # Compute l-inf distance between each pair of groups
-        return self._max_l_inf_between_points(
+        # Warn if provided a different l-p norm
+        l_p_norm = l_p_norm or self.l_p_norm
+        if l_p_norm != self.l_p_norm:
+            logging.warning(
+                f"Calculating constraint violation with l-{l_p_norm} norm;\n"
+                f"Note: this classifier was fitted with l-{self.l_p_norm} norm;"
+            )
+
+        # Compute l-p distance between each pair of groups
+        return self._max_l_p_between_points(
             points=self.groupwise_roc_points,
+            l_p_norm=l_p_norm,
         )
 
     def demographic_parity_violation(self) -> float:
@@ -270,7 +320,7 @@ class RelaxedThresholdOptimizer(Classifier):
         self._check_fit_status()
 
         # Compute groups' PPR (positive prediction rate)
-        return self._max_l_inf_between_points(
+        return self._max_l_p_between_points(
             points=[
                 # NOTE: must pass an array object, not scalars
                 np.reshape(
@@ -279,16 +329,20 @@ class RelaxedThresholdOptimizer(Classifier):
                 )
                 for (group_fpr, group_tpr), group_prev in zip(self.groupwise_roc_points, self.groupwise_prevalence)
             ],
+            l_p_norm=np.inf,
         )
 
     @staticmethod
-    def _max_l_inf_between_points(points: list[float | np.ndarray]) -> float:
+    def _max_l_p_between_points(
+        points: list[float | np.ndarray],
+        l_p_norm: int,
+    ) -> float:
         # Number of points (should correspond to the number of groups)
         n_points = len(points)
 
         # Compute l-inf distance between each pair of groups
         l_inf_constraint_violation = [
-            (np.linalg.norm(points[i] - points[j], ord=np.inf), (i, j))
+            (np.linalg.norm(points[i] - points[j], ord=l_p_norm), (i, j))
             for i, j in product(range(n_points), range(n_points))
             if i < j
         ]
@@ -423,6 +477,7 @@ class RelaxedThresholdOptimizer(Classifier):
             global_prevalence=self.global_prevalence,
             false_positive_cost=self.false_pos_cost,
             false_negative_cost=self.false_neg_cost,
+            l_p_norm=self.l_p_norm,
         )
 
         # Construct each group-specific classifier

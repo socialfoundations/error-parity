@@ -38,7 +38,7 @@ def get_metric_abs_tolerance(group_size: int) -> float:
     """Reasonable value for metric fulfillment given the inherent randomization
     of predictions and the size of the group over which the metric is computed.
     """
-    return (0.1 * group_size) ** (-1 / 1.5)
+    return (0.5 * group_size) ** (-1 / 2)
     # return group_size ** (-1/2)
 
 
@@ -62,30 +62,47 @@ def test_invalid_constraint_name():
         )
 
 
-def test_constraint_fulfillment(
+def test_equalized_odds_lp_relaxation(
+    X_features: np.ndarray,
     y_true: np.ndarray,
-    y_pred_scores: np.ndarray,
     sensitive_attribute: np.ndarray,
+    predictor: callable,
+    constraint_slack: float,
+    l_p_norm: int,
+    random_seed: int,
+):
+    """Tests different l-p relaxations for the "equalized-odds" constraint."""
+    clf = RelaxedThresholdOptimizer(
+        predictor=predictor,
+        constraint="equalized_odds",
+        tolerance=constraint_slack,
+        false_pos_cost=1,
+        false_neg_cost=1,
+        seed=random_seed,
+        l_p_norm=l_p_norm,
+    )
+
+    # Fit postprocessing to data
+    clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
+
+    check_constraint_fulfillment(
+        X_features=X_features,
+        y_true=y_true,
+        sensitive_attribute=sensitive_attribute,
+        postprocessed_clf=clf,
+    )
+
+
+def test_constraint_fulfillment(
+    X_features: np.ndarray,
+    y_true: np.ndarray,
+    sensitive_attribute: np.ndarray,
+    predictor: callable,
     fairness_constraint: str,
     constraint_slack: float,
     random_seed: int,
 ):
-    """Tests fairness constraint fulfillment at the given slack level."""
-    # Dataset metadata
-    num_samples = len(y_true)
-    unique_groups = np.unique(
-        sensitive_attribute
-    )  # return is sorted in ascending order
-    label_prevalence = np.mean(y_true)
-
-    # Predictor function
-    # # > predicts the generated scores from the sample indices
-    def predictor(idx):
-        return y_pred_scores[idx]
-
-    # Hence, for this example, the features are the sample indices
-    X_features = np.arange(num_samples)
-
+    """Tests fairness constraint fulfillment on the given synthetic data."""
     clf = RelaxedThresholdOptimizer(
         predictor=predictor,
         constraint=fairness_constraint,
@@ -98,15 +115,39 @@ def test_constraint_fulfillment(
     # Fit postprocessing to data
     clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
 
-    # Check that theoretical solution fulfills relaxed constraint
-    assert clf.constraint_violation() <= constraint_slack + SOLUTION_TOLERANCE, (
+    check_constraint_fulfillment(
+        X_features=X_features,
+        y_true=y_true,
+        sensitive_attribute=sensitive_attribute,
+        postprocessed_clf=clf,
+    )
+
+
+def check_constraint_fulfillment(
+    X_features: np.ndarray,
+    y_true: np.ndarray,
+    sensitive_attribute: np.ndarray,
+    postprocessed_clf: RelaxedThresholdOptimizer,
+):
+    """Checks that the postprocessed classifier fulfills its target constraint."""
+
+    # Dataset metadata
+    unique_groups = np.unique(
+        sensitive_attribute
+    )  # return is sorted in ascending order
+    label_prevalence = np.mean(y_true)
+
+    fairness_constraint = postprocessed_clf.constraint
+
+    # Check that theoretical solution fulfills constraint tolerance
+    assert postprocessed_clf.constraint_violation() <= postprocessed_clf.tolerance + SOLUTION_TOLERANCE, (
         f"Solution fails to fulfill the '{fairness_constraint}' inequality; "
-        f"got: {clf.constraint_violation()}; "
-        f"expected less than {constraint_slack};"
+        f"got: {postprocessed_clf.constraint_violation()}; "
+        f"expected less than {postprocessed_clf.tolerance};"
     )
 
     # Optimal binarized predictions
-    y_pred_binary = clf(X_features, group=sensitive_attribute)
+    y_pred_binary = postprocessed_clf(X_features, group=sensitive_attribute)
 
     # Check realized group-specific ROC points
     actual_group_roc_points = np.vstack(
@@ -125,7 +166,7 @@ def test_constraint_fulfillment(
         g_label_prevalence = np.mean(y_true[g_filter])
 
         actual_fpr, actual_tpr = actual_group_roc_points[g]
-        target_fpr, target_tpr = clf.groupwise_roc_points[g]
+        target_fpr, target_tpr = postprocessed_clf.groupwise_roc_points[g]
 
         # Check group FPR
         check_metric_tolerance(
@@ -159,7 +200,15 @@ def test_constraint_fulfillment(
 
     empirical_constraint_violation: float
     if fairness_constraint == "equalized_odds":
-        empirical_constraint_violation = empirical_fairness_results["equalized_odds_diff"]
+        l_p_norm = postprocessed_clf.l_p_norm
+        if l_p_norm == 1:
+            empirical_constraint_violation = empirical_fairness_results["equalized_odds_diff_l1"]
+        elif l_p_norm == 2:
+            empirical_constraint_violation = empirical_fairness_results["equalized_odds_diff_l2"]
+        elif l_p_norm == np.inf:
+            empirical_constraint_violation = empirical_fairness_results["equalized_odds_diff"]
+        else:
+            raise NotImplementedError(f"Tests not implemented for eq. odds with l-p norm {l_p_norm}")
 
     elif fairness_constraint in {"true_positive_rate_parity", "false_negative_rate_parity"}:
         empirical_constraint_violation = empirical_fairness_results["tpr_diff"]
@@ -176,14 +225,14 @@ def test_constraint_fulfillment(
     # Assert realized constraint violation is close to theoretical solution found
     check_metric_tolerance(
         # NOTE: it's fine if actual violation is below slack (and not fine if above)
-        empirical_val=max(empirical_constraint_violation - constraint_slack, 0),
+        empirical_val=max(empirical_constraint_violation - postprocessed_clf.tolerance, 0),
         theory_val=0.0,
         group_size=smallest_denominator,
         metric_name=f"{fairness_constraint} violation above slack",
     )
 
     # Check realized global ROC point
-    target_fpr, target_tpr = clf.global_roc_point
+    target_fpr, target_tpr = postprocessed_clf.global_roc_point
     actual_fpr, actual_tpr = compute_roc_point_from_predictions(
         y_true=y_true,
         y_pred_binary=y_pred_binary,
@@ -206,19 +255,19 @@ def test_constraint_fulfillment(
     )
 
     # Check realized classification loss
-    theoretical_cost = clf.cost()
+    theoretical_cost = postprocessed_clf.cost()
     actual_cost = calc_cost_of_point(
         fpr=actual_fpr,
         fnr=1 - actual_tpr,
         prevalence=label_prevalence,
-        false_pos_cost=clf.false_pos_cost,
-        false_neg_cost=clf.false_neg_cost,
+        false_pos_cost=postprocessed_clf.false_pos_cost,
+        false_neg_cost=postprocessed_clf.false_neg_cost,
     )
 
     check_metric_tolerance(
         theoretical_cost,
         actual_cost,
-        group_size=num_samples,
+        group_size=len(y_true),
         metric_name="classification loss",
     )
 
