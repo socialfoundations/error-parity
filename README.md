@@ -96,9 +96,10 @@ Currently implemented fairness constraints:
   - use `constraint="demographic_parity"`;
   - $\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a] - \mathbb{P}[\hat{Y}=1 | S=b] \right) \leq r$
 - [x] average odds;
-  - achieves equalized odds using a different relaxation: averages over group-wise TPR and FPR differences (instead of using the max of the two);
+  - i.e., average of the difference between group-specific TPR and difference between group-specific FPR;
   - use `constraint="average_odds"`;
   - $\max_{a, b \in \mathcal{S}} \frac{1}{2}\sum_{y \in \{0, 1\}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=y] - \mathbb{P}[\hat{Y}=1 | S=b, Y=y] \right) \leq r$
+  - **note:** a value of `equalized_odds=0.0` implies `average_odds=0.0`, *but not the other way around!*
 
 We welcome community contributions for [cvxpy](https://www.cvxpy.org) implementations of other fairness constraints.
 
