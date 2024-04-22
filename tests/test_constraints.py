@@ -37,9 +37,10 @@ def test_synthetic_data_generation(
 def get_metric_abs_tolerance(group_size: int) -> float:
     """Reasonable value for metric fulfillment given the inherent randomization
     of predictions and the size of the group over which the metric is computed.
+
+    Uncertainty should scale with the inverse of the square root of the group size.
     """
-    return (0.1 * group_size) ** (-1 / 1.5)
-    # return group_size ** (-1/2)
+    return (0.5 * group_size) ** (-1 / 2)
 
 
 def check_metric_tolerance(

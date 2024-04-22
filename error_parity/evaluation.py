@@ -234,8 +234,34 @@ def evaluate_fairness(
         results["fpr_diff"],  # same as TNR diff
     )
 
-    # as well as average difference
-    results["avg_odds_diff"] = (results["tpr_diff"] + results["fpr_diff"]) / 2
+    # Average odds: average constraint violation for TPR and FPR equality
+    results["average_odds_diff"] = max(
+        (
+            (1. / 2) * (
+                # TPR diff
+                groupwise_metrics[group_metric_name("tpr", group_a)]
+                - groupwise_metrics[group_metric_name("tpr", group_b)]
+
+                # FPR diff
+                + groupwise_metrics[group_metric_name("fpr", group_a)]
+                - groupwise_metrics[group_metric_name("fpr", group_b)]
+            )
+        )
+        for group_a, group_b in product(unique_groups, unique_groups)
+        if group_a != group_b
+    )
+
+    # NOTE:
+    # - For "equalized_odds", we maximize over $y \in {0,1}$ and over every
+    # group-pair $a,b \in S$; here we're flipping the order of `max` operations:
+    # maximizing over every group-pair and only afterwards over FPR and TPR
+    # differences or ratios.
+    #   - This switch is fine for "equalized-odds" but not for "average-odds".
+    # - For "average_odds", we should properly search for the max average
+    # difference between FPR and TPR, instead of averaging the already
+    # aggregated max differences (`results["tpr_diff"]` and `results["fpr_diff"]`).
+    #   - This is because `max` is not distributive over addition (order of
+    # operations cannot be flipped);
 
     # Optionally, return group-wise metrics as well
     if return_groupwise_metrics:
