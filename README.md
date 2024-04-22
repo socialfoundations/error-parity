@@ -37,7 +37,8 @@ pip install ./error-parity
 
 ## Getting started
 
-> See detailed example notebooks under the [**examples folder**](./examples/).
+> See detailed example notebooks under the [**examples folder**](./examples/) 
+> and on the [**package documentation**](https://socialfoundations.github.io/error-parity/notebooks.html).
 
 ```py
 from error_parity import RelaxedThresholdOptimizer
@@ -70,23 +71,32 @@ Given a callable score-based predictor (i.e., `y_pred = predictor(X)`), and some
     - if a group's ROC point is in the interior of its ROC curve, partial randomization of its predictions may be necessary.
 
 
-## Features and implementation road-map
+## Available fairness constraints
 
-We welcome community contributions for [cvxpy](https://www.cvxpy.org) implementations of other fairness constraints.
+You can choose specific fairness constraints via the `constraint` key-word argument to
+the `RelaxedThresholdOptimizer` constructor.
+The equation under each constraint details how it is evaluated, where $r$ is the
+relaxation (or tolerance) and $\mathcal{S}$ is the set of sensitive groups.
 
 Currently implemented fairness constraints:
-- [x] equality of odds (Hardt et al., 2016);
+- [x] equalized odds (Hardt et al., 2016) **[default]**;
   - i.e., equal group-specific TPR and FPR;
   - use `constraint="equalized_odds"`;
+  - $\max_{a, b \in \mathcal{S}} \max_{y \in \{0, 1\}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=y] - \mathbb{P}[\hat{Y}=1 | S=b, Y=y] \right) \leq r$
 - [x] equal opportunity;
   - i.e., equal group-specific TPR;
   - use `constraint="true_positive_rate_parity"`;
+  - $\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=1] - \mathbb{P}[\hat{Y}=1 | S=b, Y=1] \right) \leq r$
 - [x] predictive equality;
   - i.e., equal group-specific FPR;
   - use `constraint="false_positive_rate_parity"`;
+  - $\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=0] - \mathbb{P}[\hat{Y}=1 | S=b, Y=0] \right) \leq r$
 - [x] demographic parity;
   - i.e., equal group-specific predicted prevalence;
   - use `constraint="demographic_parity"`;
+  - $\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a] - \mathbb{P}[\hat{Y}=1 | S=b] \right) \leq r$
+
+We welcome community contributions for [cvxpy](https://www.cvxpy.org) implementations of other fairness constraints.
 
 
 ## Citing
