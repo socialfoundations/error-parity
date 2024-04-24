@@ -26,7 +26,7 @@ def rng(random_seed: int) -> np.random.Generator:
     return np.random.default_rng(random_seed)
 
 
-@pytest.fixture(params=[0.01, 0.02, 0.05, 0.1, 0.2, 1.0])
+@pytest.fixture(params=[0, 0.01, 0.02, 0.05, 0.1, 0.2, 1.0])
 def constraint_slack(request) -> float:
     """Fixture for constraint slack/violation (fairness tolerance)."""
     return request.param
@@ -135,7 +135,7 @@ def y_true(
     n_samples = len(sensitive_attribute)
 
     # Different levels of gaussian noise per group
-    group_noise = [0.2 + rng.random() / 2 for _ in range(n_groups)]
+    group_noise = [0.1 + rng.random() * 0.5 for _ in range(n_groups)]
 
     # Generate predictions
     label_prevalence = 0.2 + (rng.random() * 0.6)  # in [0.2, 0.8]

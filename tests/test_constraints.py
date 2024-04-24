@@ -12,6 +12,8 @@ from error_parity.cvxpy_utils import SOLUTION_TOLERANCE, calc_cost_of_point
 from error_parity.roc_utils import compute_roc_point_from_predictions
 from error_parity.evaluation import evaluate_fairness
 
+from .utils import check_metric_tolerance
+
 
 def test_synthetic_data_generation(
     y_true: np.ndarray,
@@ -34,26 +36,6 @@ def test_synthetic_data_generation(
             f"Synthetic data generated has group-{g} AUC of {group_auc}"
 
 
-def get_metric_abs_tolerance(group_size: int) -> float:
-    """Reasonable value for metric fulfillment given the inherent randomization
-    of predictions and the size of the group over which the metric is computed.
-    """
-    return (0.5 * group_size) ** (-1 / 2)
-    # return group_size ** (-1/2)
-
-
-def check_metric_tolerance(
-    theory_val: float, empirical_val, group_size: int, metric_name: str = ""
-) -> bool:
-    """Checks that the empirical value is within a reasonable tolerance of the expected theoretical value."""
-    assert np.isclose(
-        theory_val,
-        empirical_val,
-        atol=get_metric_abs_tolerance(group_size),
-        rtol=0.01,
-    ), f"> '{metric_name}' mismatch; expected {theory_val:.3}; got {empirical_val:.3};"
-
-
 def test_invalid_constraint_name():
     with pytest.raises(ValueError):
         _ = RelaxedThresholdOptimizer(
@@ -62,7 +44,7 @@ def test_invalid_constraint_name():
         )
 
 
-def test_equalized_odds_lp_relaxation(
+def test_equalized_odds_lp_relaxation_fulfillment(
     X_features: np.ndarray,
     y_true: np.ndarray,
     sensitive_attribute: np.ndarray,
@@ -146,6 +128,23 @@ def check_constraint_fulfillment(
         f"expected less than {postprocessed_clf.tolerance};"
     )
 
+    # # NOTE: This test is disabled as it is too strict for some cases
+    # # Check that, for tight constraints, theoretical solution is near the constraint boundary
+    # # > i.e., if constraint tolerance is small, then the theoretical solution found should have
+    # # constraint violation very close to that tolerance, as lower violation would mean a
+    # # lower-cost solution could've been found.
+    # TIGHT_CONSTRAINT_THRESHOLD = 0.04
+    # UNDERSHOOT_TOLERANCE = 0.01
+    # if postprocessed_clf.tolerance <= TIGHT_CONSTRAINT_THRESHOLD:
+    #     assert (
+    #         postprocessed_clf.constraint_violation()
+    #         >= postprocessed_clf.tolerance - UNDERSHOOT_TOLERANCE
+    #     ), (
+    #         f"Solution violates tight '{fairness_constraint}_l{postprocessed_clf.l_p_norm}' constraint; "
+    #         f"got: {postprocessed_clf.constraint_violation()}; "
+    #         f"expected near {postprocessed_clf.tolerance};"
+    #     )
+
     # Optimal binarized predictions
     y_pred_binary = postprocessed_clf(X_features, group=sensitive_attribute)
 
@@ -224,11 +223,12 @@ def check_constraint_fulfillment(
 
     # Assert realized constraint violation is close to theoretical solution found
     check_metric_tolerance(
-        # NOTE: it's fine if actual violation is below slack (and not fine if above)
-        empirical_val=max(empirical_constraint_violation - postprocessed_clf.tolerance, 0),
-        theory_val=0.0,
+        empirical_val=empirical_constraint_violation,
+        # NOTE: we're more lenient for tolerances close to 0, as 0 is literally impossible to achieve
+        theory_val=max(postprocessed_clf.constraint_violation(), 0.01),
         group_size=smallest_denominator,
         metric_name=f"{fairness_constraint} violation above slack",
+        less_or_equal=True,     # constraint violation below slack is acceptable
     )
 
     # Check realized global ROC point
