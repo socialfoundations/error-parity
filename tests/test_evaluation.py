@@ -2,6 +2,10 @@
 
 import logging
 import pytest
+import numpy as np
+
+from error_parity import RelaxedThresholdOptimizer
+from error_parity.cvxpy_utils import SOLUTION_TOLERANCE
 from error_parity.evaluation import _safe_division
 
 
@@ -26,14 +30,43 @@ def test_valid_safe_division(caplog, rng):
         assert "error" not in caplog.text.lower()
 
 
-def test_equalized_odds_measure():
-    pass
-    # # Check realized constraint violation
-    # groupwise_differences = [
-    #     np.linalg.norm(
-    #         actual_group_roc_points[i] - actual_group_roc_points[j],
-    #         ord=np.inf,
-    #     )
-    #     for i, j in product(unique_groups, unique_groups)
-    #     if i < j
-    # ]
+def test_equalized_odds_relaxation_costs(
+    X_features: np.ndarray,
+    y_true: np.ndarray,
+    sensitive_attribute: np.ndarray,
+    predictor: callable,
+    constraint_slack: float,
+    random_seed: int,
+):
+    """Tests whether l-p norms follow standard orders (lower p -> higher norm)."""
+
+    results = {}
+    sorted_p_norms = (1, 2, 3, 10, np.inf)
+    for norm in sorted_p_norms:
+        # Fit postprocessing to data
+        clf = RelaxedThresholdOptimizer(
+            predictor=predictor,
+            constraint="equalized_odds",
+            tolerance=constraint_slack,
+            false_pos_cost=1,
+            false_neg_cost=1,
+            seed=random_seed,
+            l_p_norm=norm,
+        )
+        clf.fit(X=X_features, y=y_true, group=sensitive_attribute)
+
+        # Store results
+        results[norm] = clf.cost()
+
+    # Check that l-p norms with lower p achieve lower costs and higher unfairness
+    for idx in range(1, len(sorted_p_norms)):
+
+        lower_p_norm = sorted_p_norms[idx - 1]
+        higher_p_norm = sorted_p_norms[idx]
+
+        lower_p_cost = results[lower_p_norm]
+        higher_p_cost = results[higher_p_norm]
+
+        # Assert lower-p costs are higher (accuracy is lower)
+        assert lower_p_cost > higher_p_cost - SOLUTION_TOLERANCE, \
+            f"l-{lower_p_norm} cost: {lower_p_cost} < l-{higher_p_norm} cost: {higher_p_cost}"
