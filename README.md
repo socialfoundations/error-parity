@@ -109,18 +109,16 @@ Currently implemented fairness constraints:
 
 ### Equalized odds relaxations
 
-When using `constraint="equalized_odds"` (the default), different relaxations
-can be chosen by altering the `l_p_norm` parameter.
+When using `constraint="equalized_odds"`, different relaxations can be chosen by
+altering the `l_p_norm` parameter (which dictates how to compute the distance 
+between group-specific ROC points).
 
 A few useful values:
-- `l_p_norm="inf"` **[default]** evaluates equalized-odds as the maximum
+- `l_p_norm=np.inf` **[default]** evaluates equalized-odds as the maximum
 between group-wise TPR and FPR differences (as shown above);
-- `l_p_norm=1` evaluates equalized-odds as the average of the
-absolute difference in group-wise TPR and FPR;
-  - this is also known as `average_abs_odds_difference`;
-  - specifically, the l-1 distance is *twice* the "average absolute odds" metric, so change `tolerance` accordingly;
-- `l_p_norm=p` for any other positive integer $p$: computes the distance between group-wise ROC
-points using the specified l-p norm;
+- `l_p_norm=1` evaluates equalized-odds as the sum of absolute difference in group-wise TPR and FPR;
+  - corresponds to *twice* the "average absolute odds" metric;
+  - accordingly, use twice the `tolerance` target to constrain the `average_abs_odds_difference`;
 
 The actual equalized odds constraint implemented is:
 
