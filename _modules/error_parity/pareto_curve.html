@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity.pareto_curve &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/custom.js?v=882eb7ae"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">error_parity.pareto_curve</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for error_parity.pareto_curve</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utils for computing the fairness-accuracy Pareto frontier of a classifier.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.threshold_optimizer</span> <span class="kn">import</span> <span class="n">RelaxedThresholdOptimizer</span>
+<span class="kn">from</span> <span class="nn">.evaluation</span> <span class="kn">import</span> <span class="n">evaluate_predictions</span><span class="p">,</span> <span class="n">evaluate_predictions_bootstrap</span>
+<span class="kn">from</span> <span class="nn">._commons</span> <span class="kn">import</span> <span class="n">join_dictionaries</span><span class="p">,</span> <span class="n">get_cost_envelope</span><span class="p">,</span> <span class="n">arrays_are_equal</span>
+
+
+<span class="n">DEFAULT_TOLERANCE_TICKS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span>      <span class="c1"># [0.00, 0.01, 0.02, ..., 0.19]</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">),</span>      <span class="c1"># [0.20, 0.30, 0.40, ...]</span>
+<span class="p">))</span>
+
+
+<div class="viewcode-block" id="fit_and_evaluate_postprocessing">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.pareto_curve.fit_and_evaluate_postprocessing">[docs]</a>
+<span class="k">def</span> <span class="nf">fit_and_evaluate_postprocessing</span><span class="p">(</span>
+    <span class="n">postproc_template</span><span class="p">:</span> <span class="n">RelaxedThresholdOptimizer</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">fit_data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+    <span class="n">eval_data</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">],</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="n">y_fit_pred_scores</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>    <span class="c1"># pre-computed predictions on the fit data</span>
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">bootstrap_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fit and evaluate a postprocessing intervention on the given predictor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    postproc_template: RelaxedThresholdOptimizer</span>
+<span class="sd">        An object that serves as the template to copy when creating the</span>
+<span class="sd">        postprocessing optimizer.</span>
+<span class="sd">    tolerance : float</span>
+<span class="sd">        The tolerance (or slack) for fairness constraint fulfillment. This value</span>
+<span class="sd">        will override the `tolerance` attribute of the `postproc_template` object.</span>
+<span class="sd">    fit_data : tuple</span>
+<span class="sd">        The data used to fit postprocessing.</span>
+<span class="sd">    eval_data : tuple or dict[tuple]</span>
+<span class="sd">        The data or sequence of data to evaluate postprocessing on.</span>
+<span class="sd">        If a tuple is provided, will call it &quot;eval&quot; data in the returned results</span>
+<span class="sd">        dictionary; if a dict is provided, will assume {&lt;key_1&gt;: &lt;data_1&gt;, ...}.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">        The random seed, by default 42</span>
+<span class="sd">    y_fit_pred_scores : np.ndarray, optional</span>
+<span class="sd">        The pre-computed predicted scores for the `fit_data`; if provided, will</span>
+<span class="sd">        avoid re-computing these predictions for each function call.</span>
+<span class="sd">    bootstrap : bool, optional</span>
+<span class="sd">        Whether to use bootstrapping when computing metric results for</span>
+<span class="sd">        postprocessing, by default True.</span>
+<span class="sd">    bootstrap_kwargs : dict, optional</span>
+<span class="sd">        Any extra arguments to pass on to the bootstrapping function, by default</span>
+<span class="sd">        None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    results : dict[str, dict]</span>
+<span class="sd">        A dictionary of results, whose keys are the data type, and values the</span>
+<span class="sd">        metric values obtained by postprocessing on that data type.</span>
+
+<span class="sd">        For example:</span>
+<span class="sd">        &gt;&gt;&gt; {</span>
+<span class="sd">        &gt;&gt;&gt;     &quot;validation&quot;: {&quot;accuracy&quot;: 0.7, &quot;...&quot;: &quot;...&quot;},</span>
+<span class="sd">        &gt;&gt;&gt;     &quot;test&quot;: {&quot;accuracy&quot;: 0.65, &quot;...&quot;: &quot;...&quot;},</span>
+<span class="sd">        &gt;&gt;&gt; }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">postproc_template</span><span class="p">)</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">=</span> <span class="n">tolerance</span>
+
+    <span class="c1"># Unpack data</span>
+    <span class="n">X_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">s_fit</span> <span class="o">=</span> <span class="n">fit_data</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X_fit</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_fit</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">s_fit</span><span class="p">,</span> <span class="n">y_scores</span><span class="o">=</span><span class="n">y_fit_pred_scores</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># (Theoretical) fit results</span>
+    <span class="n">results</span><span class="p">[</span><span class="s2">&quot;fit-theoretical&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">clf</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">clf</span><span class="o">.</span><span class="n">constraint</span><span class="p">:</span> <span class="n">clf</span><span class="o">.</span><span class="n">constraint_violation</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+    <span class="n">ALLOWED_ABS_ERROR</span> <span class="o">=</span> <span class="mf">1e-5</span>
+    <span class="k">assert</span> <span class="n">clf</span><span class="o">.</span><span class="n">constraint_violation</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="o">+</span> <span class="n">ALLOWED_ABS_ERROR</span><span class="p">,</span> \
+        <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">clf</span><span class="o">.</span><span class="n">constraint_violation</span><span class="p">()</span><span class="si">}</span><span class="s2"> &gt; </span><span class="si">{</span><span class="n">tolerance</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Map of data_type-&gt;data_tuple to evaluate postprocessing on</span>
+    <span class="n">data_to_eval</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">{</span><span class="s2">&quot;fit&quot;</span><span class="p">:</span> <span class="n">fit_data</span><span class="p">}</span>
+        <span class="o">|</span> <span class="p">(</span><span class="n">eval_data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eval_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">eval_data</span><span class="p">})</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_evaluate_on_data</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to evaluate on the given data tuple.&quot;&quot;&quot;</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">S</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="k">if</span> <span class="n">bootstrap</span><span class="p">:</span>
+            <span class="c1"># Default kwargs for bootstrapping</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">confidence_pct</span><span class="o">=</span><span class="mi">95</span><span class="p">,</span>
+                <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="mf">0.50</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Update kwargs with any extra bootstrap kwargs</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bootstrap_kwargs</span><span class="p">)</span>
+
+            <span class="n">eval_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+                <span class="n">evaluate_predictions_bootstrap</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eval_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+                <span class="n">evaluate_predictions</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="mf">0.50</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">eval_func</span><span class="p">(</span>
+            <span class="n">y_true</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span>
+            <span class="n">y_pred_scores</span><span class="o">=</span><span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">S</span><span class="p">),</span>
+            <span class="n">sensitive_attribute</span><span class="o">=</span><span class="n">S</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Empirical results</span>
+    <span class="k">for</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">data_tuple</span> <span class="ow">in</span> <span class="n">data_to_eval</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">data_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">_evaluate_on_data</span><span class="p">(</span><span class="n">data_tuple</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="compute_postprocessing_curve">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.pareto_curve.compute_postprocessing_curve">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_postprocessing_curve</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">fit_data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+    <span class="n">eval_data</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">],</span>
+    <span class="n">fairness_constraint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>
+    <span class="n">l_p_norm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tolerance_ticks</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">DEFAULT_TOLERANCE_TICKS</span><span class="p">,</span>
+    <span class="n">tolerance_tick_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">predict_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;predict_proba&quot;</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the fairness and performance of the given classifier after</span>
+<span class="sd">    adjusting (postprocessing) for varying levels of fairness tolerance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : object</span>
+<span class="sd">        The model to use.</span>
+<span class="sd">    fit_data : tuple</span>
+<span class="sd">        Data triplet to use to fit postprocessing intervention, (X, Y, S),</span>
+<span class="sd">        respectively containing the features, labels, and sensitive attribute.</span>
+<span class="sd">    eval_data : tuple or dict[tuple]</span>
+<span class="sd">        Data triplet to use to evaluate postprocessing intervention on (same</span>
+<span class="sd">        format as `fit_data`), or a dictionary of &lt;data_name&gt;-&gt;&lt;data_triplet&gt;</span>
+<span class="sd">        containing multiple datasets to evaluate on.</span>
+<span class="sd">    fairness_constraint : str, optional</span>
+<span class="sd">        The fairness constraint to use , by default &quot;equalized_odds&quot;.</span>
+<span class="sd">    l_p_norm : int, optional</span>
+<span class="sd">        The norm to use when computing the fairness constraint, by default np.inf.</span>
+<span class="sd">        Note: only compatible with the &quot;equalized odds&quot; constraint.</span>
+<span class="sd">    bootstrap : bool, optional</span>
+<span class="sd">        Whether to compute uncertainty estimates via bootstrapping, by default</span>
+<span class="sd">        False.</span>
+<span class="sd">    tolerance_ticks : list, optional</span>
+<span class="sd">        List of constraint tolerances to use when computing adjustment curve.</span>
+<span class="sd">        By default will use higher granularity/precision for lower levels of</span>
+<span class="sd">        disparity, and lower granularity for higher levels of disparity.</span>
+<span class="sd">        Should correspond to a sorted list of values between 0 and 1.</span>
+<span class="sd">        Will be ignored if `tolerance_tick_step` is provided.</span>
+<span class="sd">    tolerance_tick_step : float, optional</span>
+<span class="sd">        Distance between constraint tolerances in the adjustment curve.</span>
+<span class="sd">        Will override `tolerance_ticks` if provided!</span>
+<span class="sd">    predict_method : str, optional</span>
+<span class="sd">        Which method to call to obtain predictions out of the given model.</span>
+<span class="sd">        Use `predict_method=&quot;__call__&quot;` for a callable predictor, or the default</span>
+<span class="sd">        `predict_method=&quot;predict_proba&quot;` for a predictor with sklearn interface.</span>
+<span class="sd">    n_jobs : int, optional</span>
+<span class="sd">        Number of parallel jobs to use, if omitted will use `os.cpu_count()-1`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    postproc_results_df : pd.DataFrame</span>
+<span class="sd">        A DataFrame containing the results, one row per tolerance tick.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">callable_predictor</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">predict_method</span><span class="p">)(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Model outputs predictions in shape </span><span class="si">{</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">preds</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">preds</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Pre-compute predictions on the fit data</span>
+    <span class="n">X_fit</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fit_data</span>
+    <span class="n">y_fit_pred_scores</span> <span class="o">=</span> <span class="n">callable_predictor</span><span class="p">(</span><span class="n">X_fit</span><span class="p">)</span>
+
+    <span class="n">postproc_template</span> <span class="o">=</span> <span class="n">RelaxedThresholdOptimizer</span><span class="p">(</span>
+        <span class="n">predictor</span><span class="o">=</span><span class="n">callable_predictor</span><span class="p">,</span>
+        <span class="n">constraint</span><span class="o">=</span><span class="n">fairness_constraint</span><span class="p">,</span>
+        <span class="n">l_p_norm</span><span class="o">=</span><span class="n">l_p_norm</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_func_call</span><span class="p">(</span><span class="n">tol</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fit_and_evaluate_postprocessing</span><span class="p">(</span>
+                <span class="n">postproc_template</span><span class="o">=</span><span class="n">postproc_template</span><span class="p">,</span>
+                <span class="n">tolerance</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+                <span class="n">fit_data</span><span class="o">=</span><span class="n">fit_data</span><span class="p">,</span>
+                <span class="n">eval_data</span><span class="o">=</span><span class="n">eval_data</span><span class="p">,</span>
+                <span class="n">bootstrap</span><span class="o">=</span><span class="n">bootstrap</span><span class="p">,</span>
+                <span class="n">y_fit_pred_scores</span><span class="o">=</span><span class="n">y_fit_pred_scores</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;FAILED `fit_and_evaluate_postprocessing(.)` with `tolerance=</span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2">`; &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">TracebackException</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{}</span>   <span class="c1"># return empty dictionary</span>
+
+    <span class="c1"># If n_jobs not provided: use number of CPU cores - 1</span>
+    <span class="k">if</span> <span class="n">n_jobs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_jobs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using `n_jobs=</span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2">` to compute adjustment curve.&quot;</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+    <span class="c1"># Use `tolerance_tick_step` kwarg</span>
+    <span class="k">if</span> <span class="n">tolerance_tick_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tolerances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">tolerance_tick_step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="c1"># &gt; `tolerance_ticks` was provided</span>
+            <span class="n">tolerance_ticks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="c1"># &gt; and `tolerance_ticks` was set to a non-default value</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">arrays_are_equal</span><span class="p">(</span><span class="n">tolerance_ticks</span><span class="p">,</span> <span class="n">DEFAULT_TOLERANCE_TICKS</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Please provide only one of `tolerance_ticks` and `tolerance_tick_step`.&quot;</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Use of `tolerance_tick_step` overrides the use of `tolerance_ticks`.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Use `tolerance_ticks` kwarg</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tolerances</span> <span class="o">=</span> <span class="n">tolerance_ticks</span>
+
+    <span class="c1"># Log tolerances used</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing postprocessing for the following constraint tolerances: </span><span class="si">{</span><span class="n">tolerances</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="n">func_call_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">tqdm</span><span class="p">(</span>
+                <span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_func_call</span><span class="p">,</span> <span class="n">tolerances</span><span class="p">),</span>
+                <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tolerances</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">tolerances</span><span class="p">,</span> <span class="n">func_call_results</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_parse_postprocessing_curve</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_parse_postprocessing_curve</span><span class="p">(</span><span class="n">postproc_curve_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parses the postprocessing curve dictionary results into a pd.DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    postproc_curve_dict : dict</span>
+<span class="sd">        The result of computing the postprocessing adjustment curve on a model.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    postproc_results_df : pd.DataFrame</span>
+<span class="sd">        A DataFrame containing the results for each tolerance value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+        <span class="n">join_dictionaries</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">tol</span><span class="p">),</span>
+            <span class="p">},</span>
+
+            <span class="o">*</span><span class="p">[{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">metric_value</span>
+                <span class="k">for</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="n">results_at_tol</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_value</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}]</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">tol</span><span class="p">,</span> <span class="n">results_at_tol</span> <span class="ow">in</span> <span class="n">postproc_curve_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">])</span>
+
+
+<div class="viewcode-block" id="get_envelope_of_postprocessing_frontier">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.pareto_curve.get_envelope_of_postprocessing_frontier">[docs]</a>
+<span class="k">def</span> <span class="nf">get_envelope_of_postprocessing_frontier</span><span class="p">(</span>
+    <span class="n">postproc_results_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">perf_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;accuracy_mean_test&quot;</span><span class="p">,</span>
+    <span class="n">disp_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;equalized_odds_diff_mean_test&quot;</span><span class="p">,</span>
+    <span class="n">constant_clf_perf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">constant_clf_disp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes points in envelope of the given postprocessing frontier results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    postproc_results_df : pd.DataFrame</span>
+<span class="sd">        The postprocessing frontier results DF.</span>
+<span class="sd">    perf_col : str, optional</span>
+<span class="sd">        Name of the column containing performance results, by default &quot;accuracy_mean_test&quot;</span>
+<span class="sd">    disp_col : str, optional</span>
+<span class="sd">        Name of column containing disparity results, by default &quot;equalized_odds_diff_mean_test&quot;</span>
+<span class="sd">    constant_clf_perf : float, optional</span>
+<span class="sd">        The performance of a dummy constant classifier (in the same metric as</span>
+<span class="sd">        `perf_col`), by default 0.5.</span>
+<span class="sd">    constant_clf_disp : float, optional</span>
+<span class="sd">        The disparity of a dummy constant classifier (in the same metric as</span>
+<span class="sd">        `disp_col`), by default 0.0; assumes a constant classifier fulfills</span>
+<span class="sd">        fairness!</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        A 2-D array containing the points in the convex hull of the Pareto curve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Add bottom left point (postprocessing to constant classifier is always trivial)</span>
+    <span class="n">postproc_results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+        <span class="n">objs</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">perf_col</span><span class="p">:</span> <span class="p">[</span><span class="n">constant_clf_perf</span><span class="p">],</span>
+                    <span class="n">disp_col</span><span class="p">:</span> <span class="p">[</span><span class="n">constant_clf_disp</span><span class="p">],</span>
+                <span class="p">},</span>
+            <span class="p">),</span>
+            <span class="n">postproc_results_df</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Make costs array</span>
+    <span class="n">costs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">-</span> <span class="n">postproc_results_df</span><span class="p">[</span><span class="n">perf_col</span><span class="p">],</span>
+            <span class="n">postproc_results_df</span><span class="p">[</span><span class="n">disp_col</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get points in the envelope of the Pareto frontier</span>
+    <span class="n">costs_envelope</span> <span class="o">=</span> <span class="n">get_cost_envelope</span><span class="p">(</span><span class="n">costs</span><span class="p">)</span>
+
+    <span class="c1"># Get original metric values back</span>
+    <span class="n">adjustment_frontier</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">-</span> <span class="n">costs_envelope</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>     <span class="c1"># flip perf values back to original metric</span>
+            <span class="n">costs_envelope</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>         <span class="c1"># keep disparity values (were already costs)</span>
+        <span class="p">),</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Sort by x-axis to plot properly (should already be sorted but, just making sure...)</span>
+    <span class="n">adjustment_frontier</span> <span class="o">=</span> <span class="n">adjustment_frontier</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">adjustment_frontier</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="n">adjustment_frontier</span></div>
+
+
+
+<div class="viewcode-block" id="compute_inner_and_outer_adjustment_ci">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_inner_and_outer_adjustment_ci</span><span class="p">(</span>
+    <span class="n">postproc_results_df</span><span class="p">,</span>
+    <span class="n">perf_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">disp_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>    <span class="c1"># by default, fetch results on test data</span>
+    <span class="n">constant_clf_perf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the interior/inner and exterior/outer adjustment curves,</span>
+<span class="sd">    corresponding to the confidence intervals (by default 95% c.i.).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    postproc_results_df : tuple[np.array, np.array, np.array]</span>
+<span class="sd">        A tuple containing (xticks, inner_yticks, outer_yticks).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Make INTERIOR/UPPER envelope of the adjustment frontier</span>
+    <span class="c1"># (i.e., the WORST points, with lower performance and higher disparity)</span>
+    <span class="n">interior_adjusted_df</span> <span class="o">=</span> <span class="n">postproc_results_df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">interior_adjusted_df</span><span class="p">[</span><span class="n">perf_metric</span><span class="p">]</span> <span class="o">=</span> \
+        <span class="n">interior_adjusted_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">perf_metric</span><span class="si">}</span><span class="s2">_low-percentile_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+    <span class="n">interior_adjusted_df</span><span class="p">[</span><span class="n">disp_metric</span><span class="p">]</span> <span class="o">=</span> \
+        <span class="n">interior_adjusted_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">disp_metric</span><span class="si">}</span><span class="s2">_high-percentile_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Make OUTER/BOTTOM envelope of the adjustment frontier</span>
+    <span class="c1"># (i.e., the BEST points, with higher performance and lower disparity)</span>
+    <span class="n">outer_adjusted_df</span> <span class="o">=</span> <span class="n">postproc_results_df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">outer_adjusted_df</span><span class="p">[</span><span class="n">perf_metric</span><span class="p">]</span> <span class="o">=</span> \
+        <span class="n">outer_adjusted_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">perf_metric</span><span class="si">}</span><span class="s2">_high-percentile_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+    <span class="n">outer_adjusted_df</span><span class="p">[</span><span class="n">disp_metric</span><span class="p">]</span> <span class="o">=</span> \
+        <span class="n">outer_adjusted_df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">disp_metric</span><span class="si">}</span><span class="s2">_low-percentile_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Process each frontier</span>
+    <span class="n">interior_adj_frontier</span> <span class="o">=</span> <span class="n">get_envelope_of_postprocessing_frontier</span><span class="p">(</span>
+        <span class="n">interior_adjusted_df</span><span class="p">,</span>
+        <span class="n">perf_col</span><span class="o">=</span><span class="n">perf_metric</span><span class="p">,</span>
+        <span class="n">disp_col</span><span class="o">=</span><span class="n">disp_metric</span><span class="p">,</span>
+        <span class="n">constant_clf_perf</span><span class="o">=</span><span class="n">constant_clf_perf</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">outer_adj_frontier</span> <span class="o">=</span> <span class="n">get_envelope_of_postprocessing_frontier</span><span class="p">(</span>
+        <span class="n">outer_adjusted_df</span><span class="p">,</span>
+        <span class="n">perf_col</span><span class="o">=</span><span class="n">perf_metric</span><span class="p">,</span>
+        <span class="n">disp_col</span><span class="o">=</span><span class="n">disp_metric</span><span class="p">,</span>
+        <span class="n">constant_clf_perf</span><span class="o">=</span><span class="n">constant_clf_perf</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create functions that interpolate points within each frontier (interior or outer)</span>
+    <span class="c1"># Because ax.fill_between requires both lines to have the same xticks</span>
+    <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
+    <span class="n">interior_adj_func</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">interior_adj_frontier</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">interior_adj_frontier</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">fill_value</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">interior_adj_frontier</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">interior_adj_frontier</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">outer_adj_func</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">outer_adj_frontier</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">outer_adj_frontier</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">fill_value</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">outer_adj_frontier</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">outer_adj_frontier</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get common xticks (union)</span>
+    <span class="n">adjustment_frontier_xticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">interior_adj_frontier</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">outer_adj_frontier</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="p">)))</span>
+
+    <span class="n">interior_frontier_yticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">interior_adj_func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">adjustment_frontier_xticks</span><span class="p">])</span>
+    <span class="n">outer_frontier_yticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">outer_adj_func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">adjustment_frontier_xticks</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">adjustment_frontier_xticks</span><span class="p">,</span> <span class="n">interior_frontier_yticks</span><span class="p">,</span> <span class="n">outer_frontier_yticks</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

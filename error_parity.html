@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity package &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="_static/custom.js?v=882eb7ae"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Notebooks Gallery" href="notebooks.html" />
+    <link rel="prev" title="API reference" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Readme file</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="code docutils literal notranslate"><span class="pre">error_parity</span></code> package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.threshold_optimizer">error_parity.threshold_optimizer module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer"><code class="docutils literal notranslate"><span class="pre">RelaxedThresholdOptimizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.pareto_curve">error_parity.pareto_curve module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci"><code class="docutils literal notranslate"><span class="pre">compute_inner_and_outer_adjustment_ci()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.pareto_curve.compute_postprocessing_curve"><code class="docutils literal notranslate"><span class="pre">compute_postprocessing_curve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.pareto_curve.fit_and_evaluate_postprocessing"><code class="docutils literal notranslate"><span class="pre">fit_and_evaluate_postprocessing()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.pareto_curve.get_envelope_of_postprocessing_frontier"><code class="docutils literal notranslate"><span class="pre">get_envelope_of_postprocessing_frontier()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.plotting">error_parity.plotting module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.plotting.plot_polygon_edges"><code class="docutils literal notranslate"><span class="pre">plot_polygon_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.plotting.plot_postprocessing_frontier"><code class="docutils literal notranslate"><span class="pre">plot_postprocessing_frontier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.plotting.plot_postprocessing_solution"><code class="docutils literal notranslate"><span class="pre">plot_postprocessing_solution()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.evaluation">error_parity.evaluation module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.evaluation.eval_accuracy_and_equalized_odds"><code class="docutils literal notranslate"><span class="pre">eval_accuracy_and_equalized_odds()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.evaluation.evaluate_fairness"><code class="docutils literal notranslate"><span class="pre">evaluate_fairness()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.evaluation.evaluate_performance"><code class="docutils literal notranslate"><span class="pre">evaluate_performance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.evaluation.evaluate_predictions"><code class="docutils literal notranslate"><span class="pre">evaluate_predictions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.evaluation.evaluate_predictions_bootstrap"><code class="docutils literal notranslate"><span class="pre">evaluate_predictions_bootstrap()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.binarize">error_parity.binarize module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.binarize.compute_binary_predictions"><code class="docutils literal notranslate"><span class="pre">compute_binary_predictions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.classifiers">error_parity.classifiers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.classifiers.BinaryClassifier"><code class="docutils literal notranslate"><span class="pre">BinaryClassifier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.classifiers.BinaryClassifierAtROCDiagonal"><code class="docutils literal notranslate"><span class="pre">BinaryClassifierAtROCDiagonal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.classifiers.Classifier"><code class="docutils literal notranslate"><span class="pre">Classifier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.classifiers.EnsembleGroupwiseClassifiers"><code class="docutils literal notranslate"><span class="pre">EnsembleGroupwiseClassifiers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.classifiers.RandomizedClassifier"><code class="docutils literal notranslate"><span class="pre">RandomizedClassifier</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.cvxpy_utils">error_parity.cvxpy_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.cvxpy_utils.compute_fair_optimum"><code class="docutils literal notranslate"><span class="pre">compute_fair_optimum()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.cvxpy_utils.compute_halfspace_inequality"><code class="docutils literal notranslate"><span class="pre">compute_halfspace_inequality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.cvxpy_utils.compute_line"><code class="docutils literal notranslate"><span class="pre">compute_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.cvxpy_utils.make_cvxpy_halfspace_inequality"><code class="docutils literal notranslate"><span class="pre">make_cvxpy_halfspace_inequality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.cvxpy_utils.make_cvxpy_point_in_polygon_constraints"><code class="docutils literal notranslate"><span class="pre">make_cvxpy_point_in_polygon_constraints()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-error_parity.roc_utils">error_parity.roc_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.roc_utils.calc_cost_of_point"><code class="docutils literal notranslate"><span class="pre">calc_cost_of_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.roc_utils.compute_global_roc_from_groupwise"><code class="docutils literal notranslate"><span class="pre">compute_global_roc_from_groupwise()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.roc_utils.compute_roc_point_from_predictions"><code class="docutils literal notranslate"><span class="pre">compute_roc_point_from_predictions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error_parity.roc_utils.roc_convex_hull"><code class="docutils literal notranslate"><span class="pre">roc_convex_hull()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">API reference</a></li>
+      <li class="breadcrumb-item active"><code class="code docutils literal notranslate"><span class="pre">error_parity</span></code> package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/error_parity.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="error-parity-package">
+<h1><code class="code docutils literal notranslate"><span class="pre">error_parity</span></code> package<a class="headerlink" href="#error-parity-package" title="Link to this heading"></a></h1>
+<section id="module-error_parity.threshold_optimizer">
+<span id="error-parity-threshold-optimizer-module"></span><h2>error_parity.threshold_optimizer module<a class="headerlink" href="#module-error_parity.threshold_optimizer" title="Link to this heading"></a></h2>
+<p>Solver for the relaxed equal odds problem.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">error_parity.threshold_optimizer.</span></span><span class="sig-name descname"><span class="pre">RelaxedThresholdOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'equalized_odds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_pos_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_neg_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_roc_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#error_parity.classifiers.Classifier" title="error_parity.classifiers.Classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code></a></p>
+<p>Class to encapsulate all the logic needed to compute the optimal equal
+odds classifier (with possibly relaxed constraints).</p>
+<p>Initializes the relaxed equal odds wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictor</strong> (<em>callable</em><em>[</em><em>(</em><em>np.ndarray</em><em>)</em><em>, </em><em>float</em><em>]</em>) – A trained score predictor that takes in samples, X, in shape
+(num_samples, num_features), and outputs real-valued scores, R, in
+shape (num_samples,).</p></li>
+<li><p><strong>constraint</strong> (<em>str</em>) – The fairness constraint to use. By default “equalized_odds”.</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>) – The absolute tolerance for the equal odds fairness constraint.
+Will allow for <cite>tolerance</cite> difference between group-wise ROC points.</p></li>
+<li><p><strong>false_pos_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a FALSE POSITIVE error, by default 1.0.</p></li>
+<li><p><strong>false_neg_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a FALSE NEGATIVE error, by default 1.0.</p></li>
+<li><p><strong>l_p_norm</strong> (<em>int</em><em>, </em><em>optional</em>) – The l-p norm to use when computing distances between group ROC points.
+Used only for the “equalized odds” constraint (different l-p norms
+lead to different equalized-odds relaxations).
+By default np.inf, which corresponds to the l-inf norm.</p></li>
+<li><p><strong>max_roc_ticks</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of ticks (points) in each group’s ROC, when
+computing the optimal fair classifier, by default 1000.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – A random seed used for reproducibility when producing randomized
+classifiers.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.constraint_violation">
+<span class="sig-name descname"><span class="pre">constraint_violation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.constraint_violation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.constraint_violation" title="Link to this definition"></a></dt>
+<dd><p>Theoretical constraint violation of the LP solution found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constraint_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Optionally, may provide another constraint name that will be used
+instead of this classifier’s self.constraint;</p></li>
+<li><p><strong>l_p_norm</strong> (<em>int</em><em>, </em><em>optional</em>) – Which l-p norm to use when computing distances between group ROC
+points. Used only for the “equalized odds” constraint.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fairness constraint violation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.cost">
+<span class="sig-name descname"><span class="pre">cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">false_pos_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_neg_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.cost" title="Link to this definition"></a></dt>
+<dd><p>Computes the theoretical cost of the solution found.</p>
+<p>NOTE: use false_pos_cost==false_neg_cost==1 for the 0-1 loss (the
+standard error rate), which is equal to <cite>1 - accuracy</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>false_pos_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a FALSE POSITIVE error, by default will take the value
+given in the object’s constructor.</p></li>
+<li><p><strong>false_neg_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a FALSE NEGATIVE error, by default will take the value
+given in the object’s constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The cost of the solution found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.demographic_parity_violation">
+<span class="sig-name descname"><span class="pre">demographic_parity_violation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.demographic_parity_violation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.demographic_parity_violation" title="Link to this definition"></a></dt>
+<dd><p>Computes the theoretical violation of the demographic parity constraint.</p>
+<p>That is, the maximum distance between groups’ PPR (positive prediction
+rate).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The demographic parity constraint violation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.equalized_odds_violation">
+<span class="sig-name descname"><span class="pre">equalized_odds_violation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.equalized_odds_violation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.equalized_odds_violation" title="Link to this definition"></a></dt>
+<dd><p>Computes the theoretical violation of the equal odds constraint
+(i.e., the maximum l-inf distance between the ROC point of any pair
+of groups).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>l_p_norm</strong> (<em>int</em><em>, </em><em>optional</em>) – Which l-p norm to use when computing distances between group ROC
+points.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The equal-odds constraint violation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.error_rate_parity_constraint_violation">
+<span class="sig-name descname"><span class="pre">error_rate_parity_constraint_violation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.error_rate_parity_constraint_violation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.error_rate_parity_constraint_violation" title="Link to this definition"></a></dt>
+<dd><p>Computes the theoretical violation of an error-rate parity constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>error_type</strong> (<em>str</em>) – <dl class="simple">
+<dt>One of the following values:</dt><dd><p>”fp”, for false positive errors (FPR or TNR parity);
+“fn”, for false negative errors (TPR or FNR parity).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The maximum constraint violation among all groups.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit this predictor to achieve the (possibly relaxed) equal odds
+constraint on the provided data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray</em>) – The input features.</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – The input labels.</p></li>
+<li><p><strong>group</strong> (<em>np.ndarray</em>) – The group membership of each sample.
+Assumes groups are numbered [0, 1, …, num_groups-1].</p></li>
+<li><p><strong>y_scores</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The pre-computed model predictions on this data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.global_prevalence">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">global_prevalence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.global_prevalence" title="Link to this definition"></a></dt>
+<dd><p>Global prevalence, i.e., P(Y=1).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.global_roc_point">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">global_roc_point</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.global_roc_point" title="Link to this definition"></a></dt>
+<dd><p>Global ROC point achieved by solution.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_prevalence">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">groupwise_prevalence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_prevalence" title="Link to this definition"></a></dt>
+<dd><p>Group-specific prevalence, i.e., P(Y=1|A=a)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_roc_data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">groupwise_roc_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_roc_data" title="Link to this definition"></a></dt>
+<dd><p>Group-specific ROC data containing (FPR, TPR, threshold) triplets.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_roc_hulls">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">groupwise_roc_hulls</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_roc_hulls" title="Link to this definition"></a></dt>
+<dd><p>Group-specific ROC convex hulls achieved by underlying predictor.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_roc_points">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">groupwise_roc_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.groupwise_roc_points" title="Link to this definition"></a></dt>
+<dd><p>Group-specific ROC points achieved by solution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.threshold_optimizer.RelaxedThresholdOptimizer.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/threshold_optimizer.html#RelaxedThresholdOptimizer.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.predict" title="Link to this definition"></a></dt>
+<dd><p>Generate predictions for the given input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray</em>) – Input samples.</p></li>
+<li><p><strong>group</strong> (<em>np.ndarray</em>) – Input sensitive groups.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A sequence of predictions, one per input sample and input group.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-error_parity.pareto_curve">
+<span id="error-parity-pareto-curve-module"></span><h2>error_parity.pareto_curve module<a class="headerlink" href="#module-error_parity.pareto_curve" title="Link to this heading"></a></h2>
+<p>Utils for computing the fairness-accuracy Pareto frontier of a classifier.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">compute_inner_and_outer_adjustment_ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_results_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perf_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_perf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#compute_inner_and_outer_adjustment_ci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci" title="Link to this definition"></a></dt>
+<dd><p>Computes the interior/inner and exterior/outer adjustment curves,
+corresponding to the confidence intervals (by default 95% c.i.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>postproc_results_df</strong> – A tuple containing (xticks, inner_yticks, outer_yticks).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[np.array, np.array, np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.compute_postprocessing_curve">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">compute_postprocessing_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fairness_constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'equalized_odds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">0.01,</span> <span class="pre">0.02,</span> <span class="pre">0.03,</span> <span class="pre">0.04,</span> <span class="pre">0.05,</span> <span class="pre">0.06,</span> <span class="pre">0.07,</span> <span class="pre">0.08,</span> <span class="pre">0.09,</span> <span class="pre">0.1,</span> <span class="pre">0.11,</span> <span class="pre">0.12,</span> <span class="pre">0.13,</span> <span class="pre">0.14,</span> <span class="pre">0.15,</span> <span class="pre">0.16,</span> <span class="pre">0.17,</span> <span class="pre">0.18,</span> <span class="pre">0.19,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.4,</span> <span class="pre">0.5,</span> <span class="pre">0.6,</span> <span class="pre">0.7,</span> <span class="pre">0.8,</span> <span class="pre">0.9])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance_tick_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predict_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'predict_proba'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#compute_postprocessing_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.compute_postprocessing_curve" title="Link to this definition"></a></dt>
+<dd><p>Computes the fairness and performance of the given classifier after
+adjusting (postprocessing) for varying levels of fairness tolerance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>object</em>) – The model to use.</p></li>
+<li><p><strong>fit_data</strong> (<em>tuple</em>) – Data triplet to use to fit postprocessing intervention, (X, Y, S),
+respectively containing the features, labels, and sensitive attribute.</p></li>
+<li><p><strong>eval_data</strong> (<em>tuple</em><em> or </em><em>dict</em><em>[</em><em>tuple</em><em>]</em>) – Data triplet to use to evaluate postprocessing intervention on (same
+format as <cite>fit_data</cite>), or a dictionary of &lt;data_name&gt;-&gt;&lt;data_triplet&gt;
+containing multiple datasets to evaluate on.</p></li>
+<li><p><strong>fairness_constraint</strong> (<em>str</em><em>, </em><em>optional</em>) – The fairness constraint to use , by default “equalized_odds”.</p></li>
+<li><p><strong>l_p_norm</strong> (<em>int</em><em>, </em><em>optional</em>) – The norm to use when computing the fairness constraint, by default np.inf.
+Note: only compatible with the “equalized odds” constraint.</p></li>
+<li><p><strong>bootstrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to compute uncertainty estimates via bootstrapping, by default
+False.</p></li>
+<li><p><strong>tolerance_ticks</strong> (<em>list</em><em>, </em><em>optional</em>) – List of constraint tolerances to use when computing adjustment curve.
+By default will use higher granularity/precision for lower levels of
+disparity, and lower granularity for higher levels of disparity.
+Should correspond to a sorted list of values between 0 and 1.
+Will be ignored if <cite>tolerance_tick_step</cite> is provided.</p></li>
+<li><p><strong>tolerance_tick_step</strong> (<em>float</em><em>, </em><em>optional</em>) – Distance between constraint tolerances in the adjustment curve.
+Will override <cite>tolerance_ticks</cite> if provided!</p></li>
+<li><p><strong>predict_method</strong> (<em>str</em><em>, </em><em>optional</em>) – Which method to call to obtain predictions out of the given model.
+Use <cite>predict_method=”__call__”</cite> for a callable predictor, or the default
+<cite>predict_method=”predict_proba”</cite> for a predictor with sklearn interface.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of parallel jobs to use, if omitted will use <cite>os.cpu_count()-1</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>postproc_results_df</strong> – A DataFrame containing the results, one row per tolerance tick.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.fit_and_evaluate_postprocessing">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">fit_and_evaluate_postprocessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_fit_pred_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">bootstrap_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#fit_and_evaluate_postprocessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.fit_and_evaluate_postprocessing" title="Link to this definition"></a></dt>
+<dd><p>Fit and evaluate a postprocessing intervention on the given predictor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postproc_template</strong> (<a class="reference internal" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer" title="error_parity.threshold_optimizer.RelaxedThresholdOptimizer"><em>RelaxedThresholdOptimizer</em></a>) – An object that serves as the template to copy when creating the
+postprocessing optimizer.</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>) – The tolerance (or slack) for fairness constraint fulfillment. This value
+will override the <cite>tolerance</cite> attribute of the <cite>postproc_template</cite> object.</p></li>
+<li><p><strong>fit_data</strong> (<em>tuple</em>) – The data used to fit postprocessing.</p></li>
+<li><p><strong>eval_data</strong> (<em>tuple</em><em> or </em><em>dict</em><em>[</em><em>tuple</em><em>]</em>) – The data or sequence of data to evaluate postprocessing on.
+If a tuple is provided, will call it “eval” data in the returned results
+dictionary; if a dict is provided, will assume {&lt;key_1&gt;: &lt;data_1&gt;, …}.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – The random seed, by default 42</p></li>
+<li><p><strong>y_fit_pred_scores</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The pre-computed predicted scores for the <cite>fit_data</cite>; if provided, will
+avoid re-computing these predictions for each function call.</p></li>
+<li><p><strong>bootstrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use bootstrapping when computing metric results for
+postprocessing, by default True.</p></li>
+<li><p><strong>bootstrap_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Any extra arguments to pass on to the bootstrapping function, by default
+None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>results</strong> – A dictionary of results, whose keys are the data type, and values the
+metric values obtained by postprocessing on that data type.</p>
+<p>For example:
+&gt;&gt;&gt; {
+&gt;&gt;&gt;     “validation”: {“accuracy”: 0.7, “…”: “…”},
+&gt;&gt;&gt;     “test”: {“accuracy”: 0.65, “…”: “…”},
+&gt;&gt;&gt; }</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, dict]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.get_envelope_of_postprocessing_frontier">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">get_envelope_of_postprocessing_frontier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_results_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perf_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'accuracy_mean_test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'equalized_odds_diff_mean_test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_perf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_disp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#get_envelope_of_postprocessing_frontier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.get_envelope_of_postprocessing_frontier" title="Link to this definition"></a></dt>
+<dd><p>Computes points in envelope of the given postprocessing frontier results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postproc_results_df</strong> (<em>pd.DataFrame</em>) – The postprocessing frontier results DF.</p></li>
+<li><p><strong>perf_col</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the column containing performance results, by default “accuracy_mean_test”</p></li>
+<li><p><strong>disp_col</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of column containing disparity results, by default “equalized_odds_diff_mean_test”</p></li>
+<li><p><strong>constant_clf_perf</strong> (<em>float</em><em>, </em><em>optional</em>) – The performance of a dummy constant classifier (in the same metric as
+<cite>perf_col</cite>), by default 0.5.</p></li>
+<li><p><strong>constant_clf_disp</strong> (<em>float</em><em>, </em><em>optional</em>) – The disparity of a dummy constant classifier (in the same metric as
+<cite>disp_col</cite>), by default 0.0; assumes a constant classifier fulfills
+fairness!</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2-D array containing the points in the convex hull of the Pareto curve.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-error_parity.plotting">
+<span id="error-parity-plotting-module"></span><h2>error_parity.plotting module<a class="headerlink" href="#module-error_parity.plotting" title="Link to this heading"></a></h2>
+<p>Utils for plotting postprocessing frontier and postprocessing solution.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.plotting.plot_polygon_edges">
+<span class="sig-prename descclassname"><span class="pre">error_parity.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_polygon_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon_points</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/plotting.html#plot_polygon_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.plotting.plot_polygon_edges" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.plotting.plot_postprocessing_frontier">
+<span class="sig-prename descclassname"><span class="pre">error_parity.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_postprocessing_frontier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_results_df</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perf_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_perf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/plotting.html#plot_postprocessing_frontier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.plotting.plot_postprocessing_frontier" title="Link to this definition"></a></dt>
+<dd><p>Helper to plot the given post-processing frontier results.</p>
+<p>Will use bootstrapped results if available, including plotting confidence
+intervals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postproc_results_df</strong> (<em>pd.DataFrame</em>) – The DataFrame containing postprocessing results.
+This should be the output of a call to <cite>compute_postprocessing_curve(.)</cite>.</p></li>
+<li><p><strong>perf_metric</strong> (<em>str</em>) – Which performance metric to plot (horizontal axis).</p></li>
+<li><p><strong>disp_metric</strong> (<em>str</em>) – Which disparity metric to plot (vertical axis).</p></li>
+<li><p><strong>show_data_type</strong> (<em>str</em>) – The type of data to show results for; usually this will be “test”.</p></li>
+<li><p><strong>constant_clf_perf</strong> (<em>float</em>) – Performance achieved by the constant classifier; this is the point of
+lowest performance and lowest disparity achievable by postprocessing.</p></li>
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Shown in the plot legend. Name of the model to be postprocessed.</p></li>
+<li><p><strong>color</strong> (<em>str</em><em>, </em><em>optional</em>) – Which color to use for plotting the postprocessing curve, by default “black”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.plotting.plot_postprocessing_solution">
+<span class="sig-prename descclassname"><span class="pre">error_parity.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_postprocessing_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postprocessed_clf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_roc_curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_roc_hulls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_group_optima</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_group_triangulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_global_optimum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_relaxation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fig_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/plotting.html#plot_postprocessing_solution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.plotting.plot_postprocessing_solution" title="Link to this definition"></a></dt>
+<dd><p>Plots the group-specific solutions found for this predictor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postprocessed_clf</strong> (<a class="reference internal" href="#error_parity.threshold_optimizer.RelaxedThresholdOptimizer" title="error_parity.threshold_optimizer.RelaxedThresholdOptimizer"><em>RelaxedThresholdOptimizer</em></a>) – A postprocessed classifier already fitted on some data.</p></li>
+<li><p><strong>plot_roc_curves</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the global ROC curves, by default False.</p></li>
+<li><p><strong>plot_roc_hulls</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the global ROC convex hulls, by default True.</p></li>
+<li><p><strong>plot_group_optima</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the group-specific optima, by default True.</p></li>
+<li><p><strong>plot_group_triangulation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the triangulation of a group-specific solution, when
+such triangulation is needed to achieve a target ROC point.</p></li>
+<li><p><strong>plot_global_optimum</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the global optimum ROC point, by default True.</p></li>
+<li><p><strong>plot_diagonal</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the ROC diagonal with FPR=TPR, by default True.</p></li>
+<li><p><strong>plot_relaxation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot the constraint relaxation bounding box, by default False.</p></li>
+<li><p><strong>group_name_map</strong> (<em>dict</em><em>, </em><em>optional</em>) – A dictionary mapping each group’s value to an appropriate name to show
+in the plot legend, by default None.</p></li>
+<li><p><strong>figure</strong> (<em>matplotlib.figure.Figure</em><em>, </em><em>optional</em>) – A matplotlib figure to use when plotting, by default will generate a new
+figure for plotting.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-error_parity.evaluation">
+<span id="error-parity-evaluation-module"></span><h2>error_parity.evaluation module<a class="headerlink" href="#module-error_parity.evaluation" title="Link to this heading"></a></h2>
+<p>A set of functions to evaluate predictions on common performance
+and fairness metrics, possibly at a specified FPR or FNR target.</p>
+<p>Based on: <a class="reference external" href="https://github.com/AndreFCruz/hpt/blob/main/src/hpt/evaluation.py">https://github.com/AndreFCruz/hpt/blob/main/src/hpt/evaluation.py</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.evaluation.eval_accuracy_and_equalized_odds">
+<span class="sig-prename descclassname"><span class="pre">error_parity.evaluation.</span></span><span class="sig-name descname"><span class="pre">eval_accuracy_and_equalized_odds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred_binary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive_attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/evaluation.html#eval_accuracy_and_equalized_odds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.evaluation.eval_accuracy_and_equalized_odds" title="Link to this definition"></a></dt>
+<dd><p>Evaluate accuracy and equalized odds of the given predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true class labels.</p></li>
+<li><p><strong>y_pred_binary</strong> (<em>np.ndarray</em>) – The predicted class labels.</p></li>
+<li><p><strong>sensitive_attr</strong> (<em>np.ndarray</em>) – The sensitive attribute data.</p></li>
+<li><p><strong>l_p_norm</strong> (<em>int</em><em>, </em><em>optional</em>) – The norm to use for the constraint violation, by default np.inf.</p></li>
+<li><p><strong>display</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print results or not, by default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of (fairness, equalized odds violation).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.evaluation.evaluate_fairness">
+<span class="sig-prename descclassname"><span class="pre">error_parity.evaluation.</span></span><span class="sig-name descname"><span class="pre">evaluate_fairness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive_attribute</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_groupwise_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/evaluation.html#evaluate_fairness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.evaluation.evaluate_fairness" title="Link to this definition"></a></dt>
+<dd><p>Evaluates fairness as the ratios between group-wise performance metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true class labels.</p></li>
+<li><p><strong>y_pred</strong> (<em>np.ndarray</em>) – The discretized predictions.</p></li>
+<li><p><strong>sensitive_attribute</strong> (<em>np.ndarray</em>) – The sensitive attribute (protected group membership).</p></li>
+<li><p><strong>return_groupwise_metrics</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em><em>, </em><em>optional</em>) – Whether to return group-wise performance metrics (bool: True) or only
+the ratios between these metrics (bool: False), by default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary with key-value pairs of (metric name, metric value).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.evaluation.evaluate_performance">
+<span class="sig-prename descclassname"><span class="pre">error_parity.evaluation.</span></span><span class="sig-name descname"><span class="pre">evaluate_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/evaluation.html#evaluate_performance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.evaluation.evaluate_performance" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the provided predictions on common performance metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true class labels.</p></li>
+<li><p><strong>y_pred</strong> (<em>np.ndarray</em>) – The discretized predictions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary with key-value pairs of (metric name, metric value).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.evaluation.evaluate_predictions">
+<span class="sig-prename descclassname"><span class="pre">error_parity.evaluation.</span></span><span class="sig-name descname"><span class="pre">evaluate_predictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive_attribute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_groupwise_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">threshold_target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/evaluation.html#evaluate_predictions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.evaluation.evaluate_predictions" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the given predictions on both performance and fairness metrics.</p>
+<p>Will only evaluate fairness if <cite>sensitive_attribute</cite> is provided.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value of <cite>log_loss</cite> may be inaccurate when using <cite>scikit-learn&lt;1.2</cite>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true labels.</p></li>
+<li><p><strong>y_pred_scores</strong> (<em>np.ndarray</em>) – The predicted scores.</p></li>
+<li><p><strong>sensitive_attribute</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The sensitive attribute - which protected group each sample belongs to.
+If not provided, will not compute fairness metrics.</p></li>
+<li><p><strong>return_groupwise_metrics</strong> (<em>bool</em>) – Whether to return groupwise performance metrics (requires providing
+<cite>sensitive_attribute</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of (key, value) -&gt; (metric_name, metric_value).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.evaluation.evaluate_predictions_bootstrap">
+<span class="sig-prename descclassname"><span class="pre">error_parity.evaluation.</span></span><span class="sig-name descname"><span class="pre">evaluate_predictions_bootstrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive_attribute</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_pct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">threshold_target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/evaluation.html#evaluate_predictions_bootstrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.evaluation.evaluate_predictions_bootstrap" title="Link to this definition"></a></dt>
+<dd><p>Computes bootstrap estimates of several metrics for the given predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true labels.</p></li>
+<li><p><strong>y_pred_scores</strong> (<em>np.ndarray</em>) – The score predictions.</p></li>
+<li><p><strong>sensitive_attribute</strong> (<em>np.ndarray</em>) – The sensitive attribute data.</p></li>
+<li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – How many bootstrap samples to draw, by default 200.</p></li>
+<li><p><strong>confidence_pct</strong> (<em>float</em><em>, </em><em>optional</em>) – How large of a confidence interval to use when reporting lower and upper
+bounds, by default 95 (i.e., 2.5 to 97.5 percentile of results).</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – The random seed, by default 42.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of results</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-error_parity.binarize">
+<span id="error-parity-binarize-module"></span><h2>error_parity.binarize module<a class="headerlink" href="#module-error_parity.binarize" title="Link to this heading"></a></h2>
+<p>Module to binarize continuous-score predictions.</p>
+<p>Based on: <a class="reference external" href="https://github.com/AndreFCruz/hpt/blob/main/src/hpt/binarize.py">https://github.com/AndreFCruz/hpt/blob/main/src/hpt/binarize.py</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.binarize.compute_binary_predictions">
+<span class="sig-prename descclassname"><span class="pre">error_parity.binarize.</span></span><span class="sig-name descname"><span class="pre">compute_binary_predictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ppr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/binarize.html#compute_binary_predictions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.binarize.compute_binary_predictions" title="Link to this definition"></a></dt>
+<dd><p>Discretizes the given score predictions into binary labels.</p>
+<p>If necessary, will randomly untie binary predictions with equal score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true binary labels</p></li>
+<li><p><strong>y_pred_scores</strong> (<em>np.ndarray</em>) – Predictions as a continuous score between 0 and 1</p></li>
+<li><p><strong>threshold</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Whether to use a specified (global) threshold, by default None</p></li>
+<li><p><strong>tpr</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Whether to target a specified TPR (true positive rate, or recall), by
+default None</p></li>
+<li><p><strong>fpr</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Whether to target a specified FPR (false positive rate), by default None</p></li>
+<li><p><strong>ppr</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Whether to target a specified PPR (positive prediction rate), by default
+None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The binarized predictions according to the specified target.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-error_parity.classifiers">
+<span id="error-parity-classifiers-module"></span><h2>error_parity.classifiers module<a class="headerlink" href="#module-error_parity.classifiers" title="Link to this heading"></a></h2>
+<p>Helper functions to construct and use randomized classifiers.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="error_parity.classifiers.BinaryClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">error_parity.classifiers.</span></span><span class="sig-name descname"><span class="pre">BinaryClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">score_predictor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#BinaryClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.BinaryClassifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#error_parity.classifiers.Classifier" title="error_parity.classifiers.Classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code></a></p>
+<p>Constructs a deterministic binary classifier, by thresholding a
+real-valued score predictor.</p>
+<p>Constructs a deterministic binary classifier from the given
+real-valued score predictor and a threshold in {0, 1}.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="error_parity.classifiers.BinaryClassifierAtROCDiagonal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">error_parity.classifiers.</span></span><span class="sig-name descname"><span class="pre">BinaryClassifierAtROCDiagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_fpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_tpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#BinaryClassifierAtROCDiagonal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.BinaryClassifierAtROCDiagonal" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#error_parity.classifiers.Classifier" title="error_parity.classifiers.Classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code></a></p>
+<p>A dummy classifier whose predictions have no correlation with the input
+features, but achieves whichever target FPR or TPR you want (on ROC diag.)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="error_parity.classifiers.Classifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">error_parity.classifiers.</span></span><span class="sig-name descname"><span class="pre">Classifier</span></span><a class="reference internal" href="_modules/error_parity/classifiers.html#Classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.Classifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="error_parity.classifiers.EnsembleGroupwiseClassifiers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">error_parity.classifiers.</span></span><span class="sig-name descname"><span class="pre">EnsembleGroupwiseClassifiers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_to_clf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#EnsembleGroupwiseClassifiers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.EnsembleGroupwiseClassifiers" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#error_parity.classifiers.Classifier" title="error_parity.classifiers.Classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code></a></p>
+<p>Constructs a classifier from a set of group-specific classifiers.</p>
+<p>Constructs a classifier from a set of group-specific classifiers.</p>
+<p>Must be provided exactly one classifier per unique group value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>group_to_clf</strong> (<em>dict</em><em>[</em><em>int</em><em> | </em><em>str</em><em>, </em><em>callable</em><em>]</em>) – A mapping of group value to the classifier that should handle
+predictions for that specific group.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="error_parity.classifiers.RandomizedClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">error_parity.classifiers.</span></span><span class="sig-name descname"><span class="pre">RandomizedClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classifiers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probabilities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#RandomizedClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.RandomizedClassifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#error_parity.classifiers.Classifier" title="error_parity.classifiers.Classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code></a></p>
+<p>Constructs a randomized classifier from the given  classifiers and
+their probabilities.</p>
+<p>Constructs a randomized classifier from the given  classifiers and
+their probabilities.</p>
+<p>This classifier will compute predictions for the whole input dataset at
+once, which will in general be faster for larger inputs (when compared
+to predicting each sample separately).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>classifiers</strong> (<em>list</em><em>[</em><em>callable</em><em>]</em>) – A list of classifiers</p></li>
+<li><p><strong>probabilities</strong> (<em>list</em><em>[</em><em>float</em><em>]</em>) – A list of probabilities for each given classifier, where
+probabilities[idx] is the probability of using the prediction from
+classifiers[idx].</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – A random seed, by default 42.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corresponding randomized classifier.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.classifiers.RandomizedClassifier.construct_at_target_ROC">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_at_target_ROC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roc_curve_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_roc_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#RandomizedClassifier.construct_at_target_ROC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.RandomizedClassifier.construct_at_target_ROC" title="Link to this definition"></a></dt>
+<dd><p>Constructs a randomized classifier in the interior of the
+convex hull of the classifier’s ROC curve, at a given target
+ROC point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictor</strong> (<em>callable</em>) – A predictor that outputs real-valued scores in range [0; 1].</p></li>
+<li><p><strong>roc_curve_data</strong> (<em>tuple</em><em>[</em><em>np.array</em><em>...</em><em>]</em>) – The ROC curve of the given classifier, as a tuple of
+(FPR values; TPR values; threshold values).</p></li>
+<li><p><strong>target_roc_point</strong> (<em>np.ndarray</em>) – The target ROC point in (FPR, TPR).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rand_clf</strong> – A (randomized) binary classifier whose expected FPR and TPR
+corresponds to the given target ROC point.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.classifiers.RandomizedClassifier.find_points_for_target_ROC">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_points_for_target_ROC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roc_curve_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_roc_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#RandomizedClassifier.find_points_for_target_ROC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.RandomizedClassifier.find_points_for_target_ROC" title="Link to this definition"></a></dt>
+<dd><p>Retrieves a set of realizable points (and respective weights) in the
+provided ROC curve that can be used to realize any target ROC in the
+interior of the ROC curve.</p>
+<p>NOTE: this method is a bit redundant – has functionality in common with
+RandomizedClassifier.construct_at_target_ROC()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="error_parity.classifiers.RandomizedClassifier.find_weights_given_two_points">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_weights_given_two_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/classifiers.html#RandomizedClassifier.find_weights_given_two_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.classifiers.RandomizedClassifier.find_weights_given_two_points" title="Link to this definition"></a></dt>
+<dd><p>Given two ROC points corresponding to existing binary classifiers,
+find the weights that result in a classifier whose ROC point is target_point.</p>
+<p>May need to interpolate the two given points with a third point corresponding
+to a random classifier (random uniform distribution with different thresholds).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns a tuple of numpy arrays (Ws, Ps), such that Ws &#64; Ps == target_point.
+The 1st array, Ws, corresponds to the weights of each point in the 2nd array, Ps.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-error_parity.cvxpy_utils">
+<span id="error-parity-cvxpy-utils-module"></span><h2>error_parity.cvxpy_utils module<a class="headerlink" href="#module-error_parity.cvxpy_utils" title="Link to this heading"></a></h2>
+<p>A set of helper functions for using cvxpy.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.cvxpy_utils.compute_fair_optimum">
+<span class="sig-prename descclassname"><span class="pre">error_parity.cvxpy_utils.</span></span><span class="sig-name descname"><span class="pre">compute_fair_optimum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fairness_constraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupwise_roc_hulls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_sizes_label_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_sizes_label_neg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupwise_prevalence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_prevalence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_positive_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_negative_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/cvxpy_utils.html#compute_fair_optimum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.cvxpy_utils.compute_fair_optimum" title="Link to this definition"></a></dt>
+<dd><p>Computes the solution to finding the optimal fair (equal odds) classifier.</p>
+<p>Can relax the equal odds constraint by some given tolerance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fairness_constraint</strong> (<em>str</em>) – <p>The name of the fairness constraint under which the LP will be
+optimized. Possible inputs are:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>’equalized_odds’</dt><dd><p>match true positive and false positive rates across groups</p>
+</dd>
+</dl>
+</div></blockquote>
+</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>) – A value for the tolerance when enforcing the fairness constraint.</p></li>
+<li><p><strong>groupwise_roc_hulls</strong> (<em>dict</em><em>[</em><em>int</em><em>, </em><em>np.ndarray</em><em>]</em>) – A dict mapping each group to the convex hull of the group’s ROC curve.
+The convex hull is an np.array of shape (n_points, 2), containing the
+points that form the convex hull of the ROC curve, sorted in COUNTER
+CLOCK-WISE order.</p></li>
+<li><p><strong>group_sizes_label_pos</strong> (<em>np.ndarray</em>) – The relative or absolute number of positive samples in each group.</p></li>
+<li><p><strong>group_sizes_label_neg</strong> (<em>np.ndarray</em>) – The relative or absolute number of negative samples in each group.</p></li>
+<li><p><strong>global_prevalence</strong> (<em>float</em>) – The global prevalence of positive samples.</p></li>
+<li><p><strong>false_positive_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a FALSE POSITIVE error, by default 1.</p></li>
+<li><p><strong>false_negative_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a FALSE NEGATIVE error, by default 1.</p></li>
+<li><p><strong>l_p_norm</strong> (<em>int</em><em> | </em><em>str</em><em>, </em><em>optional</em>) – The type of l-p norm to use when computing the distance between two ROC
+points. Used only for the “equalized_odds” constraint. By default uses
+<cite>np.inf</cite> (l-infinity distance): the maximum between groups’ TPR and FPR
+differences. Using <cite>l_p_norm=1</cite> will correspond to the
+<cite>average_abs_odds_difference</cite>.
+See the following link for more information on this parameter:
+<a class="reference external" href="https://www.cvxpy.org/api_reference/cvxpy.atoms.other_atoms.html#norm">https://www.cvxpy.org/api_reference/cvxpy.atoms.other_atoms.html#norm</a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>(groupwise_roc_points, global_roc_point)</strong> – A tuple pair, (&lt;1&gt;, &lt;2&gt;), containing:
+1: an array with the group-wise ROC points for the solution.
+2: an array with the single global ROC point for the solution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.cvxpy_utils.compute_halfspace_inequality">
+<span class="sig-prename descclassname"><span class="pre">error_parity.cvxpy_utils.</span></span><span class="sig-name descname"><span class="pre">compute_halfspace_inequality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/cvxpy_utils.html#compute_halfspace_inequality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.cvxpy_utils.compute_halfspace_inequality" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Computes the halfspace inequality defined by the vector p1-&gt;p2, such that</dt><dd><p>Ax + b &lt;= 0,
+where A and b are extracted from the line that goes through p1-&gt;p2.</p>
+</dd>
+</dl>
+<p>As such, the inequality enforces that points must lie on the LEFT of the
+line defined by the p1-&gt;p2 vector.</p>
+<p>In other words, input points are assumed to be in COUNTER CLOCK-WISE order
+(right-hand rule).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p1</strong> (<em>np.ndarray</em>) – A point in the halfspace.</p></li>
+<li><p><strong>p2</strong> (<em>np.ndarray</em>) – Another point in the halfspace.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns an array of size=(n_dims + 1), with format [A; b],
+representing the inequality Ax + b &lt;= 0.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float, float]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Thrown in case if inconsistent internal state variables.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.cvxpy_utils.compute_line">
+<span class="sig-prename descclassname"><span class="pre">error_parity.cvxpy_utils.</span></span><span class="sig-name descname"><span class="pre">compute_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/cvxpy_utils.html#compute_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.cvxpy_utils.compute_line" title="Link to this definition"></a></dt>
+<dd><p>Computes the slope and intercept of the line that passes
+through the two given points.</p>
+<p>The intercept is the value at x=0!
+(or NaN for vertical lines)</p>
+<p>For vertical lines just use the x-value of one of the points
+to find the intercept at y=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p1</strong> (<em>np.ndarray</em>) – A 2-D point.</p></li>
+<li><p><strong>p2</strong> (<em>np.ndarray</em>) – A 2-D point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple pair with (slope, intercept) of the line that goes from p1 to p2.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Raised when input is invalid, e.g., when p1 == p2.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.cvxpy_utils.make_cvxpy_halfspace_inequality">
+<span class="sig-prename descclassname"><span class="pre">error_parity.cvxpy_utils.</span></span><span class="sig-name descname"><span class="pre">make_cvxpy_halfspace_inequality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cvxpy_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/cvxpy_utils.html#make_cvxpy_halfspace_inequality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.cvxpy_utils.make_cvxpy_halfspace_inequality" title="Link to this definition"></a></dt>
+<dd><p>Creates a single cvxpy inequality constraint that enforces the given
+point, <cite>cvxpy_point</cite>, to lie on the left of the vector p1-&gt;p2.</p>
+<p>Points must be sorted in counter clock-wise order!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p1</strong> (<em>np.ndarray</em>) – A point p1.</p></li>
+<li><p><strong>p2</strong> (<em>np.ndarray</em>) – Another point p2.</p></li>
+<li><p><strong>cvxpy_point</strong> (<em>Variable</em>) – The cvxpy variable over which the constraint will be applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A linear inequality constraint of type Ax + b &lt;= 0.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.cvxpy_utils.make_cvxpy_point_in_polygon_constraints">
+<span class="sig-prename descclassname"><span class="pre">error_parity.cvxpy_utils.</span></span><span class="sig-name descname"><span class="pre">make_cvxpy_point_in_polygon_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon_vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cvxpy_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/cvxpy_utils.html#make_cvxpy_point_in_polygon_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.cvxpy_utils.make_cvxpy_point_in_polygon_constraints" title="Link to this definition"></a></dt>
+<dd><p>Creates the set of cvxpy constraints that force the given cvxpy variable
+point to lie within the polygon defined by the given vertices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>polygon_vertices</strong> (<em>np.ndarray</em>) – A sequence of points that make up a polygon.
+Points must be sorted in COUNTER CLOCK-WISE order! (right-hand rule)</p></li>
+<li><p><strong>cvxpy_point</strong> (<em>cvxpy.Variable</em>) – A cvxpy variable representing a point, over which the constraints will
+be applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of cvxpy constraints.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Expression]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-error_parity.roc_utils">
+<span id="error-parity-roc-utils-module"></span><h2>error_parity.roc_utils module<a class="headerlink" href="#module-error_parity.roc_utils" title="Link to this heading"></a></h2>
+<p>Helper functions to solve the relaxed equal odds problem.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.roc_utils.calc_cost_of_point">
+<span class="sig-prename descclassname"><span class="pre">error_parity.roc_utils.</span></span><span class="sig-name descname"><span class="pre">calc_cost_of_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fnr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prevalence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_pos_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_neg_cost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/roc_utils.html#calc_cost_of_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.roc_utils.calc_cost_of_point" title="Link to this definition"></a></dt>
+<dd><p>Calculates the cost of the given ROC point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fpr</strong> (<em>float</em>) – The false positive rate (FPR).</p></li>
+<li><p><strong>fnr</strong> (<em>float</em>) – The false negative rate (FNR).</p></li>
+<li><p><strong>prevalence</strong> (<em>float</em>) – The prevalence of positive samples in the dataset,
+i.e., np.sum(y_true) / len(y_true)</p></li>
+<li><p><strong>false_pos_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a false positive error, by default 1.</p></li>
+<li><p><strong>false_neg_cost</strong> (<em>float</em><em>, </em><em>optional</em>) – The cost of a false negative error, by default 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>cost</strong> – The cost of the given ROC point (divided by the size of the dataset).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.roc_utils.compute_global_roc_from_groupwise">
+<span class="sig-prename descclassname"><span class="pre">error_parity.roc_utils.</span></span><span class="sig-name descname"><span class="pre">compute_global_roc_from_groupwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groupwise_roc_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupwise_label_pos_weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupwise_label_neg_weight</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/roc_utils.html#compute_global_roc_from_groupwise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.roc_utils.compute_global_roc_from_groupwise" title="Link to this definition"></a></dt>
+<dd><p>Computes the global ROC point that corresponds to the provided group-wise
+ROC points.</p>
+<p>The global ROC is a linear combination of the group-wise points, with
+different weights for computing FPR and TPR – the first related to LNs, and
+the second to LPs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>groupwise_roc_points</strong> (<em>np.ndarray</em>) – An array of shape (n_groups, n_roc_dims) containing one ROC point per
+group.</p></li>
+<li><p><strong>groupwise_label_pos_weight</strong> (<em>np.ndarray</em>) – The relative size of each group in terms of its label POSITIVE samples
+(out of all POSITIVE samples, how many are in each group).</p></li>
+<li><p><strong>groupwise_label_neg_weight</strong> (<em>np.ndarray</em>) – The relative size of each group in terms of its label NEGATIVE samples
+(out of all NEGATIVE samples, how many are in each group).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>global_roc_point</strong> – A single point that corresponds to the global outcome of the given
+group-wise ROC points.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.roc_utils.compute_roc_point_from_predictions">
+<span class="sig-prename descclassname"><span class="pre">error_parity.roc_utils.</span></span><span class="sig-name descname"><span class="pre">compute_roc_point_from_predictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred_binary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/roc_utils.html#compute_roc_point_from_predictions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.roc_utils.compute_roc_point_from_predictions" title="Link to this definition"></a></dt>
+<dd><p>Computes the ROC point associated with the provided binary predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>np.ndarray</em>) – The true labels.</p></li>
+<li><p><strong>y_pred_binary</strong> (<em>np.ndarray</em>) – The binary predictions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The resulting ROC point, i.e., a tuple (FPR, TPR).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.roc_utils.roc_convex_hull">
+<span class="sig-prename descclassname"><span class="pre">error_parity.roc_utils.</span></span><span class="sig-name descname"><span class="pre">roc_convex_hull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roc_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/roc_utils.html#roc_convex_hull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.roc_utils.roc_convex_hull" title="Link to this definition"></a></dt>
+<dd><p>Computes the convex hull of the provided ROC points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>roc_points</strong> (<em>np.ndarray</em>) – An array of shape (n_points, n_dims) containing all points
+of a provided ROC curve.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>hull_points</strong> – An array of shape (n_hull_points, n_dim) containing all
+points in the convex hull of the ROC curve.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="API reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="notebooks.html" class="btn btn-neutral float-right" title="Notebooks Gallery" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

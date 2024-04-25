@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>README.md &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="_static/custom.js?v=882eb7ae"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API reference" href="modules.html" />
+    <link rel="prev" title="Welcome to error-parity’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Readme file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#error-parity">error-parity    <!-- omit in toc --></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installing">Installing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-started">Getting started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-it-works">How it works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fairness-constraints">Fairness constraints</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#equalized-odds-relaxations">Equalized odds relaxations</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#citing">Citing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">README.md</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="readme-md">
+<h1>README.md<a class="headerlink" href="#readme-md" title="Link to this heading"></a></h1>
+<section id="error-parity">
+<h2>error-parity    <!-- omit in toc --><a class="headerlink" href="#error-parity" title="Link to this heading"></a></h2>
+<p><img alt="Tests status" src="https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg" />
+<img alt="PyPI status" src="https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg" />
+<img alt="Documentation status" src="https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg" />
+<img alt="PyPI version" src="https://badgen.net/pypi/v/error-parity" />
+<img alt="OSI license" src="https://badgen.net/pypi/license/error-parity" />
+<img alt="Python compatibility" src="https://badgen.net/pypi/python/error-parity" /></p>
+<!-- ![PyPI version](https://img.shields.io/pypi/v/error-parity) -->
+<!-- ![OSI license](https://img.shields.io/pypi/l/error-parity) -->
+<!-- ![Compatible python versions](https://img.shields.io/pypi/pyversions/error-parity) -->
+<blockquote>
+<div><p>Work presented as an <em>oral at ICLR 2024</em>, titled <a class="reference external" href="https://openreview.net/forum?id=jr03SfWsBS">“Unprocessing Seven Years of Algorithmic Fairness”</a>.</p>
+</div></blockquote>
+<p>Fast postprocessing of any score-based predictor to meet fairness criteria.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> package can achieve strict or relaxed fairness constraint fulfillment,
+which can be useful to compare ML models at equal fairness levels.</p>
+<p>Package documentation available <a class="reference external" href="https://socialfoundations.github.io/error-parity/">here</a>.</p>
+<p>Contents:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#installing"><span class="std std-ref">Installing</span></a></p></li>
+<li><p><a class="reference internal" href="#getting-started"><span class="xref myst">Getting started</span></a></p></li>
+<li><p><a class="reference internal" href="#how-it-works"><span class="xref myst">How it works</span></a></p></li>
+<li><p><a class="reference internal" href="#fairness-constraints"><span class="xref myst">Fairness constraints</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#equalized-odds-relaxations"><span class="xref myst">Equalized odds relaxations</span></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#citing"><span class="std std-ref">Citing</span></a></p></li>
+</ul>
+<section id="installing">
+<h3>Installing<a class="headerlink" href="#installing" title="Link to this heading"></a></h3>
+<p>Install package from <a class="reference external" href="https://pypi.org/project/error-parity/">PyPI</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">error</span><span class="o">-</span><span class="n">parity</span>
+</pre></div>
+</div>
+<p>Or, for development, you can clone the repo and install from local sources:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">socialfoundations</span><span class="o">/</span><span class="n">error</span><span class="o">-</span><span class="n">parity</span><span class="o">.</span><span class="n">git</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">./</span><span class="n">error</span><span class="o">-</span><span class="n">parity</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-started">
+<h3>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>See detailed example notebooks under the <a class="reference internal" href="#./examples/"><span class="xref myst"><strong>examples folder</strong></span></a>
+and on the <a class="reference external" href="https://socialfoundations.github.io/error-parity/notebooks.html"><strong>package documentation</strong></a>.</p>
+</div></blockquote>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity</span> <span class="kn">import</span> <span class="n">RelaxedThresholdOptimizer</span>
+
+<span class="c1"># Given any trained model that outputs real-valued scores</span>
+<span class="n">fair_clf</span> <span class="o">=</span> <span class="n">RelaxedThresholdOptimizer</span><span class="p">(</span>
+    <span class="n">predictor</span><span class="o">=</span><span class="k">lambda</span> <span class="n">X</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>   <span class="c1"># for sklearn API</span>
+    <span class="c1"># predictor=model,            # use this for a callable model</span>
+    <span class="n">constraint</span><span class="o">=</span><span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>  <span class="c1"># other constraints are available</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>               <span class="c1"># fairness constraint tolerance</span>
+<span class="p">)</span>
+
+<span class="c1"># Fit the fairness adjustment on some data</span>
+<span class="c1"># This will find the optimal _fair classifier_</span>
+<span class="n">fair_clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+
+<span class="c1"># Now you can use `fair_clf` as any other classifier</span>
+<span class="c1"># You have to provide group information to compute fair predictions</span>
+<span class="n">y_pred_test</span> <span class="o">=</span> <span class="n">fair_clf</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X_test</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="how-it-works">
+<h3>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading"></a></h3>
+<p>Given a callable score-based predictor (i.e., <code class="docutils literal notranslate"><span class="pre">y_pred</span> <span class="pre">=</span> <span class="pre">predictor(X)</span></code>), and some <code class="docutils literal notranslate"><span class="pre">(X,</span> <span class="pre">Y,</span> <span class="pre">S)</span></code> data to fit, <code class="docutils literal notranslate"><span class="pre">RelaxedThresholdOptimizer</span></code> will:</p>
+<ol class="arabic simple">
+<li><p>Compute group-specific ROC curves and their convex hulls;</p></li>
+<li><p>Compute the $r$-relaxed optimal solution for the chosen fairness criterion (using <a class="reference external" href="https://www.cvxpy.org">cvxpy</a>);</p></li>
+<li><p>Find the set of group-specific binary classifiers that match the optimal solution found.</p>
+<ul class="simple">
+<li><p>each group-specific classifier is made up of (possibly randomized) group-specific thresholds over the given predictor;</p></li>
+<li><p>if a group’s ROC point is in the interior of its ROC curve, partial randomization of its predictions may be necessary.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="fairness-constraints">
+<h3>Fairness constraints<a class="headerlink" href="#fairness-constraints" title="Link to this heading"></a></h3>
+<p>You can choose specific fairness constraints via the <code class="docutils literal notranslate"><span class="pre">constraint</span></code> key-word argument to
+the <code class="docutils literal notranslate"><span class="pre">RelaxedThresholdOptimizer</span></code> constructor.
+The equation under each constraint details how it is evaluated, where $r$ is the
+relaxation (or tolerance) and $\mathcal{S}$ is the set of sensitive groups.</p>
+<p>Currently implemented fairness constraints:</p>
+<ul class="simple">
+<li><p>[x] equalized odds (Hardt et al., 2016) <strong>[default]</strong>;</p>
+<ul>
+<li><p>i.e., equal group-specific TPR and FPR;</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">constraint=&quot;equalized_odds&quot;</span></code>;</p></li>
+<li><p>$\max_{a, b \in \mathcal{S}} \max_{y \in {0, 1}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=y] - \mathbb{P}[\hat{Y}=1 | S=b, Y=y] \right) \leq r$</p></li>
+<li><p><a class="reference internal" href="#equalized-odds-relaxations"><span class="xref myst">other relaxations available</span></a> by changing the <code class="docutils literal notranslate"><span class="pre">l_p_norm</span></code> parameter;</p></li>
+</ul>
+</li>
+<li><p>[x] equal opportunity;</p>
+<ul>
+<li><p>i.e., equal group-specific TPR;</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">constraint=&quot;true_positive_rate_parity&quot;</span></code>;</p></li>
+<li><p>$\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=1] - \mathbb{P}[\hat{Y}=1 | S=b, Y=1] \right) \leq r$</p></li>
+</ul>
+</li>
+<li><p>[x] predictive equality;</p>
+<ul>
+<li><p>i.e., equal group-specific FPR;</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">constraint=&quot;false_positive_rate_parity&quot;</span></code>;</p></li>
+<li><p>$\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a, Y=0] - \mathbb{P}[\hat{Y}=1 | S=b, Y=0] \right) \leq r$</p></li>
+</ul>
+</li>
+<li><p>[x] demographic parity;</p>
+<ul>
+<li><p>i.e., equal group-specific predicted prevalence;</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">constraint=&quot;demographic_parity&quot;</span></code>;</p></li>
+<li><p>$\max_{a, b \in \mathcal{S}} \left( \mathbb{P}[\hat{Y}=1 | S=a] - \mathbb{P}[\hat{Y}=1 | S=b] \right) \leq r$</p></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<div><p>We welcome community contributions for <a class="reference external" href="https://www.cvxpy.org">cvxpy</a> implementations of other fairness constraints.</p>
+</div></blockquote>
+<section id="equalized-odds-relaxations">
+<h4>Equalized odds relaxations<a class="headerlink" href="#equalized-odds-relaxations" title="Link to this heading"></a></h4>
+<p>When using <code class="docutils literal notranslate"><span class="pre">constraint=&quot;equalized_odds&quot;</span></code>, different relaxations can be chosen by
+altering the <code class="docutils literal notranslate"><span class="pre">l_p_norm</span></code> parameter (which dictates how to compute the distance
+between group-specific ROC points).</p>
+<p>A few useful values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">l_p_norm=np.inf</span></code> <strong>[default]</strong> evaluates equalized-odds as the maximum
+between group-wise TPR and FPR differences (as shown above);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l_p_norm=1</span></code> evaluates equalized-odds as the sum of absolute difference in group-wise TPR and FPR;</p>
+<ul>
+<li><p>corresponds to <em>twice</em> the “average absolute odds” metric;</p></li>
+<li><p>accordingly, use twice the <code class="docutils literal notranslate"><span class="pre">tolerance</span></code> target to constrain the <code class="docutils literal notranslate"><span class="pre">average_abs_odds_difference</span></code>;</p></li>
+</ul>
+</li>
+</ul>
+<p>The actual equalized odds constraint implemented is:</p>
+<p>$\max_{a, b \in \mathcal{S}} \left\lVert ROC_a - ROC_b \right\rVert_p \leq r,$ where $ROC_a$ is the ROC point of group $S=a$ and $ROC_b$ is the ROC point of group $S=b$.</p>
+</section>
+</section>
+<section id="citing">
+<h3>Citing<a class="headerlink" href="#citing" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>@inproceedings{
+  cruz2024unprocessing,
+  title={Unprocessing Seven Years of Algorithmic Fairness},
+  author={Andr{\&#39;e} Cruz and Moritz Hardt},
+  booktitle={The Twelfth International Conference on Learning Representations},
+  year={2024},
+  url={https://openreview.net/forum?id=jr03SfWsBS}
+}
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to error-parity’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

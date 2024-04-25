@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Achieving equalized odds on real-world ACS data (ACSIncome) &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/custom.js?v=882eb7ae"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Achieving equalized odds on synthetic data" href="relaxed-equalized-odds.usage-example-synthetic-data.html" />
+    <link rel="prev" title="Notebooks Gallery" href="../notebooks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">API reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../notebooks.html">Example notebooks</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Achieving <em>equalized odds</em> on real-world ACS data (ACSIncome)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Given-some-data-(X,-Y,-S)">Given some data (X, Y, S)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Given-a-trained-predictor-(that-outputs-real-valued-scores)">Given a trained predictor (that outputs real-valued scores)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Construct-the-fair-optimal-classifier-(derived-from-the-given-predictor)">Construct the fair optimal classifier (derived from the given predictor)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plot-solution">Plot solution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Theoretical-results:">Theoretical results:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Plot-realized-ROC-points">Plot realized ROC points</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Fairness-vs-Performance-trade-off">Fairness vs Performance trade-off</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Fit-and-plot-similar-example-but-using-%22Equal-Opportunity%22-fairness-metric">Fit and plot similar example but using “Equal Opportunity” fairness metric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-synthetic-data.html">Achieving <em>equalized odds</em> on synthetic data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-synthetic-data.html#Plot-postprocessing-Pareto-frontier">Plot postprocessing Pareto frontier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage-example-for-other-constraints.synthetic-data.html">Achieving different fairness constraints on synthetic data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage-example-for-other-constraints.synthetic-data.html#Plot-Fairness-Accuracy-Pareto-frontier-achievable-by-postprocessing">Plot Fairness-Accuracy Pareto frontier achievable by postprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example-with-postprocessing-and-inprocessing.html">Example usage of <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> with other fairness-constrained classifiers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../notebooks.html">Notebooks Gallery</a></li>
+      <li class="breadcrumb-item active">Achieving <em>equalized odds</em> on real-world ACS data (ACSIncome)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/relaxed-equalized-odds.usage-example-folktables.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Achieving-equalized-odds-on-real-world-ACS-data-(ACSIncome)">
+<h1>Achieving <em>equalized odds</em> on real-world ACS data (ACSIncome)<a class="headerlink" href="#Achieving-equalized-odds-on-real-world-ACS-data-(ACSIncome)" title="Link to this heading"></a></h1>
+<p><strong>NOTE</strong>: this notebook has extra requirements, install them with: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;error_parity[dev]&quot;</span></code></p>
+<p><strong>DATA</strong>: the data used in this notebook can be easily downloaded and parsed using the companion notebook <code class="docutils literal notranslate"><span class="pre">parse-folktables-datasets.ipynb</span></code>;</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_curve</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Notebook ran using `error-parity==</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Notebook ran using `error-parity==0.3.11`
+</pre></div></div>
+</div>
+<section id="Given-some-data-(X,-Y,-S)">
+<h2>Given some data (X, Y, S)<a class="headerlink" href="#Given-some-data-(X,-Y,-S)" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ACS_TASK</span> <span class="o">=</span> <span class="s2">&quot;ACSIncome&quot;</span>
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">42</span>
+
+<span class="n">data_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;folktables&quot;</span> <span class="o">/</span> <span class="s2">&quot;train=0.6_test=0.2_validation=0.2_max-groups=4&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ACS_CATEGORICAL_COLS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;COW&#39;</span><span class="p">,</span>  <span class="c1"># class of worker</span>
+    <span class="s1">&#39;MAR&#39;</span><span class="p">,</span>  <span class="c1"># marital status</span>
+    <span class="s1">&#39;OCCP&#39;</span><span class="p">,</span> <span class="c1"># occupation code</span>
+    <span class="s1">&#39;POBP&#39;</span><span class="p">,</span> <span class="c1"># place of birth code</span>
+    <span class="s1">&#39;RELP&#39;</span><span class="p">,</span> <span class="c1"># relationship status</span>
+    <span class="s1">&#39;SEX&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RAC1P&#39;</span><span class="p">,</span> <span class="c1"># race code</span>
+    <span class="s1">&#39;DIS&#39;</span><span class="p">,</span>  <span class="c1"># disability</span>
+    <span class="s1">&#39;ESP&#39;</span><span class="p">,</span>  <span class="c1"># employment status of parents</span>
+    <span class="s1">&#39;CIT&#39;</span><span class="p">,</span>  <span class="c1"># citizenship status</span>
+    <span class="s1">&#39;MIG&#39;</span><span class="p">,</span>  <span class="c1"># mobility status</span>
+    <span class="s1">&#39;MIL&#39;</span><span class="p">,</span>  <span class="c1"># military service</span>
+    <span class="s1">&#39;ANC&#39;</span><span class="p">,</span>  <span class="c1"># ancestry</span>
+    <span class="s1">&#39;NATIVITY&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DEAR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DEYE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DREM&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ESR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ST&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FER&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GCL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;JWTR&#39;</span><span class="p">,</span>
+<span class="c1">#     &#39;PUMA&#39;,</span>
+<span class="c1">#     &#39;POWPUMA&#39;,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">folktables</span>
+
+<span class="k">def</span> <span class="nf">split_X_Y_S</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">label_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sensitive_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ignore_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unawareness</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="n">ignore_cols</span> <span class="o">=</span> <span class="n">ignore_cols</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="n">ignore_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label_col</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unawareness</span><span class="p">:</span>
+        <span class="n">ignore_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sensitive_col</span><span class="p">)</span>
+
+    <span class="n">feature_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_cols</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">feature_cols</span><span class="p">],</span>                           <span class="c1"># X</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">label_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>       <span class="c1"># Y</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">sensitive_col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>   <span class="c1"># S</span>
+    <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">load_ACS_data</span><span class="p">(</span><span class="n">dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sensitive_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads the given ACS task data from pre-generated datasets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[str, tuple]</span>
+<span class="sd">        A list of tuples, each tuple composed of (features, label, sensitive_attribute).</span>
+<span class="sd">        The list is sorted as follows&quot; [&lt;train data tuple&gt;, &lt;test data tuple&gt;, &lt;val. data tuple&gt;].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load task object</span>
+    <span class="n">task_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">folktables</span><span class="p">,</span> <span class="n">task_name</span><span class="p">)</span>
+
+    <span class="c1"># Load train, test, and validation data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;validation&#39;</span><span class="p">]:</span>
+        <span class="c1"># Construct file path</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t find data for &#39;</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; (this is probably expected).&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Read data from disk</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Set categorical columns</span>
+        <span class="n">cat_cols</span> <span class="o">=</span> <span class="n">ACS_CATEGORICAL_COLS</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="n">col</span><span class="p">:</span> <span class="s2">&quot;category&quot;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cat_cols</span><span class="p">})</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="n">data_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">split_X_Y_S</span><span class="p">(</span>
+            <span class="n">df</span><span class="p">,</span>
+            <span class="n">label_col</span><span class="o">=</span><span class="n">task_obj</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">sensitive_col</span><span class="o">=</span><span class="n">sensitive_col</span> <span class="ow">or</span> <span class="n">task_obj</span><span class="o">.</span><span class="n">group</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load and pre-process data</span>
+<span class="n">all_data</span> <span class="o">=</span> <span class="n">load_ACS_data</span><span class="p">(</span>
+    <span class="n">dir_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="n">ACS_TASK</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Unpack into features, label, and group</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">s_train</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span>
+<span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">s_test</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span>
+<span class="k">if</span> <span class="s2">&quot;validation&quot;</span> <span class="ow">in</span> <span class="n">all_data</span><span class="p">:</span>
+    <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">s_val</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">]</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No validation data.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_groups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s_train</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">actual_prevalence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Global prevalence: </span><span class="si">{</span><span class="n">actual_prevalence</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Global prevalence: 37.2%
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">EPSILON_TOLERANCE</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+<span class="n">FALSE_POS_COST</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">FALSE_NEG_COST</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">L_P_NORM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>         <span class="c1"># constrain l-infinity distance between ROC points</span>
+<span class="c1"># L_P_NORM = 1            # constrain l-1 distance between ROC points</span>
+<span class="c1"># L_P_NORM = 2            # constrain l-2 distance between ROC points</span>
+</pre></div>
+</div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="Given-a-trained-predictor-(that-outputs-real-valued-scores)">
+<h2>Given a trained predictor (that outputs real-valued scores)<a class="headerlink" href="#Given-a-trained-predictor-(that-outputs-real-valued-scores)" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+
+<span class="n">rf_clf</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">rf_clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 1min 46s, sys: 1.81 s, total: 1min 47s
+Wall time: 13.7 s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>RandomForestClassifier(n_jobs=-2)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">RandomForestClassifier</label><div class="sk-toggleable__content"><pre>RandomForestClassifier(n_jobs=-2)</pre></div></div></div></div></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predictor</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">X</span><span class="p">:</span> <span class="n">rf_clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Construct-the-fair-optimal-classifier-(derived-from-the-given-predictor)">
+<h2>Construct the fair optimal classifier (derived from the given predictor)<a class="headerlink" href="#Construct-the-fair-optimal-classifier-(derived-from-the-given-predictor)" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fairness is measured by the equal odds constraint (equal FPR and TPR among groups);</p>
+<ul>
+<li><p>optionally, this constraint can be relaxed by some small tolerance;</p></li>
+<li><p>the type of relaxation can be changed using the <code class="docutils literal notranslate"><span class="pre">l_p_norm</span></code> key-word argument (default is <code class="docutils literal notranslate"><span class="pre">l_p_norm=np.inf</span></code>);</p></li>
+</ul>
+</li>
+<li><p>Optimality is measured as minimizing the expected loss while fulfilling the fairness constraint,</p>
+<ul>
+<li><p>parameterized by the given cost of false positive and false negative errors;</p></li>
+</ul>
+</li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;validation&quot;</span> <span class="ow">in</span> <span class="n">all_data</span><span class="p">:</span>
+    <span class="n">X_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">s_fit</span> <span class="o">=</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">s_val</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">X_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">s_fit</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">s_train</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity</span> <span class="kn">import</span> <span class="n">RelaxedThresholdOptimizer</span>
+
+<span class="n">postproc_clf</span> <span class="o">=</span> <span class="n">RelaxedThresholdOptimizer</span><span class="p">(</span>
+    <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="o">=</span><span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="n">EPSILON_TOLERANCE</span><span class="p">,</span>
+    <span class="n">false_pos_cost</span><span class="o">=</span><span class="n">FALSE_POS_COST</span><span class="p">,</span>
+    <span class="n">false_neg_cost</span><span class="o">=</span><span class="n">FALSE_NEG_COST</span><span class="p">,</span>
+    <span class="n">l_p_norm</span><span class="o">=</span><span class="n">L_P_NORM</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">postproc_clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X_fit</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_fit</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">s_fit</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:root:ROC convex hull contains 8.7% of the original points.
+INFO:root:ROC convex hull contains 10.8% of the original points.
+INFO:root:ROC convex hull contains 6.0% of the original points.
+INFO:root:ROC convex hull contains 9.6% of the original points.
+INFO:root:cvxpy solver took 0.00044025s; status is optimal.
+INFO:root:Optimal solution value: 0.201182803373743
+INFO:root:Variable Global ROC point: value [0.14162381 0.69846535]
+INFO:root:Variable ROC point for group 0: value [0.14576582 0.70242546]
+INFO:root:Variable ROC point for group 1: value [0.12760711 0.65242546]
+INFO:root:Variable ROC point for group 2: value [0.10263456 0.70242546]
+INFO:root:Variable ROC point for group 3: value [0.14840647 0.65242546]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 14.9 s, sys: 218 ms, total: 15.1 s
+Wall time: 2.14 s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;error_parity.threshold_optimizer.RelaxedThresholdOptimizer at 0x163262380&gt;
+</pre></div></div>
+</div>
+</section>
+<section id="Plot-solution">
+<h2>Plot solution<a class="headerlink" href="#Plot-solution" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;whitegrid&quot;</span><span class="p">,</span> <span class="n">rc</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;grid.linestyle&#39;</span><span class="p">:</span> <span class="s1">&#39;:&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_groups_name_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;White&quot;</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Black&quot;</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;American Indian&quot;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Alaska Native&quot;</span><span class="p">,</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;American Indian&quot;</span><span class="p">,</span>
+    <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Asian&quot;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;Native Hawaiian&quot;</span><span class="p">,</span>
+    <span class="mi">7</span><span class="p">:</span> <span class="s2">&quot;other single race&quot;</span><span class="p">,</span>
+    <span class="mi">8</span><span class="p">:</span> <span class="s2">&quot;other multiple races&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">largest_groups_name_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;White&quot;</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Black&quot;</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Asian&quot;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;other&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">group_name_map</span><span class="o">=</span><span class="n">all_groups_name_map</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s_fit</span><span class="p">))</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">largest_groups_name_map</span><span class="p">)</span> <span class="k">else</span> <span class="n">largest_groups_name_map</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.plotting</span> <span class="kn">import</span> <span class="n">plot_postprocessing_solution</span>
+<span class="n">plot_postprocessing_solution</span><span class="p">(</span>
+    <span class="n">postprocessed_clf</span><span class="o">=</span><span class="n">postproc_clf</span><span class="p">,</span>
+    <span class="n">plot_roc_curves</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">plot_roc_hulls</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="n">group_name_map</span><span class="o">=</span><span class="n">group_name_map</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_relaxed-equalized-odds.usage-example-folktables_22_0.png" src="../_images/examples_relaxed-equalized-odds.usage-example-folktables_22_0.png" />
+</div>
+</div>
+<section id="Theoretical-results:">
+<h3>Theoretical results:<a class="headerlink" href="#Theoretical-results:" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">acc_val</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">postproc_clf</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="n">unf_val</span> <span class="o">=</span> <span class="n">postproc_clf</span><span class="o">.</span><span class="n">constraint_violation</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accuracy:   </span><span class="si">{</span><span class="n">acc_val</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unfairness: </span><span class="si">{</span><span class="n">unf_val</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2"> &lt;= </span><span class="si">{</span><span class="n">EPSILON_TOLERANCE</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:root:Maximum fairness violation is between group=0 (p=[0.14576582 0.70242546]) and group=3 (p=[0.14840647 0.65242546]);
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Accuracy:   79.9%
+Unfairness: 5.0% &lt;= 5.0%
+</pre></div></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="Plot-realized-ROC-points">
+<h2>Plot realized ROC points<a class="headerlink" href="#Plot-realized-ROC-points" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>Realized ROC points will converge to the theoretical solution for larger datasets, but some variance is expected for smaller datasets.</p>
+</div></blockquote>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set group-wise colors and global color</span>
+<span class="n">palette</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="n">n_colors</span><span class="o">=</span><span class="n">n_groups</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">global_color</span> <span class="o">=</span> <span class="n">palette</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">all_group_colors</span> <span class="o">=</span> <span class="n">palette</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.roc_utils</span> <span class="kn">import</span> <span class="n">compute_roc_point_from_predictions</span>
+
+<span class="n">plot_postprocessing_solution</span><span class="p">(</span>
+    <span class="n">postprocessed_clf</span><span class="o">=</span><span class="n">postproc_clf</span><span class="p">,</span>
+    <span class="n">plot_roc_curves</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">plot_roc_hulls</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">plot_relaxation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="n">group_name_map</span><span class="o">=</span><span class="n">group_name_map</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Compute predictions</span>
+<span class="n">y_fit_preds</span> <span class="o">=</span> <span class="n">postproc_clf</span><span class="p">(</span><span class="n">X_fit</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">s_fit</span><span class="p">)</span>
+
+<span class="c1"># Plot the group-wise points found</span>
+<span class="n">realized_roc_points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">):</span>
+
+    <span class="c1"># Evaluate triangulation of target point as a randomized clf</span>
+    <span class="n">group_filter</span> <span class="o">=</span> <span class="n">s_fit</span> <span class="o">==</span> <span class="n">idx</span>
+
+    <span class="n">curr_realized_roc_point</span> <span class="o">=</span> <span class="n">compute_roc_point_from_predictions</span><span class="p">(</span><span class="n">y_fit</span><span class="p">[</span><span class="n">group_filter</span><span class="p">],</span> <span class="n">y_fit_preds</span><span class="p">[</span><span class="n">group_filter</span><span class="p">])</span>
+    <span class="n">realized_roc_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_realized_roc_point</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">curr_realized_roc_point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">curr_realized_roc_point</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">all_group_colors</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">realized_roc_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">realized_roc_points</span><span class="p">)</span>
+
+<span class="c1"># Plot actual global classifier performance</span>
+<span class="n">global_clf_realized_roc_point</span> <span class="o">=</span> <span class="n">compute_roc_point_from_predictions</span><span class="p">(</span><span class="n">y_fit</span><span class="p">,</span> <span class="n">y_fit_preds</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">global_clf_realized_roc_point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">global_clf_realized_roc_point</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">color</span><span class="o">=</span><span class="n">global_color</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.80</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_relaxed-equalized-odds.usage-example-folktables_27_0.png" src="../_images/examples_relaxed-equalized-odds.usage-example-folktables_27_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Distances to group-wise targets:</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">target_point</span><span class="p">,</span> <span class="n">actual_point</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">postproc_clf</span><span class="o">.</span><span class="n">groupwise_roc_points</span><span class="p">,</span> <span class="n">realized_roc_points</span><span class="p">)):</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target_point</span> <span class="o">-</span> <span class="n">actual_point</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Group </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: l2 distance from target to realized point := </span><span class="si">{</span><span class="n">dist</span><span class="si">:</span><span class="s2">.3%</span><span class="si">}</span><span class="s2"> (size=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s_fit</span><span class="o">==</span><span class="n">i</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+<span class="c1"># Distance to global target point:</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">postproc_clf</span><span class="o">.</span><span class="n">global_roc_point</span> <span class="o">-</span> <span class="n">global_clf_realized_roc_point</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Global l2 distance from target to realized point   := </span><span class="si">{</span><span class="n">dist</span><span class="si">:</span><span class="s2">.3%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Group 0: l2 distance from target to realized point := 0.010% (size=259521)
+Group 1: l2 distance from target to realized point := 0.017% (size=29518)
+Group 2: l2 distance from target to realized point := 0.052% (size=19386)
+Group 3: l2 distance from target to realized point := 0.000% (size=12570)
+Global l2 distance from target to realized point   := 0.007%
+</pre></div></div>
+</div>
+<blockquote>
+<div><p>assumes FP_cost == FN_cost == 1.0</p>
+</div></blockquote>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
+<span class="kn">from</span> <span class="nn">error_parity.roc_utils</span> <span class="kn">import</span> <span class="n">calc_cost_of_point</span>
+
+<span class="c1"># Empirical accuracy</span>
+<span class="n">accuracy_fit</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_fit</span><span class="p">,</span> <span class="n">y_fit_preds</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual accuracy: </span><span class="se">\t\t</span><span class="si">{</span><span class="n">accuracy_fit</span><span class="si">:</span><span class="s2">.3%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual error rate (1 - Acc.):</span><span class="se">\t</span><span class="si">{</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">accuracy_fit</span><span class="si">:</span><span class="s2">.3%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Theoretical error rate:</span><span class="se">\t\t</span><span class="si">{</span><span class="n">postproc_clf</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="si">:</span><span class="s2">.3%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Actual accuracy:                79.886%
+Actual error rate (1 - Acc.):   20.114%
+Theoretical error rate:         20.118%
+</pre></div></div>
+</div>
+<hr class="docutils" />
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="c1"># Compute prediction scores</span>
+<span class="n">y_test_scores</span> <span class="o">=</span> <span class="n">predictor</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+
+<span class="n">acc_unfair_best</span><span class="p">,</span> <span class="n">acc_unfair_threshold</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_scores</span> <span class="o">&gt;=</span> <span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2e-2</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best (train) unfair accuracy is </span><span class="si">{</span><span class="n">acc_unfair_best</span><span class="si">:</span><span class="s2">.3%</span><span class="si">}</span><span class="s2">, with threshold t=</span><span class="si">{</span><span class="n">acc_unfair_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9b43e941c0fa4d7a9cc473e718fc11af", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Best (train) unfair accuracy is 80.208%, with threshold t=0.48
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.evaluation</span> <span class="kn">import</span> <span class="n">eval_accuracy_and_equalized_odds</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best (unconstrained) single-threshold classifier:&quot;</span><span class="p">)</span>
+
+<span class="n">eval_accuracy_and_equalized_odds</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
+    <span class="n">y_pred_binary</span><span class="o">=</span><span class="n">predictor</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">acc_unfair_threshold</span><span class="p">,</span>
+    <span class="n">sensitive_attr</span><span class="o">=</span><span class="n">s_test</span><span class="p">,</span>
+    <span class="n">l_p_norm</span><span class="o">=</span><span class="n">L_P_NORM</span><span class="p">,</span>
+    <span class="n">display</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best (constrained) multi-threshold classifier:&quot;</span><span class="p">)</span>
+<span class="n">eval_accuracy_and_equalized_odds</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
+    <span class="n">y_pred_binary</span><span class="o">=</span><span class="n">postproc_clf</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">s_test</span><span class="p">),</span>
+    <span class="n">sensitive_attr</span><span class="o">=</span><span class="n">s_test</span><span class="p">,</span>
+    <span class="n">l_p_norm</span><span class="o">=</span><span class="n">L_P_NORM</span><span class="p">,</span>
+    <span class="n">display</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Best (unconstrained) single-threshold classifier:
+        Accuracy:   80.21%
+        Unfairness: 35.50%
+Best (constrained) multi-threshold classifier:
+        Accuracy:   79.90%
+        Unfairness: 8.10%
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Fairness-vs-Performance-trade-off">
+<h1>Fairness vs Performance trade-off<a class="headerlink" href="#Fairness-vs-Performance-trade-off" title="Link to this heading"></a></h1>
+<p>Plotting the entire Pareto frontier <strong>may take a few minutes…</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.pareto_curve</span> <span class="kn">import</span> <span class="n">compute_postprocessing_curve</span>
+
+<span class="n">postproc_results_df</span> <span class="o">=</span> <span class="n">compute_postprocessing_curve</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">rf_clf</span><span class="p">,</span>
+    <span class="n">fit_data</span><span class="o">=</span><span class="p">(</span><span class="n">X_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">s_fit</span><span class="p">),</span>
+    <span class="n">eval_data</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">s_test</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">fairness_constraint</span><span class="o">=</span><span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>
+    <span class="n">l_p_norm</span><span class="o">=</span><span class="n">L_P_NORM</span><span class="p">,</span>
+    <span class="n">tolerance_ticks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">),</span>
+    <span class="p">)),</span>
+    <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:root:Using `n_jobs=9` to compute adjustment curve.
+INFO:root:Computing postprocessing for the following constraint tolerances: [0.   0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1  0.2  0.3  0.4
+ 0.5  0.6  0.7  0.8  0.9 ].
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "8001d4c14f0e4c93beb93af0c58cfff3", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.plotting</span> <span class="kn">import</span> <span class="n">plot_postprocessing_frontier</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">plot_postprocessing_frontier</span><span class="p">(</span>
+    <span class="n">postproc_results_df</span><span class="p">,</span>
+    <span class="n">perf_metric</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span>
+    <span class="n">disp_metric</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;equalized_odds_diff_l</span><span class="si">{</span><span class="n">postproc_clf</span><span class="o">.</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">show_data_type</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+    <span class="n">constant_clf_perf</span><span class="o">=</span><span class="nb">max</span><span class="p">((</span><span class="n">y_test</span> <span class="o">==</span> <span class="n">const_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">for</span> <span class="n">const_pred</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">}),</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\bigstar$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;accuracy $\rightarrow$&quot;</span><span class="p">)</span>
+<span class="n">l_p_norm_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">postproc_clf</span><span class="o">.</span><span class="n">l_p_norm</span><span class="p">)</span> <span class="k">if</span> <span class="n">postproc_clf</span><span class="o">.</span><span class="n">l_p_norm</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="sa">r</span><span class="s2">&quot;\infty&quot;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;equalized odds $\ell_&quot;</span> <span class="o">+</span> <span class="n">l_p_norm_str</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;$ violation $\leftarrow$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_relaxed-equalized-odds.usage-example-folktables_38_0.png" src="../_images/examples_relaxed-equalized-odds.usage-example-folktables_38_0.png" />
+</div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="Fit-and-plot-similar-example-but-using-%22Equal-Opportunity%22-fairness-metric">
+<h1>Fit and plot similar example but using “Equal Opportunity” fairness metric<a class="headerlink" href="#Fit-and-plot-similar-example-but-using-%22Equal-Opportunity%22-fairness-metric" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p>equal opportunity is achieved by setting <code class="docutils literal notranslate"><span class="pre">fairness_constraint=&quot;true_positive_rate_parity&quot;</span></code></p>
+</div></blockquote>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.pareto_curve</span> <span class="kn">import</span> <span class="n">compute_postprocessing_curve</span>
+
+<span class="n">postproc_results_df</span> <span class="o">=</span> <span class="n">compute_postprocessing_curve</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">rf_clf</span><span class="p">,</span>
+    <span class="n">fit_data</span><span class="o">=</span><span class="p">(</span><span class="n">X_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">s_fit</span><span class="p">),</span>
+    <span class="n">eval_data</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">s_test</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">fairness_constraint</span><span class="o">=</span><span class="s2">&quot;true_positive_rate_parity&quot;</span><span class="p">,</span>
+    <span class="n">tolerance_ticks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">),</span>
+    <span class="p">)),</span>
+    <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ef19f62aef9847caa888ee254d549701", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_postprocessing_frontier</span><span class="p">(</span>
+    <span class="n">postproc_results_df</span><span class="p">,</span>
+    <span class="n">perf_metric</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span>
+    <span class="n">disp_metric</span><span class="o">=</span><span class="s2">&quot;tpr_diff&quot;</span><span class="p">,</span>
+    <span class="n">show_data_type</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+    <span class="n">constant_clf_perf</span><span class="o">=</span><span class="nb">max</span><span class="p">((</span><span class="n">y_test</span> <span class="o">==</span> <span class="n">const_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">for</span> <span class="n">const_pred</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">}),</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;accuracy $\rightarrow$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;equality of opportunity violation $\leftarrow$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_relaxed-equalized-odds.usage-example-folktables_41_0.png" src="../_images/examples_relaxed-equalized-odds.usage-example-folktables_41_0.png" />
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../notebooks.html" class="btn btn-neutral float-left" title="Notebooks Gallery" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relaxed-equalized-odds.usage-example-synthetic-data.html" class="btn btn-neutral float-right" title="Achieving equalized odds on synthetic data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

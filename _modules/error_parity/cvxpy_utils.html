@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity.cvxpy_utils &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/custom.js?v=882eb7ae"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">error_parity.cvxpy_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for error_parity.cvxpy_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A set of helper functions for using cvxpy.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">from</span> <span class="nn">cvxpy.expressions.variable</span> <span class="kn">import</span> <span class="n">Variable</span>
+<span class="kn">from</span> <span class="nn">cvxpy.expressions.expression</span> <span class="kn">import</span> <span class="n">Expression</span>
+
+<span class="kn">from</span> <span class="nn">.roc_utils</span> <span class="kn">import</span> <span class="n">calc_cost_of_point</span><span class="p">,</span> <span class="n">compute_global_roc_from_groupwise</span>
+
+
+<span class="c1"># Maximum distance from solution to feasibility or optimality</span>
+<span class="n">SOLUTION_TOLERANCE</span> <span class="o">=</span> <span class="mf">1e-9</span>
+
+<span class="c1"># Set of all fairness constraints with a cvxpy LP implementation</span>
+<span class="n">ALL_CONSTRAINTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>           <span class="c1"># equal TPR and equal FPR across groups</span>
+    <span class="s2">&quot;true_positive_rate_parity&quot;</span><span class="p">,</span>    <span class="c1"># TPR parity, same as FNR parity</span>
+    <span class="s2">&quot;false_positive_rate_parity&quot;</span><span class="p">,</span>   <span class="c1"># FPR parity, same as TNR parity</span>
+    <span class="s2">&quot;true_negative_rate_parity&quot;</span><span class="p">,</span>    <span class="c1"># TNR parity, same as FPR parity</span>
+    <span class="s2">&quot;false_negative_rate_parity&quot;</span><span class="p">,</span>   <span class="c1"># FNR parity, same as TPR parity</span>
+    <span class="s2">&quot;demographic_parity&quot;</span><span class="p">,</span>       <span class="c1"># equal positive prediction rates across groups</span>
+<span class="p">}</span>
+
+<span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;Currently only the following constraints are supported: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ALL_CONSTRAINTS</span><span class="p">))</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="compute_line">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.cvxpy_utils.compute_line">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_line</span><span class="p">(</span><span class="n">p1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">p2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the slope and intercept of the line that passes</span>
+<span class="sd">    through the two given points.</span>
+
+<span class="sd">    The intercept is the value at x=0!</span>
+<span class="sd">    (or NaN for vertical lines)</span>
+
+<span class="sd">    For vertical lines just use the x-value of one of the points</span>
+<span class="sd">    to find the intercept at y=0.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p1 : np.ndarray</span>
+<span class="sd">        A 2-D point.</span>
+<span class="sd">    p2 : np.ndarray</span>
+<span class="sd">        A 2-D point.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[float, float]</span>
+<span class="sd">        A tuple pair with (slope, intercept) of the line that goes from p1 to p2.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Raised when input is invalid, e.g., when p1 == p2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">p1x</span><span class="p">,</span> <span class="n">p1y</span> <span class="o">=</span> <span class="n">p1</span>
+    <span class="n">p2x</span><span class="p">,</span> <span class="n">p2y</span> <span class="o">=</span> <span class="n">p2</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid points: p1==p2;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Vertical line</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">p2x</span><span class="p">,</span> <span class="n">p1x</span><span class="p">):</span>
+        <span class="n">slope</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">intercept</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Diagonal or horizontal line</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">p2y</span> <span class="o">-</span> <span class="n">p1y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">p2x</span> <span class="o">-</span> <span class="n">p1x</span><span class="p">)</span>
+        <span class="n">intercept</span> <span class="o">=</span> <span class="n">p1y</span> <span class="o">-</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">p1x</span>
+
+    <span class="k">return</span> <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span></div>
+
+
+
+<div class="viewcode-block" id="compute_halfspace_inequality">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.cvxpy_utils.compute_halfspace_inequality">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_halfspace_inequality</span><span class="p">(</span>   <span class="c1"># noqa: C901</span>
+    <span class="n">p1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">p2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the halfspace inequality defined by the vector p1-&gt;p2, such that</span>
+<span class="sd">        Ax + b &lt;= 0,</span>
+<span class="sd">        where A and b are extracted from the line that goes through p1-&gt;p2.</span>
+
+<span class="sd">    As such, the inequality enforces that points must lie on the LEFT of the</span>
+<span class="sd">    line defined by the p1-&gt;p2 vector.</span>
+
+<span class="sd">    In other words, input points are assumed to be in COUNTER CLOCK-WISE order</span>
+<span class="sd">    (right-hand rule).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p1 : np.ndarray</span>
+<span class="sd">        A point in the halfspace.</span>
+<span class="sd">    p2 : np.ndarray</span>
+<span class="sd">        Another point in the halfspace.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[float, float, float]</span>
+<span class="sd">        Returns an array of size=(n_dims + 1), with format [A; b],</span>
+<span class="sd">        representing the inequality Ax + b &lt;= 0.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        Thrown in case if inconsistent internal state variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span> <span class="o">=</span> <span class="n">compute_line</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+
+    <span class="c1"># Unpack the points for ease of use</span>
+    <span class="n">p1x</span><span class="p">,</span> <span class="n">p1y</span> <span class="o">=</span> <span class="n">p1</span>
+    <span class="n">p2x</span><span class="p">,</span> <span class="n">p2y</span> <span class="o">=</span> <span class="n">p2</span>
+
+    <span class="c1"># if slope is infinity, the constraint only applies to the values of x;</span>
+    <span class="c1"># &gt; the halfspace&#39;s b intercept value will correspond to this value of x;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">slope</span><span class="p">):</span>
+        <span class="c1"># Sanity check for vertical line</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">p1x</span><span class="p">,</span> <span class="n">p2x</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Got infinite slope for line containing two points with &quot;</span>
+                <span class="s2">&quot;different x-axis coordinates.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Vector pointing downwards? then, x &gt;= b</span>
+        <span class="k">if</span> <span class="n">p2y</span> <span class="o">&lt;</span> <span class="n">p1y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p1x</span><span class="p">]</span>
+
+        <span class="c1"># Vector pointing upwards? then, x &lt;= b</span>
+        <span class="k">elif</span> <span class="n">p2y</span> <span class="o">&gt;</span> <span class="n">p1y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">p1x</span><span class="p">]</span>
+
+    <span class="c1"># elif slope is zero, the constraint only applies to the values of y;</span>
+    <span class="c1"># &gt; the halfspace&#39;s b intercept value will correspond to this value of y;</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="c1"># Sanity checks for horizontal line</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">p1y</span><span class="p">,</span> <span class="n">p2y</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">p1y</span><span class="p">,</span> <span class="n">intercept</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid horizontal line; points p1 and p2 should have same &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;y-axis value as intercept (</span><span class="si">{</span><span class="n">p1y</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">p2y</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">intercept</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Vector pointing leftwards? then, y &lt;= b</span>
+        <span class="k">if</span> <span class="n">p2x</span> <span class="o">&lt;</span> <span class="n">p1x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">p1y</span><span class="p">]</span>
+
+        <span class="c1"># Vector pointing rightwards? then, y &gt;= b</span>
+        <span class="k">elif</span> <span class="n">p2x</span> <span class="o">&gt;</span> <span class="n">p1x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">p1y</span><span class="p">]</span>
+
+    <span class="c1"># else, we have a standard diagonal line</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Vector points left?</span>
+        <span class="c1"># then, y &lt;= mx + b &lt;=&gt; -mx + y - b &lt;= 0</span>
+        <span class="k">if</span> <span class="n">p2x</span> <span class="o">&lt;</span> <span class="n">p1x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="o">-</span><span class="n">slope</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">intercept</span><span class="p">]</span>
+
+        <span class="c1"># Vector points right?</span>
+        <span class="c1"># then, y &gt;= mx + b &lt;=&gt; mx - y + b &lt;= 0</span>
+        <span class="k">elif</span> <span class="n">p2x</span> <span class="o">&gt;</span> <span class="n">p1x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">slope</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">intercept</span><span class="p">]</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No constraint can be concluded from points p1=</span><span class="si">{</span><span class="n">p1</span><span class="si">}</span><span class="s2"> and p2=</span><span class="si">{</span><span class="n">p2</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="make_cvxpy_halfspace_inequality">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.cvxpy_utils.make_cvxpy_halfspace_inequality">[docs]</a>
+<span class="k">def</span> <span class="nf">make_cvxpy_halfspace_inequality</span><span class="p">(</span>
+    <span class="n">p1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">p2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">cvxpy_point</span><span class="p">:</span> <span class="n">Variable</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a single cvxpy inequality constraint that enforces the given</span>
+<span class="sd">    point, `cvxpy_point`, to lie on the left of the vector p1-&gt;p2.</span>
+
+<span class="sd">    Points must be sorted in counter clock-wise order!</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p1 : np.ndarray</span>
+<span class="sd">        A point p1.</span>
+<span class="sd">    p2 : np.ndarray</span>
+<span class="sd">        Another point p2.</span>
+<span class="sd">    cvxpy_point : Variable</span>
+<span class="sd">        The cvxpy variable over which the constraint will be applied.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Expression</span>
+<span class="sd">        A linear inequality constraint of type Ax + b &lt;= 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_coeff</span><span class="p">,</span> <span class="n">y_coeff</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">compute_halfspace_inequality</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_coeff</span><span class="p">,</span> <span class="n">y_coeff</span><span class="p">])</span> <span class="o">@</span> <span class="n">cvxpy_point</span> <span class="o">+</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="make_cvxpy_point_in_polygon_constraints">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.cvxpy_utils.make_cvxpy_point_in_polygon_constraints">[docs]</a>
+<span class="k">def</span> <span class="nf">make_cvxpy_point_in_polygon_constraints</span><span class="p">(</span>
+    <span class="n">polygon_vertices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">cvxpy_point</span><span class="p">:</span> <span class="n">Variable</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates the set of cvxpy constraints that force the given cvxpy variable</span>
+<span class="sd">    point to lie within the polygon defined by the given vertices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    polygon_vertices : np.ndarray</span>
+<span class="sd">        A sequence of points that make up a polygon.</span>
+<span class="sd">        Points must be sorted in COUNTER CLOCK-WISE order! (right-hand rule)</span>
+<span class="sd">    cvxpy_point : cvxpy.Variable</span>
+<span class="sd">        A cvxpy variable representing a point, over which the constraints will</span>
+<span class="sd">        be applied.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[Expression]</span>
+<span class="sd">        A list of cvxpy constraints.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">make_cvxpy_halfspace_inequality</span><span class="p">(</span>
+            <span class="n">polygon_vertices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">polygon_vertices</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">polygon_vertices</span><span class="p">)],</span>
+            <span class="n">cvxpy_point</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">polygon_vertices</span><span class="p">))</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="compute_fair_optimum">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.cvxpy_utils.compute_fair_optimum">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_fair_optimum</span><span class="p">(</span>   <span class="c1"># noqa: C901</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">fairness_constraint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">groupwise_roc_hulls</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">group_sizes_label_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">group_sizes_label_neg</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">groupwise_prevalence</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">global_prevalence</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">false_positive_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">false_negative_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">l_p_norm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the solution to finding the optimal fair (equal odds) classifier.</span>
+
+<span class="sd">    Can relax the equal odds constraint by some given tolerance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fairness_constraint : str</span>
+<span class="sd">        The name of the fairness constraint under which the LP will be</span>
+<span class="sd">        optimized. Possible inputs are:</span>
+
+<span class="sd">            &#39;equalized_odds&#39;</span>
+<span class="sd">                match true positive and false positive rates across groups</span>
+
+<span class="sd">    tolerance : float</span>
+<span class="sd">        A value for the tolerance when enforcing the fairness constraint.</span>
+
+<span class="sd">    groupwise_roc_hulls : dict[int, np.ndarray]</span>
+<span class="sd">        A dict mapping each group to the convex hull of the group&#39;s ROC curve.</span>
+<span class="sd">        The convex hull is an np.array of shape (n_points, 2), containing the</span>
+<span class="sd">        points that form the convex hull of the ROC curve, sorted in COUNTER</span>
+<span class="sd">        CLOCK-WISE order.</span>
+
+<span class="sd">    group_sizes_label_pos : np.ndarray</span>
+<span class="sd">        The relative or absolute number of positive samples in each group.</span>
+
+<span class="sd">    group_sizes_label_neg : np.ndarray</span>
+<span class="sd">        The relative or absolute number of negative samples in each group.</span>
+
+<span class="sd">    global_prevalence : float</span>
+<span class="sd">        The global prevalence of positive samples.</span>
+
+<span class="sd">    false_positive_cost : float, optional</span>
+<span class="sd">        The cost of a FALSE POSITIVE error, by default 1.</span>
+
+<span class="sd">    false_negative_cost : float, optional</span>
+<span class="sd">        The cost of a FALSE NEGATIVE error, by default 1.</span>
+
+<span class="sd">    l_p_norm : int | str, optional</span>
+<span class="sd">        The type of l-p norm to use when computing the distance between two ROC</span>
+<span class="sd">        points. Used only for the &quot;equalized_odds&quot; constraint. By default uses</span>
+<span class="sd">        `np.inf` (l-infinity distance): the maximum between groups&#39; TPR and FPR</span>
+<span class="sd">        differences. Using `l_p_norm=1` will correspond to the</span>
+<span class="sd">        `average_abs_odds_difference`.</span>
+<span class="sd">        See the following link for more information on this parameter:</span>
+<span class="sd">        https://www.cvxpy.org/api_reference/cvxpy.atoms.other_atoms.html#norm</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (groupwise_roc_points, global_roc_point) : tuple[np.ndarray, np.ndarray]</span>
+<span class="sd">        A tuple pair, (&lt;1&gt;, &lt;2&gt;), containing:</span>
+<span class="sd">        1: an array with the group-wise ROC points for the solution.</span>
+<span class="sd">        2: an array with the single global ROC point for the solution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fairness_constraint</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALL_CONSTRAINTS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span><span class="p">)</span>
+
+    <span class="n">n_groups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groupwise_roc_hulls</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_groups</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_sizes_label_neg</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n_groups</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_sizes_label_pos</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid arguments; all of the following should have the same &quot;</span>
+            <span class="s2">&quot;length: groupwise_roc_hulls, group_sizes_label_neg, group_sizes_label_pos;&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groupwise_roc_hulls</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">group_sizes_label_neg</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">group_sizes_label_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Group-wise ROC points --- in the form (FPR, TPR)</span>
+    <span class="n">groupwise_roc_points_vars</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;ROC point for group </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">nonneg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Define global ROC point as a linear combination of the group-wise ROC points</span>
+    <span class="n">global_roc_point_var</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Global ROC point&quot;</span><span class="p">,</span> <span class="n">nonneg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># Global FPR is the average of group FPRs weighted by LNs in each group</span>
+        <span class="n">global_roc_point_var</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="o">==</span> <span class="n">group_sizes_label_neg</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">groupwise_roc_points_vars</span><span class="p">]),</span>
+        <span class="c1"># Global TPR is the average of group TPRs weighted by LPs in each group</span>
+        <span class="n">global_roc_point_var</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="o">==</span> <span class="n">group_sizes_label_pos</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">groupwise_roc_points_vars</span><span class="p">]),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># ** APPLY FAIRNESS CONSTRAINTS **</span>
+    <span class="c1"># NOTE: feature request: compatibility with multiple constraints simultaneously</span>
+
+    <span class="c1"># If &quot;equalized_odds&quot;</span>
+    <span class="c1"># - i.e., l-p distance between any two groups&#39; ROC points must be less than `tolerance`;</span>
+    <span class="c1"># - DEFAULT: l-infinity distance (max distance between any two points in the ROC curve);</span>
+    <span class="k">if</span> <span class="n">fairness_constraint</span> <span class="o">==</span> <span class="s2">&quot;equalized_odds&quot;</span><span class="p">:</span>
+        <span class="n">constraints</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">cp</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+                <span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                <span class="n">p</span><span class="o">=</span><span class="n">l_p_norm</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">&lt;=</span> <span class="n">tolerance</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span>
+        <span class="p">]</span>
+
+    <span class="c1"># If some rate parity, i.e., parity of one of {TPR, FPR, TNR, FNR}</span>
+    <span class="c1"># i.e., constrain absolute distance between any two groups&#39; rate metric</span>
+    <span class="k">elif</span> <span class="n">fairness_constraint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;rate_parity&quot;</span><span class="p">):</span>
+        <span class="n">roc_idx_of_interest</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">fairness_constraint</span> <span class="o">==</span> <span class="s2">&quot;true_positive_rate_parity&quot;</span>      <span class="c1"># TPR</span>
+            <span class="ow">or</span> <span class="n">fairness_constraint</span> <span class="o">==</span> <span class="s2">&quot;false_negative_rate_parity&quot;</span>  <span class="c1"># FNR</span>
+        <span class="p">):</span>
+            <span class="n">roc_idx_of_interest</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="n">fairness_constraint</span> <span class="o">==</span> <span class="s2">&quot;false_positive_rate_parity&quot;</span>     <span class="c1"># FPR</span>
+            <span class="ow">or</span> <span class="n">fairness_constraint</span> <span class="o">==</span> <span class="s2">&quot;true_negative_rate_parity&quot;</span>   <span class="c1"># TNR</span>
+        <span class="p">):</span>
+            <span class="n">roc_idx_of_interest</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This point should never be reached as fairness_constraint was previously validated</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span><span class="p">)</span>
+
+        <span class="n">constraints</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">cp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+                <span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">roc_idx_of_interest</span><span class="p">]</span>
+                <span class="o">-</span> <span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">roc_idx_of_interest</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">&lt;=</span> <span class="n">tolerance</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span>
+        <span class="p">]</span>
+
+    <span class="c1"># If demographic parity, i.e., equal positive prediction rates across groups</span>
+    <span class="c1"># note: this ignores the labels Y and only considers predictions Y_hat</span>
+    <span class="k">elif</span> <span class="n">fairness_constraint</span> <span class="o">==</span> <span class="s2">&quot;demographic_parity&quot;</span><span class="p">:</span>
+
+        <span class="c1"># NOTE: PPR = TPR * prevalence + FPR * (1 - prevalence)</span>
+        <span class="k">def</span> <span class="nf">group_positive_prediction_rate</span><span class="p">(</span><span class="n">group_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Computes group-wise PPR as a function of the ROC cvxpy vars.&quot;&quot;&quot;</span>
+            <span class="n">group_prevalence</span> <span class="o">=</span> <span class="n">groupwise_prevalence</span><span class="p">[</span><span class="n">group_idx</span><span class="p">]</span>
+            <span class="n">group_tpr</span> <span class="o">=</span> <span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">group_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">group_fpr</span> <span class="o">=</span> <span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">group_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">group_tpr</span> <span class="o">*</span> <span class="n">group_prevalence</span> <span class="o">+</span> <span class="n">group_fpr</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">group_prevalence</span><span class="p">)</span>
+
+        <span class="c1"># Add constraints on the absolute difference between group-wos</span>
+        <span class="n">constraints</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">cp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+                <span class="n">group_positive_prediction_rate</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">-</span> <span class="n">group_positive_prediction_rate</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span>
+        <span class="p">]</span>
+
+    <span class="c1"># NOTE: implement other constraints here</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span><span class="p">)</span>
+
+    <span class="c1"># Constraints for points in respective group-wise ROC curves</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">):</span>
+        <span class="n">constraints</span> <span class="o">+=</span> <span class="n">make_cvxpy_point_in_polygon_constraints</span><span class="p">(</span>
+            <span class="n">polygon_vertices</span><span class="o">=</span><span class="n">groupwise_roc_hulls</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+            <span class="n">cvxpy_point</span><span class="o">=</span><span class="n">groupwise_roc_points_vars</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Define cost function</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span>
+        <span class="n">calc_cost_of_point</span><span class="p">(</span>
+            <span class="n">fpr</span><span class="o">=</span><span class="n">global_roc_point_var</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">fnr</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">global_roc_point_var</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">prevalence</span><span class="o">=</span><span class="n">global_prevalence</span><span class="p">,</span>
+            <span class="n">false_pos_cost</span><span class="o">=</span><span class="n">false_positive_cost</span><span class="p">,</span>
+            <span class="n">false_neg_cost</span><span class="o">=</span><span class="n">false_negative_cost</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Define cvxpy problem</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
+
+    <span class="c1"># Run solver</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">ECOS</span><span class="p">,</span> <span class="n">abstol</span><span class="o">=</span><span class="n">SOLUTION_TOLERANCE</span><span class="p">,</span> <span class="n">feastol</span><span class="o">=</span><span class="n">SOLUTION_TOLERANCE</span><span class="p">)</span>
+    <span class="c1"># NOTE: these tolerances are supposed to be smaller than the default np.isclose tolerances</span>
+    <span class="c1"># (useful when comparing if two points are the same, within the cvxpy accuracy tolerance)</span>
+
+    <span class="c1"># Log solution</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;cvxpy solver took </span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">solver_stats</span><span class="o">.</span><span class="n">solve_time</span><span class="si">}</span><span class="s2">s; status is </span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">prob</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;infeasible&quot;</span><span class="p">,</span> <span class="s2">&quot;unbounded&quot;</span><span class="p">]:</span>
+        <span class="c1"># Otherwise, problem.value is inf or -inf, respectively.</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal solution value: </span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">prob</span><span class="o">.</span><span class="n">variables</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable </span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">()</span><span class="si">}</span><span class="s2">: value </span><span class="si">{</span><span class="n">variable</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># This line should never be reached (there are always trivial fair</span>
+        <span class="c1"># solutions in the ROC diagonal)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cvxpy problem has no solution; status=</span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">groupwise_roc_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">groupwise_roc_points_vars</span><span class="p">])</span>
+    <span class="n">global_roc_point</span> <span class="o">=</span> <span class="n">global_roc_point_var</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="c1"># Validating solution cost</span>
+    <span class="n">solution_cost</span> <span class="o">=</span> <span class="n">calc_cost_of_point</span><span class="p">(</span>
+        <span class="n">fpr</span><span class="o">=</span><span class="n">global_roc_point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">fnr</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">global_roc_point</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">prevalence</span><span class="o">=</span><span class="n">global_prevalence</span><span class="p">,</span>
+        <span class="n">false_pos_cost</span><span class="o">=</span><span class="n">false_positive_cost</span><span class="p">,</span>
+        <span class="n">false_neg_cost</span><span class="o">=</span><span class="n">false_negative_cost</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">solution_cost</span><span class="p">,</span> <span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Solution was found but cost did not pass validation! &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Found solution ROC point </span><span class="si">{</span><span class="n">global_roc_point</span><span class="si">}</span><span class="s2"> with theoretical cost &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, but actual cost is </span><span class="si">{</span><span class="n">solution_cost</span><span class="si">}</span><span class="s2">;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Validating congruency between group-wise ROC points and global ROC point</span>
+    <span class="n">global_roc_from_groupwise</span> <span class="o">=</span> <span class="n">compute_global_roc_from_groupwise</span><span class="p">(</span>
+        <span class="n">groupwise_roc_points</span><span class="o">=</span><span class="n">groupwise_roc_points</span><span class="p">,</span>
+        <span class="n">groupwise_label_pos_weight</span><span class="o">=</span><span class="n">group_sizes_label_pos</span><span class="p">,</span>
+        <span class="n">groupwise_label_neg_weight</span><span class="o">=</span><span class="n">group_sizes_label_neg</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">global_roc_from_groupwise</span><span class="p">,</span> <span class="n">global_roc_point</span><span class="p">)):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Solution: global ROC point (</span><span class="si">{</span><span class="n">global_roc_point</span><span class="si">}</span><span class="s2">) does not seem to &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;match group-wise ROC points; global should be &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">global_roc_from_groupwise</span><span class="si">}</span><span class="s2">) to be consistent with group-wise;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">groupwise_roc_points</span><span class="p">,</span> <span class="n">global_roc_point</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

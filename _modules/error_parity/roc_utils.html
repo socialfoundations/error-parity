@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity.roc_utils &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/custom.js?v=882eb7ae"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">error_parity.roc_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for error_parity.roc_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Helper functions to solve the relaxed equal odds problem.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+
+
+<div class="viewcode-block" id="calc_cost_of_point">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.roc_utils.calc_cost_of_point">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_cost_of_point</span><span class="p">(</span>
+    <span class="n">fpr</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">fnr</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">prevalence</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">false_pos_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">false_neg_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the cost of the given ROC point.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fpr : float</span>
+<span class="sd">        The false positive rate (FPR).</span>
+<span class="sd">    fnr : float</span>
+<span class="sd">        The false negative rate (FNR).</span>
+<span class="sd">    prevalence : float</span>
+<span class="sd">        The prevalence of positive samples in the dataset,</span>
+<span class="sd">        i.e., np.sum(y_true) / len(y_true)</span>
+<span class="sd">    false_pos_cost : float, optional</span>
+<span class="sd">        The cost of a false positive error, by default 1.</span>
+<span class="sd">    false_neg_cost : float, optional</span>
+<span class="sd">        The cost of a false negative error, by default 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cost : float</span>
+<span class="sd">        The cost of the given ROC point (divided by the size of the dataset).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cost_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">false_pos_cost</span><span class="p">,</span> <span class="n">false_neg_cost</span><span class="p">])</span>
+    <span class="n">weight_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prevalence</span><span class="p">,</span> <span class="n">prevalence</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">cost_vector</span> <span class="o">*</span> <span class="n">weight_vector</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">fpr</span><span class="p">,</span> <span class="n">fnr</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="compute_roc_point_from_predictions">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.roc_utils.compute_roc_point_from_predictions">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_roc_point_from_predictions</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the ROC point associated with the provided binary predictions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : np.ndarray</span>
+<span class="sd">        The true labels.</span>
+<span class="sd">    y_pred_binary : np.ndarray</span>
+<span class="sd">        The binary predictions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[float, float]</span>
+<span class="sd">        The resulting ROC point, i.e., a tuple (FPR, TPR).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tn</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred_binary</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="c1"># FPR = FP / LN</span>
+    <span class="n">fpr</span> <span class="o">=</span> <span class="n">fp</span> <span class="o">/</span> <span class="p">(</span><span class="n">fp</span> <span class="o">+</span> <span class="n">tn</span><span class="p">)</span>
+
+    <span class="c1"># TPR = TP / LP</span>
+    <span class="n">tpr</span> <span class="o">=</span> <span class="n">tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fn</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_global_roc_from_groupwise">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.roc_utils.compute_global_roc_from_groupwise">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_global_roc_from_groupwise</span><span class="p">(</span>
+    <span class="n">groupwise_roc_points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">groupwise_label_pos_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">groupwise_label_neg_weight</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the global ROC point that corresponds to the provided group-wise</span>
+<span class="sd">    ROC points.</span>
+
+<span class="sd">    The global ROC is a linear combination of the group-wise points, with</span>
+<span class="sd">    different weights for computing FPR and TPR -- the first related to LNs, and</span>
+<span class="sd">    the second to LPs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    groupwise_roc_points : np.ndarray</span>
+<span class="sd">        An array of shape (n_groups, n_roc_dims) containing one ROC point per</span>
+<span class="sd">        group.</span>
+<span class="sd">    groupwise_label_pos_weight : np.ndarray</span>
+<span class="sd">        The relative size of each group in terms of its label POSITIVE samples</span>
+<span class="sd">        (out of all POSITIVE samples, how many are in each group).</span>
+<span class="sd">    groupwise_label_neg_weight : np.ndarray</span>
+<span class="sd">        The relative size of each group in terms of its label NEGATIVE samples</span>
+<span class="sd">        (out of all NEGATIVE samples, how many are in each group).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    global_roc_point : np.ndarray</span>
+<span class="sd">        A single point that corresponds to the global outcome of the given</span>
+<span class="sd">        group-wise ROC points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_groups</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">groupwise_roc_points</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Some initial sanity checks</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">groupwise_label_pos_weight</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groupwise_label_neg_weight</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">groupwise_label_pos_weight</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_groups</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid input shapes: length of all arguments must be equal (the &quot;</span>
+            <span class="s2">&quot;number of different sensitive groups).&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Normalize group LP (/LN) weights by their size</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">groupwise_label_pos_weight</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="n">groupwise_label_pos_weight</span> <span class="o">/=</span> <span class="n">groupwise_label_pos_weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">groupwise_label_neg_weight</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="n">groupwise_label_neg_weight</span> <span class="o">/=</span> <span class="n">groupwise_label_neg_weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="c1"># Compute global FPR (weighted by relative number of LNs in each group)</span>
+    <span class="n">global_fpr</span> <span class="o">=</span> <span class="n">groupwise_label_neg_weight</span> <span class="o">@</span> <span class="n">groupwise_roc_points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Compute global TPR (weighted by relative number of LPs in each group)</span>
+    <span class="n">global_tpr</span> <span class="o">=</span> <span class="n">groupwise_label_pos_weight</span> <span class="o">@</span> <span class="n">groupwise_roc_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">global_roc_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">global_fpr</span><span class="p">,</span> <span class="n">global_tpr</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">global_roc_point</span></div>
+
+
+
+<div class="viewcode-block" id="roc_convex_hull">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.roc_utils.roc_convex_hull">[docs]</a>
+<span class="k">def</span> <span class="nf">roc_convex_hull</span><span class="p">(</span><span class="n">roc_points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the convex hull of the provided ROC points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    roc_points : np.ndarray</span>
+<span class="sd">        An array of shape (n_points, n_dims) containing all points</span>
+<span class="sd">        of a provided ROC curve.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    hull_points : np.ndarray</span>
+<span class="sd">        An array of shape (n_hull_points, n_dim) containing all</span>
+<span class="sd">        points in the convex hull of the ROC curve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Save init data just for logging</span>
+    <span class="n">init_num_points</span><span class="p">,</span> <span class="n">_dims</span> <span class="o">=</span> <span class="n">roc_points</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Compute convex hull</span>
+    <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">roc_points</span><span class="p">)</span>
+
+    <span class="c1"># NOTE: discarding points below the diagonal seems to lead to bugs later on, idk why...</span>
+    <span class="c1"># Discard points in the interior of the convex hull,</span>
+    <span class="c1"># and other useless points (below main diagonal)</span>
+    <span class="c1"># points_above_diagonal = np.argwhere(roc_points[:, 1] &gt;= roc_points[:, 0]).ravel()</span>
+    <span class="c1"># hull_indices = sorted(set(hull.vertices) &amp; set(points_above_diagonal))</span>
+
+    <span class="n">hull_indices</span> <span class="o">=</span> <span class="n">hull</span><span class="o">.</span><span class="n">vertices</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;ROC convex hull contains </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hull_indices</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">init_num_points</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;of the original points.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">roc_points</span><span class="p">[</span><span class="n">hull_indices</span><span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

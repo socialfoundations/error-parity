@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparison between error-parity’s LP solver and a brute-force solver &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/custom.js?v=882eb7ae"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Comparison between <code class="docutils literal notranslate"><span class="pre">error-parity</span></code>’s LP solver and a brute-force solver</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/brute-force-example_equalized-odds-thresholding.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Comparison-between-error-parity's-LP-solver-and-a-brute-force-solver">
+<h1>Comparison between <code class="docutils literal notranslate"><span class="pre">error-parity</span></code>’s LP solver and a brute-force solver<a class="headerlink" href="#Comparison-between-error-parity's-LP-solver-and-a-brute-force-solver" title="Link to this heading"></a></h1>
+<p>Out of curiosity, this notebook compares the performance and efficiency of the <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> LP formulation against a baseline brute-force solver.</p>
+<p><strong>NOTE</strong>: this notebook has extra requirements, install them with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pip install &quot;error_parity[dev]&quot;
+</pre></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install &quot;error-parity[dev]&quot;
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cvxpy</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_curve</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Notebook ran using `error-parity==</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Notebook ran using `error-parity==0.3.11`
+</pre></div></div>
+</div>
+<section id="Given-some-data-(X,-Y,-S)">
+<h2>Given some data (X, Y, S)<a class="headerlink" href="#Given-some-data-(X,-Y,-S)" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">generate_synthetic_data</span><span class="p">(</span><span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_groups</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prevalence</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to generate synthetic features/labels/predictions.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Construct numpy rng</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="c1"># Different levels of gaussian noise per group (to induce some inequality in error rates)</span>
+    <span class="n">group_noise</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">)]</span>
+
+    <span class="c1"># Generate predictions</span>
+    <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">prevalence</span> <span class="o">&lt;</span> <span class="mi">1</span>
+    <span class="n">y_score</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+
+    <span class="c1"># Generate labels</span>
+    <span class="c1"># - define which samples belong to each group</span>
+    <span class="c1"># - add different noise levels for each group</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">n_groups</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">):</span>
+        <span class="n">group_filter</span> <span class="o">=</span> <span class="n">group</span> <span class="o">==</span> <span class="n">i</span>
+        <span class="n">y_true_groupwise</span> <span class="o">=</span> <span class="p">((</span>
+            <span class="n">y_score</span><span class="p">[</span><span class="n">group_filter</span><span class="p">]</span> <span class="o">+</span>
+            <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group_filter</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="n">group_noise</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">prevalence</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">y_true</span><span class="p">[</span><span class="n">group_filter</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_true_groupwise</span>
+
+    <span class="c1">### Generate features: just use the sample index</span>
+    <span class="c1"># As we already have the y_scores, we can construct the features X</span>
+    <span class="c1"># as the index of each sample, so we can construct a classifier that</span>
+    <span class="c1"># simply maps this index to our pre-generated predictions for this clf.</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">group</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">N_GROUPS</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1"># N_SAMPLES = 1_000_000</span>
+<span class="n">N_SAMPLES</span> <span class="o">=</span> <span class="mi">100_000</span>
+
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">23</span>
+
+<span class="n">X</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">group</span> <span class="o">=</span> <span class="n">generate_synthetic_data</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="n">N_SAMPLES</span><span class="p">,</span>
+    <span class="n">n_groups</span><span class="o">=</span><span class="n">N_GROUPS</span><span class="p">,</span>
+    <span class="n">prevalence</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">actual_prevalence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual global prevalence: </span><span class="si">{</span><span class="n">actual_prevalence</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Actual global prevalence: 27.2%
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">EPSILON_TOLERANCE</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="c1"># EPSILON_TOLERANCE = 1.0  # best unconstrained classifier</span>
+<span class="n">FALSE_POS_COST</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">FALSE_NEG_COST</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="Given-a-trained-predictor-(that-outputs-real-valued-scores)">
+<h2>Given a trained predictor (that outputs real-valued scores)<a class="headerlink" href="#Given-a-trained-predictor-(that-outputs-real-valued-scores)" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example predictor that predicts the synthetically produced scores above</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">idx</span><span class="p">:</span> <span class="n">y_score</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Comparing-LP-vs-brute-force-solution">
+<h1>Comparing LP vs brute-force solution<a class="headerlink" href="#Comparing-LP-vs-brute-force-solution" title="Link to this heading"></a></h1>
+<section id="1.-Brute-force-solver">
+<h2>1. Brute-force solver<a class="headerlink" href="#1.-Brute-force-solver" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">error_parity.evaluation</span> <span class="kn">import</span> <span class="n">eval_accuracy_and_equalized_odds</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="k">def</span> <span class="nf">binarize_predictions</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">group_membership</span><span class="p">,</span> <span class="n">group_thresholds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Binarizes score predictions using different group thresholds.&quot;&quot;&quot;</span>
+    <span class="c1"># Random number generator</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="c1"># Results array</span>
+    <span class="n">y_pred_binary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">group_membership</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">group_key</span><span class="p">,</span> <span class="n">group_thrs</span> <span class="ow">in</span> <span class="n">group_thresholds</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="c1"># Single threshold provided (no randomization)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group_thrs</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+            <span class="n">low_thr</span><span class="p">,</span> <span class="n">high_thr</span> <span class="o">=</span> <span class="n">group_thrs</span><span class="p">,</span> <span class="n">group_thrs</span>
+
+        <span class="c1"># Two thresholds provided (partial randomization)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">group_thrs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Provide exactly 2 thresholds, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">group_thrs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">low_thr</span><span class="p">,</span> <span class="n">high_thr</span> <span class="o">=</span> <span class="n">group_thrs</span>
+
+        <span class="c1"># Boolean numpy filter for samples of the current group</span>
+        <span class="n">group_filter</span> <span class="o">=</span> <span class="n">group_membership</span> <span class="o">==</span> <span class="n">group_key</span>
+        <span class="n">group_score_preds</span> <span class="o">=</span> <span class="n">y_score</span><span class="p">[</span><span class="n">group_filter</span><span class="p">]</span>
+
+        <span class="c1"># Below low_thr -&gt; negative pred.</span>
+        <span class="n">y_pred_binary</span><span class="p">[</span><span class="n">group_filter</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_score</span> <span class="o">&lt;</span> <span class="n">low_thr</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Above high_thr -&gt; positive pred.</span>
+        <span class="n">y_pred_binary</span><span class="p">[</span><span class="n">group_filter</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_score</span> <span class="o">&gt;</span> <span class="n">high_thr</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># Between low_thr and high_thr -&gt; random uniform prediction</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">low_thr</span><span class="p">,</span> <span class="n">high_thr</span><span class="p">):</span>
+            <span class="n">middle_scores_filter</span> <span class="o">=</span> <span class="p">((</span><span class="n">y_score</span> <span class="o">&gt;=</span> <span class="n">low_thr</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_score</span> <span class="o">&lt;=</span> <span class="n">high_thr</span><span class="p">))</span>
+            <span class="n">y_pred_binary</span><span class="p">[</span><span class="n">group_filter</span> <span class="o">&amp;</span> <span class="n">middle_scores_filter</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span>
+                <span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="c1"># sampled in [low, high)</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group_filter</span> <span class="o">&amp;</span> <span class="n">middle_scores_filter</span><span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Return binarized predictions</span>
+    <span class="k">return</span> <span class="n">y_pred_binary</span>
+
+
+<span class="k">def</span> <span class="nf">solve_brute_force</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">predictor</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">data_tuple</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">threshold_ticks_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-2</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Brute-force solution for equalized odds problem.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Unpack data tuple</span>
+    <span class="n">X_feats</span><span class="p">,</span> <span class="n">y_labels</span><span class="p">,</span> <span class="n">s_group</span> <span class="o">=</span> <span class="n">data_tuple</span>
+
+    <span class="c1"># Generate unique threshold combinations</span>
+    <span class="n">unique_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">s_group</span><span class="p">)</span>
+    <span class="n">group_threshold_combinations</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
+        <span class="c1">### Deterministic thresholds</span>
+        <span class="c1"># np.arange(0, 1 + threshold_ticks_step, threshold_ticks_step)</span>
+
+        <span class="c1">### Randomized thresholds (full search)</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="n">lo_thr</span><span class="p">,</span> <span class="n">hi_thr</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">lo_thr</span><span class="p">,</span> <span class="n">hi_thr</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">threshold_ticks_step</span><span class="p">,</span> <span class="n">threshold_ticks_step</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">threshold_ticks_step</span><span class="p">,</span> <span class="n">threshold_ticks_step</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">lo_thr</span> <span class="o">&lt;=</span> <span class="n">hi_thr</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_GROUPS</span><span class="p">)</span>
+    <span class="p">])</span>
+
+    <span class="c1">### Characterizing the best result</span>
+    <span class="c1">### NOTE: &quot;best&quot; is defined as maximizing accuracy constrained by eq_odds &lt;= tolerance</span>
+
+    <span class="c1"># Threshold combination of the best result</span>
+    <span class="n">best_combi</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Accuracy of the best result</span>
+    <span class="n">best_accuracy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Constraint violation of the best result</span>
+    <span class="n">best_eq_odds_violation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Evaluate all threshold combinations</span>
+    <span class="n">num_determ_thrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">threshold_ticks_step</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">total_combinations</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">num_determ_thrs</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_determ_thrs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">combi</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">group_threshold_combinations</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">total_combinations</span><span class="p">):</span>
+        <span class="n">thrsh_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">,</span> <span class="n">combi</span><span class="p">))</span>
+
+        <span class="c1"># Binarize predictions with this threshold combination</span>
+        <span class="n">binarized_preds</span> <span class="o">=</span> <span class="n">binarize_predictions</span><span class="p">(</span>
+            <span class="n">y_score</span><span class="o">=</span><span class="n">y_score</span><span class="p">,</span>
+            <span class="n">group_membership</span><span class="o">=</span><span class="n">s_group</span><span class="p">,</span>
+            <span class="n">group_thresholds</span><span class="o">=</span><span class="n">thrsh_dict</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Evaluate results</span>
+        <span class="n">curr_result</span> <span class="o">=</span> <span class="n">eval_accuracy_and_equalized_odds</span><span class="p">(</span>
+            <span class="n">y_true</span><span class="o">=</span><span class="n">y_labels</span><span class="p">,</span> <span class="n">y_pred_binary</span><span class="o">=</span><span class="n">binarized_preds</span><span class="p">,</span>
+            <span class="n">sensitive_attr</span><span class="o">=</span><span class="n">s_group</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">curr_accuracy</span><span class="p">,</span> <span class="n">curr_eq_odds_violation</span> <span class="o">=</span> <span class="n">curr_result</span>
+
+        <span class="k">if</span> <span class="n">best_combi</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="n">best_accuracy</span> <span class="o">&lt;</span> <span class="n">curr_accuracy</span>
+            <span class="ow">and</span> <span class="n">curr_eq_odds_violation</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">):</span>
+
+            <span class="c1"># New best found</span>
+            <span class="n">best_combi</span> <span class="o">=</span> <span class="n">combi</span>
+            <span class="n">best_accuracy</span> <span class="o">=</span> <span class="n">curr_accuracy</span>
+            <span class="n">best_eq_odds_violation</span> <span class="o">=</span> <span class="n">curr_eq_odds_violation</span>
+
+    <span class="c1"># Return solution that fulfills target tolerance optimally</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;group_thresholds&quot;</span><span class="p">:</span> <span class="n">best_combi</span><span class="p">,</span>
+        <span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="n">best_accuracy</span><span class="p">,</span>
+        <span class="s2">&quot;eq_odds_violation&quot;</span><span class="p">:</span> <span class="n">best_eq_odds_violation</span><span class="p">,</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>Run solver:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">brute_force_solution</span> <span class="o">=</span> <span class="n">solve_brute_force</span><span class="p">(</span>
+    <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="n">EPSILON_TOLERANCE</span><span class="p">,</span>
+    <span class="n">data_tuple</span><span class="o">=</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span>
+    <span class="n">threshold_ticks_step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">brute_force_solution</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "1ad44ab5ed4244a1ace95f09442c078b", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 3min 18s, sys: 8.16 s, total: 3min 26s
+Wall time: 4min 23s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;group_thresholds&#39;: ((0.7000000000000001, 0.8), (0.7000000000000001, 0.9)),
+ &#39;accuracy&#39;: 0.80763,
+ &#39;eq_odds_violation&#39;: 0.04660537497114363}
+</pre></div></div>
+</div>
+</section>
+<section id="2.-LP-solver">
+<h2>2. LP solver<a class="headerlink" href="#2.-LP-solver" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity</span> <span class="kn">import</span> <span class="n">RelaxedThresholdOptimizer</span>
+
+<span class="k">def</span> <span class="nf">solve_lp</span><span class="p">(</span><span class="n">predictor</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">data_tuple</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">RelaxedThresholdOptimizer</span><span class="p">(</span>
+        <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+        <span class="n">constraint</span><span class="o">=</span><span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="n">max_roc_ticks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># use full precision</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">X</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">group</span> <span class="o">=</span> <span class="n">data_tuple</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">clf</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">postproc_clf</span> <span class="o">=</span> <span class="n">solve_lp</span><span class="p">(</span>
+    <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="n">EPSILON_TOLERANCE</span><span class="p">,</span>
+    <span class="n">data_tuple</span><span class="o">=</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 104 ms, sys: 4.96 ms, total: 109 ms
+Wall time: 108 ms
+</pre></div></div>
+</div>
+</section>
+<section id="Compare-accuracy-and-constraint-violation">
+<h2>Compare accuracy and constraint violation<a class="headerlink" href="#Compare-accuracy-and-constraint-violation" title="Link to this heading"></a></h2>
+<p>Assumes <code class="docutils literal notranslate"><span class="pre">FP_cost</span> <span class="pre">==</span> <span class="pre">FN_cost</span> <span class="pre">==</span> <span class="pre">1.0</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accuracy for dummy constant classifier: </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_true</span><span class="o">==</span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">})</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Accuracy for dummy constant classifier: 72.8%
+</pre></div></div>
+</div>
+<p>Evaluate predictions realized by LP solution.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_pred_binary_lp</span> <span class="o">=</span> <span class="n">postproc_clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
+
+<span class="n">lp_acc</span><span class="p">,</span> <span class="n">lp_eq_odds</span> <span class="o">=</span> <span class="n">eval_accuracy_and_equalized_odds</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred_binary_lp</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Realized LP accuracy: </span><span class="si">{</span><span class="n">lp_acc</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Realized LP eq. odds violation: </span><span class="si">{</span><span class="n">lp_eq_odds</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Realized LP accuracy: 82.2%
+Realized LP eq. odds violation: 5.0%
+
+</pre></div></div>
+</div>
+<p>Evaluate predictions realized by brute-force solution.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_pred_binary_brute_force</span> <span class="o">=</span> <span class="n">binarize_predictions</span><span class="p">(</span>
+    <span class="n">y_score</span><span class="o">=</span><span class="n">y_score</span><span class="p">,</span> <span class="n">group_membership</span><span class="o">=</span><span class="n">group</span><span class="p">,</span>
+    <span class="n">group_thresholds</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_GROUPS</span><span class="p">),</span> <span class="n">brute_force_solution</span><span class="p">[</span><span class="s2">&quot;group_thresholds&quot;</span><span class="p">])),</span>
+<span class="p">)</span>
+
+<span class="n">bf_acc</span><span class="p">,</span> <span class="n">bf_eq_odds</span> <span class="o">=</span> <span class="n">eval_accuracy_and_equalized_odds</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred_binary_brute_force</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Realized BF accuracy: </span><span class="si">{</span><span class="n">bf_acc</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Realized BF eq. odds violation: </span><span class="si">{</span><span class="n">bf_eq_odds</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Realized BF accuracy: 80.8%
+Realized BF eq. odds violation: 4.7%
+</pre></div></div>
+</div>
+<p><strong>Conclusion:</strong> brute-force solver took over 4 minutes to exhaustively search over 4356 combinations while the LP solver took 114ms to achieve a superior solution (because of the finer search grid).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

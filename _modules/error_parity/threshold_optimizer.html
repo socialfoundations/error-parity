@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity.threshold_optimizer &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/custom.js?v=882eb7ae"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">error_parity.threshold_optimizer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for error_parity.threshold_optimizer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Solver for the relaxed equal odds problem.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_curve</span>
+
+<span class="kn">from</span> <span class="nn">.cvxpy_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">compute_fair_optimum</span><span class="p">,</span>
+    <span class="n">ALL_CONSTRAINTS</span><span class="p">,</span>
+    <span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.roc_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">roc_convex_hull</span><span class="p">,</span>
+    <span class="n">calc_cost_of_point</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.classifiers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Classifier</span><span class="p">,</span>
+    <span class="n">RandomizedClassifier</span><span class="p">,</span>
+    <span class="n">EnsembleGroupwiseClassifiers</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer">[docs]</a>
+<span class="k">class</span> <span class="nc">RelaxedThresholdOptimizer</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to encapsulate all the logic needed to compute the optimal equal</span>
+<span class="sd">    odds classifier (with possibly relaxed constraints).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">predictor</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">constraint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">false_pos_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">false_neg_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">l_p_norm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+        <span class="n">max_roc_ticks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the relaxed equal odds wrapper.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        predictor : callable[(np.ndarray), float]</span>
+<span class="sd">            A trained score predictor that takes in samples, X, in shape</span>
+<span class="sd">            (num_samples, num_features), and outputs real-valued scores, R, in</span>
+<span class="sd">            shape (num_samples,).</span>
+<span class="sd">        constraint : str</span>
+<span class="sd">            The fairness constraint to use. By default &quot;equalized_odds&quot;.</span>
+<span class="sd">        tolerance : float</span>
+<span class="sd">            The absolute tolerance for the equal odds fairness constraint.</span>
+<span class="sd">            Will allow for `tolerance` difference between group-wise ROC points.</span>
+<span class="sd">        false_pos_cost : float, optional</span>
+<span class="sd">            The cost of a FALSE POSITIVE error, by default 1.0.</span>
+<span class="sd">        false_neg_cost : float, optional</span>
+<span class="sd">            The cost of a FALSE NEGATIVE error, by default 1.0.</span>
+<span class="sd">        l_p_norm : int, optional</span>
+<span class="sd">            The l-p norm to use when computing distances between group ROC points.</span>
+<span class="sd">            Used only for the &quot;equalized odds&quot; constraint (different l-p norms</span>
+<span class="sd">            lead to different equalized-odds relaxations).</span>
+<span class="sd">            By default np.inf, which corresponds to the l-inf norm.</span>
+<span class="sd">        max_roc_ticks : int, optional</span>
+<span class="sd">            The maximum number of ticks (points) in each group&#39;s ROC, when</span>
+<span class="sd">            computing the optimal fair classifier, by default 1000.</span>
+<span class="sd">        seed : int</span>
+<span class="sd">            A random seed used for reproducibility when producing randomized</span>
+<span class="sd">            classifiers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Save arguments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span> <span class="o">=</span> <span class="n">predictor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span> <span class="o">=</span> <span class="n">constraint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">=</span> <span class="n">tolerance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">false_pos_cost</span> <span class="o">=</span> <span class="n">false_pos_cost</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">false_neg_cost</span> <span class="o">=</span> <span class="n">false_neg_cost</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span> <span class="o">=</span> <span class="n">l_p_norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_roc_ticks</span> <span class="o">=</span> <span class="n">max_roc_ticks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+
+        <span class="c1"># Validate constraint</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALL_CONSTRAINTS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span> <span class="o">!=</span> <span class="s2">&quot;equalized_odds&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;l-p norm is only supported for the &#39;equalized_odds&#39; constraint. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Got constraint=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="si">}</span><span class="s2">&#39; and l_p_norm=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid l-p norm=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2">. Must be an integer or np.inf.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Initialize instance variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_hulls</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_prevalence</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_roc_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_prevalence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_realized_classifier</span><span class="p">:</span> <span class="n">EnsembleGroupwiseClassifiers</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">groupwise_roc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Group-specific ROC data containing (FPR, TPR, threshold) triplets.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">groupwise_roc_hulls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Group-specific ROC convex hulls achieved by underlying predictor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_hulls</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">groupwise_roc_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Group-specific ROC points achieved by solution.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_points</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">groupwise_prevalence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Group-specific prevalence, i.e., P(Y=1|A=a)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_prevalence</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">global_roc_point</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Global ROC point achieved by solution.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_roc_point</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">global_prevalence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Global prevalence, i.e., P(Y=1).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_prevalence</span>
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.cost">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.cost">[docs]</a>
+    <span class="k">def</span> <span class="nf">cost</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">false_pos_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">false_neg_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes the theoretical cost of the solution found.</span>
+
+<span class="sd">        NOTE: use false_pos_cost==false_neg_cost==1 for the 0-1 loss (the</span>
+<span class="sd">        standard error rate), which is equal to `1 - accuracy`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        false_pos_cost : float, optional</span>
+<span class="sd">            The cost of a FALSE POSITIVE error, by default will take the value</span>
+<span class="sd">            given in the object&#39;s constructor.</span>
+<span class="sd">        false_neg_cost : float, optional</span>
+<span class="sd">            The cost of a FALSE NEGATIVE error, by default will take the value</span>
+<span class="sd">            given in the object&#39;s constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The cost of the solution found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fit_status</span><span class="p">()</span>
+        <span class="n">global_fpr</span><span class="p">,</span> <span class="n">global_tpr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_roc_point</span>
+
+        <span class="k">return</span> <span class="n">calc_cost_of_point</span><span class="p">(</span>
+            <span class="n">fpr</span><span class="o">=</span><span class="n">global_fpr</span><span class="p">,</span>
+            <span class="n">fnr</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">global_tpr</span><span class="p">,</span>
+            <span class="n">prevalence</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_prevalence</span><span class="p">,</span>
+            <span class="n">false_pos_cost</span><span class="o">=</span><span class="n">false_pos_cost</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_pos_cost</span><span class="p">,</span>
+            <span class="n">false_neg_cost</span><span class="o">=</span><span class="n">false_neg_cost</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_neg_cost</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.constraint_violation">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.constraint_violation">[docs]</a>
+    <span class="k">def</span> <span class="nf">constraint_violation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">constraint_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">l_p_norm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Theoretical constraint violation of the LP solution found.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        constraint_name : str, optional</span>
+<span class="sd">            Optionally, may provide another constraint name that will be used</span>
+<span class="sd">            instead of this classifier&#39;s self.constraint;</span>
+
+<span class="sd">        l_p_norm : int, optional</span>
+<span class="sd">            Which l-p norm to use when computing distances between group ROC</span>
+<span class="sd">            points. Used only for the &quot;equalized odds&quot; constraint.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The fairness constraint violation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fit_status</span><span class="p">()</span>
+
+        <span class="c1"># Warn if provided a different constraint</span>
+        <span class="n">constraint_name</span> <span class="o">=</span> <span class="n">constraint_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span>
+        <span class="k">if</span> <span class="n">constraint_name</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Calculating constraint violation for </span><span class="si">{</span><span class="n">constraint_name</span><span class="si">}</span><span class="s2"> constraint;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Note: this classifier was fitted with a </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="si">}</span><span class="s2"> constraint;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Warn if provided a different l-p norm</span>
+        <span class="n">l_p_norm</span> <span class="o">=</span> <span class="n">l_p_norm</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span>
+        <span class="k">if</span> <span class="n">l_p_norm</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Calculating constraint violation with l-</span><span class="si">{</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2"> norm;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Note: this classifier was fitted with l-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2"> norm;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Validate constraint</span>
+        <span class="k">if</span> <span class="n">constraint_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALL_CONSTRAINTS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">NOT_SUPPORTED_CONSTRAINTS_ERROR_MESSAGE</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">constraint_name</span> <span class="o">==</span> <span class="s2">&quot;equalized_odds&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">equalized_odds_violation</span><span class="p">(</span><span class="n">l_p_norm</span><span class="o">=</span><span class="n">l_p_norm</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">constraint_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;rate_parity&quot;</span><span class="p">):</span>
+            <span class="n">constraint_to_error_type</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;true_positive_rate_parity&quot;</span><span class="p">:</span> <span class="s2">&quot;fn&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;false_positive_rate_parity&quot;</span><span class="p">:</span> <span class="s2">&quot;fp&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;true_negative_rate_parity&quot;</span><span class="p">:</span> <span class="s2">&quot;fp&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;false_negative_rate_parity&quot;</span><span class="p">:</span> <span class="s2">&quot;fn&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_rate_parity_constraint_violation</span><span class="p">(</span>
+                <span class="n">error_type</span><span class="o">=</span><span class="n">constraint_to_error_type</span><span class="p">[</span><span class="n">constraint_name</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">constraint_name</span> <span class="o">==</span> <span class="s2">&quot;demographic_parity&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">demographic_parity_violation</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Standalone constraint violation not yet computed for &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;constraint=&#39;</span><span class="si">{</span><span class="n">constraint_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.error_rate_parity_constraint_violation">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.error_rate_parity_constraint_violation">[docs]</a>
+    <span class="k">def</span> <span class="nf">error_rate_parity_constraint_violation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes the theoretical violation of an error-rate parity constraint.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        error_type : str</span>
+<span class="sd">            One of the following values:</span>
+<span class="sd">                &quot;fp&quot;, for false positive errors (FPR or TNR parity);</span>
+<span class="sd">                &quot;fn&quot;, for false negative errors (TPR or FNR parity).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The maximum constraint violation among all groups.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fit_status</span><span class="p">()</span>
+        <span class="n">valid_error_types</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;fp&quot;</span><span class="p">,</span> <span class="s2">&quot;fn&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">error_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_error_types</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid error_type=&#39;</span><span class="si">{</span><span class="n">error_type</span><span class="si">}</span><span class="s2">&#39;, must be one of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">valid_error_types</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">roc_idx_of_interest</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">error_type</span> <span class="o">==</span> <span class="s2">&quot;fp&quot;</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_l_p_between_points</span><span class="p">(</span>
+            <span class="n">points</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>     <span class="c1"># NOTE: must pass an array object, not scalars</span>
+                    <span class="n">roc_point</span><span class="p">[</span><span class="n">roc_idx_of_interest</span><span class="p">],</span>  <span class="c1"># use only FPR or TPR (whichever was constrained)</span>
+                    <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
+                <span class="k">for</span> <span class="n">roc_point</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupwise_roc_points</span>
+            <span class="p">],</span>
+            <span class="n">l_p_norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.equalized_odds_violation">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.equalized_odds_violation">[docs]</a>
+    <span class="k">def</span> <span class="nf">equalized_odds_violation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l_p_norm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes the theoretical violation of the equal odds constraint</span>
+<span class="sd">        (i.e., the maximum l-inf distance between the ROC point of any pair</span>
+<span class="sd">        of groups).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        l_p_norm : int, optional</span>
+<span class="sd">            Which l-p norm to use when computing distances between group ROC</span>
+<span class="sd">            points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The equal-odds constraint violation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fit_status</span><span class="p">()</span>
+
+        <span class="c1"># Warn if provided a different l-p norm</span>
+        <span class="n">l_p_norm</span> <span class="o">=</span> <span class="n">l_p_norm</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span>
+        <span class="k">if</span> <span class="n">l_p_norm</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Calculating constraint violation with l-</span><span class="si">{</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2"> norm;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Note: this classifier was fitted with l-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="si">}</span><span class="s2"> norm;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Compute l-p distance between each pair of groups</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_l_p_between_points</span><span class="p">(</span>
+            <span class="n">points</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groupwise_roc_points</span><span class="p">,</span>
+            <span class="n">l_p_norm</span><span class="o">=</span><span class="n">l_p_norm</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.demographic_parity_violation">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.demographic_parity_violation">[docs]</a>
+    <span class="k">def</span> <span class="nf">demographic_parity_violation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes the theoretical violation of the demographic parity constraint.</span>
+
+<span class="sd">        That is, the maximum distance between groups&#39; PPR (positive prediction</span>
+<span class="sd">        rate).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The demographic parity constraint violation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fit_status</span><span class="p">()</span>
+
+        <span class="c1"># Compute groups&#39; PPR (positive prediction rate)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_l_p_between_points</span><span class="p">(</span>
+            <span class="n">points</span><span class="o">=</span><span class="p">[</span>
+                <span class="c1"># NOTE: must pass an array object, not scalars</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="n">group_tpr</span> <span class="o">*</span> <span class="n">group_prev</span> <span class="o">+</span> <span class="n">group_fpr</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">group_prev</span><span class="p">),</span>
+                    <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">group_fpr</span><span class="p">,</span> <span class="n">group_tpr</span><span class="p">),</span> <span class="n">group_prev</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupwise_roc_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupwise_prevalence</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">l_p_norm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_max_l_p_between_points</span><span class="p">(</span>
+        <span class="n">points</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">l_p_norm</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="c1"># Number of points (should correspond to the number of groups)</span>
+        <span class="n">n_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+        <span class="c1"># Compute l-inf distance between each pair of groups</span>
+        <span class="n">l_inf_constraint_violation</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">points</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">ord</span><span class="o">=</span><span class="n">l_p_norm</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_points</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_points</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Return the maximum</span>
+        <span class="n">max_violation</span><span class="p">,</span> <span class="p">(</span><span class="n">groupA</span><span class="p">,</span> <span class="n">groupB</span><span class="p">)</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">l_inf_constraint_violation</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Maximum fairness violation is between &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;group=</span><span class="si">{</span><span class="n">groupA</span><span class="si">}</span><span class="s2"> (p=</span><span class="si">{</span><span class="n">points</span><span class="p">[</span><span class="n">groupA</span><span class="p">]</span><span class="si">}</span><span class="s2">) and &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;group=</span><span class="si">{</span><span class="n">groupB</span><span class="si">}</span><span class="s2"> (p=</span><span class="si">{</span><span class="n">points</span><span class="p">[</span><span class="n">groupB</span><span class="p">]</span><span class="si">}</span><span class="s2">);&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">max_violation</span>
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.fit">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y_scores</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit this predictor to achieve the (possibly relaxed) equal odds</span>
+<span class="sd">        constraint on the provided data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            The input features.</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            The input labels.</span>
+<span class="sd">        group : np.ndarray</span>
+<span class="sd">            The group membership of each sample.</span>
+<span class="sd">            Assumes groups are numbered [0, 1, ..., num_groups-1].</span>
+<span class="sd">        y_scores : np.ndarray, optional</span>
+<span class="sd">            The pre-computed model predictions on this data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        callable</span>
+<span class="sd">            Returns self.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Compute group stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_prevalence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">unique_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">num_groups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">num_groups</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Groups should be numbered starting at 0, and up to &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;num_groups-1. Got </span><span class="si">{</span><span class="n">num_groups</span><span class="si">}</span><span class="s2"> groups, but max value is &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">unique_groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> != num_groups-1 == </span><span class="si">{</span><span class="n">num_groups</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Relative group sizes for LN and LP samples</span>
+        <span class="n">group_sizes_label_neg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">group</span> <span class="o">==</span> <span class="n">g</span><span class="p">])</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">unique_groups</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">group_sizes_label_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">group</span> <span class="o">==</span> <span class="n">g</span><span class="p">])</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">unique_groups</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group_sizes_label_neg</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group_sizes_label_pos</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed sanity check. Are you using non-binary labels?&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Convert to relative sizes</span>
+        <span class="n">group_sizes_label_neg</span> <span class="o">=</span> <span class="n">group_sizes_label_neg</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">group_sizes_label_neg</span>
+        <span class="p">)</span>
+        <span class="n">group_sizes_label_pos</span> <span class="o">=</span> <span class="n">group_sizes_label_pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">group_sizes_label_pos</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Compute group-wise prevalence rates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_prevalence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">group</span> <span class="o">==</span> <span class="n">g</span><span class="p">])</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">unique_groups</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Compute group-wise ROC curves</span>
+        <span class="k">if</span> <span class="n">y_scores</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">y_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># Flatten y_scores array if needed</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_scores</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_scores</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">y_scores</span> <span class="o">=</span> <span class="n">y_scores</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">unique_groups</span><span class="p">:</span>
+            <span class="n">group_filter</span> <span class="o">=</span> <span class="n">group</span> <span class="o">==</span> <span class="n">g</span>
+
+            <span class="n">roc_curve_data</span> <span class="o">=</span> <span class="n">roc_curve</span><span class="p">(</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">group_filter</span><span class="p">],</span>
+                <span class="n">y_scores</span><span class="p">[</span><span class="n">group_filter</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Check if max_roc_ticks is exceeded</span>
+            <span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thrs</span> <span class="o">=</span> <span class="n">roc_curve_data</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_roc_ticks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">fpr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_roc_ticks</span><span class="p">:</span>
+                <span class="n">indices_to_keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fpr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">fpr</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_roc_ticks</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+                <span class="c1"># Bottom-left (0,0) and top-right (1,1) points must be kept</span>
+                <span class="n">indices_to_keep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fpr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">roc_curve_data</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">fpr</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">],</span>
+                    <span class="n">tpr</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">],</span>
+                    <span class="n">thrs</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">],</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_data</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">roc_curve_data</span>
+
+        <span class="c1"># Compute convex hull of each ROC curve</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_hulls</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">unique_groups</span><span class="p">:</span>
+            <span class="n">group_fpr</span><span class="p">,</span> <span class="n">group_tpr</span><span class="p">,</span> <span class="n">_group_thresholds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_data</span><span class="p">[</span><span class="n">g</span><span class="p">]</span>
+
+            <span class="n">curr_roc_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">group_fpr</span><span class="p">,</span> <span class="n">group_tpr</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">curr_roc_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">curr_roc_points</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="p">)</span>  <span class="c1"># Add point (1, 0) to ROC curve</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_hulls</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">roc_convex_hull</span><span class="p">(</span><span class="n">curr_roc_points</span><span class="p">)</span>
+
+        <span class="c1"># Find the group-wise optima that fulfill the fairness criteria</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_roc_point</span> <span class="o">=</span> <span class="n">compute_fair_optimum</span><span class="p">(</span>
+            <span class="n">fairness_constraint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="n">groupwise_roc_hulls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_hulls</span><span class="p">,</span>
+            <span class="n">group_sizes_label_pos</span><span class="o">=</span><span class="n">group_sizes_label_pos</span><span class="p">,</span>
+            <span class="n">group_sizes_label_neg</span><span class="o">=</span><span class="n">group_sizes_label_neg</span><span class="p">,</span>
+            <span class="n">groupwise_prevalence</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groupwise_prevalence</span><span class="p">,</span>
+            <span class="n">global_prevalence</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_prevalence</span><span class="p">,</span>
+            <span class="n">false_positive_cost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">false_pos_cost</span><span class="p">,</span>
+            <span class="n">false_negative_cost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">false_neg_cost</span><span class="p">,</span>
+            <span class="n">l_p_norm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Construct each group-specific classifier</span>
+        <span class="n">all_rand_clfs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">g</span><span class="p">:</span> <span class="n">RandomizedClassifier</span><span class="o">.</span><span class="n">construct_at_target_ROC</span><span class="p">(</span>
+                <span class="n">predictor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="p">,</span>
+                <span class="n">roc_curve_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_data</span><span class="p">[</span><span class="n">g</span><span class="p">],</span>
+                <span class="n">target_roc_point</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_groupwise_roc_points</span><span class="p">[</span><span class="n">g</span><span class="p">],</span>
+                <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">unique_groups</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Construct the global classifier (can be used for all groups)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_realized_classifier</span> <span class="o">=</span> <span class="n">EnsembleGroupwiseClassifiers</span><span class="p">(</span>
+            <span class="n">group_to_clf</span><span class="o">=</span><span class="n">all_rand_clfs</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate predictions for the given input data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realized_classifier</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RelaxedThresholdOptimizer.predict">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer.predict">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate predictions for the given input data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            Input samples.</span>
+<span class="sd">        group : np.ndarray</span>
+<span class="sd">            Input sensitive groups.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            A sequence of predictions, one per input sample and input group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_check_fit_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raise_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether this classifier has been fit on some data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        raise_error : bool, optional</span>
+<span class="sd">            Whether to raise an error if the classifier is uninitialized</span>
+<span class="sd">            (otherwise will just return False), by default True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        is_fit : bool</span>
+<span class="sd">            Whether the classifier was already fit on some data.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If `raise_error==True`, raises an error if the classifier is</span>
+<span class="sd">            uninitialized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realized_classifier</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">raise_error</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;This classifier has not yet been fitted to any data.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a shallow copy of this object.</span>
+<span class="sd">        The returned copy is in a blank state, i.e., it has not been fit to any</span>
+<span class="sd">        data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
+            <span class="n">predictor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor</span><span class="p">,</span>
+            <span class="n">constraint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="n">false_pos_cost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">false_pos_cost</span><span class="p">,</span>
+            <span class="n">false_neg_cost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">false_neg_cost</span><span class="p">,</span>
+            <span class="n">l_p_norm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">l_p_norm</span><span class="p">,</span>
+            <span class="n">max_roc_ticks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_roc_ticks</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

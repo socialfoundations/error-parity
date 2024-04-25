@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obtaining parsed folktables datasets &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/custom.js?v=882eb7ae"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Obtaining parsed folktables datasets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/parse-folktables-datasets.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Obtaining-parsed-folktables-datasets">
+<h1>Obtaining parsed folktables datasets<a class="headerlink" href="#Obtaining-parsed-folktables-datasets" title="Link to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">folktables</span> <span class="kn">import</span> <span class="n">ACSDataSource</span>
+</pre></div>
+</div>
+</div>
+<p><strong>NOTE</strong>: use <code class="docutils literal notranslate"><span class="pre">MAX_SENSITIVE_GROUPS=2</span></code> to generate datasets for binary-group experiments.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Important constants!</span>
+<span class="n">TRAIN_SIZE</span> <span class="o">=</span> <span class="mf">0.6</span>
+<span class="n">TEST_SIZE</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">VALIDATION_SIZE</span> <span class="o">=</span> <span class="mf">0.2</span>
+
+<span class="n">MAX_SENSITIVE_GROUPS</span> <span class="o">=</span> <span class="mi">4</span>          <span class="c1"># keep only samples from the 4 largest groups</span>
+<span class="c1"># MAX_SENSITIVE_GROUPS = None     # keep samples from all groups</span>
+
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">42</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">TRAIN_SIZE</span> <span class="o">+</span> <span class="n">TEST_SIZE</span> <span class="o">+</span> <span class="p">(</span><span class="n">VALIDATION_SIZE</span> <span class="ow">or</span> <span class="mf">0.</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># sanity check</span>
+</pre></div>
+</div>
+</div>
+<p><strong>Change</strong> these paths according to where you want the data to be saved to.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">root_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+<span class="n">data_dir</span> <span class="o">=</span> <span class="n">root_dir</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;folktables&quot;</span>
+<span class="n">data_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># download 2018 ACS data</span>
+<span class="kn">from</span> <span class="nn">folktables.load_acs</span> <span class="kn">import</span> <span class="n">state_list</span>
+
+<span class="n">data_source</span> <span class="o">=</span> <span class="n">ACSDataSource</span><span class="p">(</span>
+    <span class="n">survey_year</span><span class="o">=</span><span class="s1">&#39;2018&#39;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="s1">&#39;1-Year&#39;</span><span class="p">,</span> <span class="n">survey</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span>
+    <span class="n">root_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># data is 3236107 rows x 286 columns</span>
+<span class="n">acs_data</span> <span class="o">=</span> <span class="n">data_source</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="n">state_list</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># use download=True if not yet downloaded</span>
+<span class="n">acs_data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(3236107, 286)
+</pre></div></div>
+</div>
+<p>According to the dataset’s datasheet, train/test splits should be stratified by state (at least for ACSIncome, the remaining tasks seem ambiguous).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">STATE_COL</span> <span class="o">=</span> <span class="s2">&quot;ST&quot;</span>
+
+<span class="n">ACS_CATEGORICAL_COLS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;COW&#39;</span><span class="p">,</span>  <span class="c1"># class of worker</span>
+    <span class="s1">&#39;MAR&#39;</span><span class="p">,</span>  <span class="c1"># marital status</span>
+    <span class="s1">&#39;OCCP&#39;</span><span class="p">,</span> <span class="c1"># occupation code</span>
+    <span class="s1">&#39;POBP&#39;</span><span class="p">,</span> <span class="c1"># place of birth code</span>
+    <span class="s1">&#39;RELP&#39;</span><span class="p">,</span> <span class="c1"># relationship status</span>
+    <span class="s1">&#39;SEX&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RAC1P&#39;</span><span class="p">,</span> <span class="c1"># race code</span>
+    <span class="s1">&#39;DIS&#39;</span><span class="p">,</span>  <span class="c1"># disability</span>
+    <span class="s1">&#39;ESP&#39;</span><span class="p">,</span>  <span class="c1"># employment status of parents</span>
+    <span class="s1">&#39;CIT&#39;</span><span class="p">,</span>  <span class="c1"># citizenship status</span>
+    <span class="s1">&#39;MIG&#39;</span><span class="p">,</span>  <span class="c1"># mobility status</span>
+    <span class="s1">&#39;MIL&#39;</span><span class="p">,</span>  <span class="c1"># military service</span>
+    <span class="s1">&#39;ANC&#39;</span><span class="p">,</span>  <span class="c1"># ancestry</span>
+    <span class="s1">&#39;NATIVITY&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DEAR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DEYE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DREM&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ESR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ST&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FER&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GCL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;JWTR&#39;</span><span class="p">,</span>
+<span class="c1">#     &#39;PUMA&#39;,</span>
+<span class="c1">#     &#39;POWPUMA&#39;,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">or_</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">folktables</span> <span class="kn">import</span> <span class="n">BasicProblem</span>
+
+<span class="k">def</span> <span class="nf">split_folktables_task</span><span class="p">(</span>
+        <span class="n">acs_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">acs_task</span><span class="p">:</span> <span class="n">BasicProblem</span><span class="p">,</span>
+        <span class="n">train_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">test_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">validation_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_sensitive_groups</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stratify_by_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_to_disk</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">file_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Train/test split a given folktables task (for train/test/validation).</span>
+
+<span class="sd">    According to the dataset&#39;s datasheet, (at least) the ACSIncome</span>
+<span class="sd">    task should be stratified by state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    acs_data : pd.DataFrame</span>
+<span class="sd">    acs_task : folktables.BasicProblem</span>
+<span class="sd">    train_size : float</span>
+<span class="sd">    test_size : float</span>
+<span class="sd">    validation_size : float</span>
+<span class="sd">    max_sensitive_groups : int, optional</span>
+<span class="sd">        If the number of protected groups exceeds this, discard samples belonging to</span>
+<span class="sd">        the groups with lowest relative size.</span>
+<span class="sd">    stratify_by_state : bool, optional</span>
+<span class="sd">        Whether to stratify splits by state.</span>
+<span class="sd">    seed : int, optional</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (train_data, test_data, validation_data) : Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Sanity check</span>
+    <span class="k">assert</span> <span class="n">train_size</span> <span class="o">+</span> <span class="n">test_size</span> <span class="o">+</span> <span class="p">(</span><span class="n">validation_size</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">val</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">validation_size</span><span class="p">))</span>
+
+    <span class="c1"># Add State to the feature columns so we can do stratified splits (will be removed later)</span>
+    <span class="n">remove_state_col_later</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># only remove the state column later if we were the ones adding it</span>
+    <span class="k">if</span> <span class="n">stratify_by_state</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">STATE_COL</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">acs_task</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+            <span class="n">acs_task</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">acs_task</span><span class="p">)</span> <span class="c1"># we&#39;re gonna need to change this task object</span>
+            <span class="n">acs_task</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">STATE_COL</span><span class="p">)</span>
+            <span class="n">remove_state_col_later</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">remove_state_col_later</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Pre-process data + select task-specific features</span>
+    <span class="n">features</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">group</span> <span class="o">=</span> <span class="n">acs_task</span><span class="o">.</span><span class="n">df_to_numpy</span><span class="p">(</span><span class="n">acs_data</span><span class="p">)</span>
+
+    <span class="c1"># Make a DataFrame with all processed data</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">acs_task</span><span class="o">.</span><span class="n">features</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
+
+    <span class="c1"># Correct column ordering (1st: label, 2nd: group, 3rd and onwards: features)</span>
+    <span class="n">cols_order</span> <span class="o">=</span> <span class="p">([</span><span class="n">acs_task</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span> <span class="o">+</span>
+        <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">acs_task</span><span class="o">.</span><span class="n">features</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">}))</span>
+    <span class="k">if</span> <span class="n">remove_state_col_later</span><span class="p">:</span>
+        <span class="n">cols_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols_order</span> <span class="k">if</span> <span class="n">col</span> <span class="o">!=</span> <span class="n">STATE_COL</span><span class="p">]</span>
+
+    <span class="c1"># Save state_col for stratified split</span>
+    <span class="k">if</span> <span class="n">stratify_by_state</span><span class="p">:</span>
+        <span class="n">state_col_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">STATE_COL</span><span class="p">]</span>
+
+    <span class="c1"># Enforce correct ordering in df</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">cols_order</span><span class="p">]</span>
+
+    <span class="c1"># Drop samples from sensitive groups with low relative size</span>
+    <span class="c1"># (e.g., original paper has only White and Black races)</span>
+    <span class="k">if</span> <span class="n">max_sensitive_groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_sensitive_groups</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">group_sizes</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">big_groups</span> <span class="o">=</span> <span class="n">group_sizes</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()[:</span> <span class="n">max_sensitive_groups</span><span class="p">]</span>
+
+        <span class="n">big_groups_filter</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span>
+            <span class="n">or_</span><span class="p">,</span>
+            <span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">==</span> <span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">big_groups</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Keep only big groups</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">big_groups_filter</span><span class="p">]</span>
+        <span class="n">state_col_data</span> <span class="o">=</span> <span class="n">state_col_data</span><span class="p">[</span><span class="n">big_groups_filter</span><span class="p">]</span>
+
+        <span class="c1"># Group values must be sorted, and start at 0</span>
+        <span class="c1"># (e.g., if we deleted group=2 but kept group=3, the later should now have value 2)</span>
+        <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">():</span>
+            <span class="n">map_to_sequential</span> <span class="o">=</span> <span class="p">{</span><span class="n">g</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">big_groups</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">big_groups</span><span class="p">)))}</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">map_to_sequential</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]]</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using the following group value mapping: </span><span class="si">{</span><span class="n">map_to_sequential</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="n">df</span><span class="p">[</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1">## Try to enforce correct types</span>
+    <span class="c1"># All columns should be encoded as integers, dtype=int</span>
+    <span class="n">types_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">col</span><span class="p">:</span> <span class="nb">int</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">dtypes</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;object&quot;</span>
+    <span class="p">}</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">types_dict</span><span class="p">)</span>
+    <span class="c1"># ^ set int types right-away so that categories don&#39;t have floating points</span>
+
+    <span class="c1"># Set categorical columns to start at value=0! (necessary for sensitive attributes)</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ACS_CATEGORICAL_COLS</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)):</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+    <span class="c1"># Set categorical columns to the correct dtype &quot;category&quot;</span>
+    <span class="n">types_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;category&quot;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ACS_CATEGORICAL_COLS</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+        <span class="c1"># if df[col].nunique() &lt; 10</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Plus the group is definitely categorical</span>
+    <span class="n">types_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">acs_task</span><span class="o">.</span><span class="n">group</span><span class="p">:</span> <span class="s2">&quot;category&quot;</span><span class="p">})</span>
+
+    <span class="c1"># And the target is definitely integer</span>
+    <span class="n">types_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">acs_task</span><span class="o">.</span><span class="n">target</span><span class="p">:</span> <span class="nb">int</span><span class="p">})</span>
+
+    <span class="c1"># Set df to correct types</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">types_dict</span><span class="p">)</span>
+
+    <span class="c1"># ** Split data in train/test/validation **</span>
+    <span class="n">train_idx</span><span class="p">,</span> <span class="n">other_idx</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+        <span class="n">train_size</span><span class="o">=</span><span class="n">train_size</span><span class="p">,</span>
+        <span class="n">stratify</span><span class="o">=</span><span class="n">state_col_data</span> <span class="k">if</span> <span class="n">stratify_by_state</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">train_df</span><span class="p">,</span> <span class="n">other_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">other_idx</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">train_idx</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">other_idx</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># Split validation</span>
+    <span class="k">if</span> <span class="n">validation_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">validation_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">new_test_size</span> <span class="o">=</span> <span class="n">test_size</span> <span class="o">/</span> <span class="p">(</span><span class="n">test_size</span> <span class="o">+</span> <span class="n">validation_size</span><span class="p">)</span>
+
+        <span class="n">val_idx</span><span class="p">,</span> <span class="n">test_idx</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+            <span class="n">other_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">test_size</span><span class="o">=</span><span class="n">new_test_size</span><span class="p">,</span>
+            <span class="n">stratify</span><span class="o">=</span><span class="n">state_col_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">other_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">stratify_by_state</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">val_df</span><span class="p">,</span> <span class="n">test_df</span> <span class="o">=</span> <span class="n">other_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">val_idx</span><span class="p">],</span> <span class="n">other_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_idx</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_idx</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_idx</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val_df</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">validation_size</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">test_idx</span> <span class="o">=</span> <span class="n">other_idx</span>
+        <span class="n">test_df</span> <span class="o">=</span> <span class="n">other_df</span>
+
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_df</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">train_size</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">test_df</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">test_size</span><span class="p">)</span>
+
+    <span class="c1"># Optionally, save data to disk</span>
+    <span class="c1"># Warning: depends on global notebook variables</span>
+    <span class="k">if</span> <span class="n">save_to_disk</span><span class="p">:</span>
+        <span class="n">subfolder_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;train=</span><span class="si">{</span><span class="n">train_size</span><span class="si">:</span><span class="s2">.2</span><span class="si">}</span><span class="s2">_test=</span><span class="si">{</span><span class="n">test_size</span><span class="si">:</span><span class="s2">.2</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">validation_size</span><span class="p">:</span>
+            <span class="n">subfolder_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subfolder_name</span><span class="si">}</span><span class="s2">_validation=</span><span class="si">{</span><span class="n">validation_size</span><span class="si">:</span><span class="s2">.2</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">max_sensitive_groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_sensitive_groups</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">subfolder_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subfolder_name</span><span class="si">}</span><span class="s2">_max-groups=</span><span class="si">{</span><span class="n">max_sensitive_groups</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Create folder</span>
+        <span class="n">save_to_disk</span> <span class="o">=</span> <span class="n">save_to_disk</span> <span class="o">/</span> <span class="n">subfolder_name</span>
+        <span class="n">save_to_disk</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving data to folder &#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">save_to_disk</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39; with prefix &#39;</span><span class="si">{</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">train_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to_disk</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">.train.csv&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+        <span class="n">test_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to_disk</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">.test.csv&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">validation_size</span><span class="p">:</span>
+            <span class="n">val_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to_disk</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_prefix</span><span class="si">}</span><span class="s2">.validation.csv&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">train_df</span><span class="p">,</span> <span class="n">test_df</span><span class="p">,</span> <span class="n">val_df</span><span class="p">)</span> <span class="k">if</span> <span class="n">validation_size</span> <span class="k">else</span> <span class="p">(</span><span class="n">train_df</span><span class="p">,</span> <span class="n">test_df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">folktables</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="n">all_acs_tasks</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;ACSIncome&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ACSPublicCoverage&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ACSMobility&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ACSEmployment&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ACSTravelTime&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">const_predictor_acc</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Generate data and save to disk, for all tasks</span>
+<span class="k">for</span> <span class="n">task_name</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">all_acs_tasks</span><span class="p">):</span>
+
+    <span class="c1"># Dynamically import/load task object</span>
+    <span class="n">task_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">folktables</span><span class="p">,</span> <span class="n">task_name</span><span class="p">)</span>
+
+    <span class="c1"># Process data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">split_folktables_task</span><span class="p">(</span>
+        <span class="n">acs_data</span><span class="p">,</span>
+        <span class="n">task_obj</span><span class="p">,</span>
+        <span class="n">train_size</span><span class="o">=</span><span class="n">TRAIN_SIZE</span><span class="p">,</span>
+        <span class="n">test_size</span><span class="o">=</span><span class="n">TEST_SIZE</span><span class="p">,</span>
+        <span class="n">validation_size</span><span class="o">=</span><span class="n">VALIDATION_SIZE</span><span class="p">,</span>
+        <span class="n">max_sensitive_groups</span><span class="o">=</span><span class="n">MAX_SENSITIVE_GROUPS</span><span class="p">,</span>
+        <span class="n">stratify_by_state</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+        <span class="n">save_to_disk</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span>
+        <span class="n">file_prefix</span><span class="o">=</span><span class="n">task_name</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">const_predictor_acc</span><span class="p">[</span><span class="n">task_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">curr_type</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">curr_data</span><span class="p">[</span><span class="n">task_obj</span><span class="o">.</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="mi">1</span><span class="o">-</span><span class="n">curr_data</span><span class="p">[</span><span class="n">task_obj</span><span class="o">.</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">curr_type</span><span class="p">,</span> <span class="n">curr_data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;validation&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<section id="Log-the-constant-classifier-accuracy-for-each-dataset-and-data-type">
+<h2>Log the constant classifier accuracy for each dataset and data type<a class="headerlink" href="#Log-the-constant-classifier-accuracy-for-each-dataset-and-data-type" title="Link to this heading"></a></h2>
+<p>The constant classifier always predicts either class 1 or 0 (whichever has highest prevalence in the dataset).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">const_predictor_acc</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{
+  &#34;ACSIncome&#34;: {
+    &#34;train&#34;: 0.6276484057384071,
+    &#34;test&#34;: 0.6267948098880045,
+    &#34;validation&#34;: 0.6275487157120827
+  },
+  &#34;ACSPublicCoverage&#34;: {
+    &#34;train&#34;: 0.705777716173447,
+    &#34;test&#34;: 0.7080615054796799,
+    &#34;validation&#34;: 0.7048998544597685
+  },
+  &#34;ACSMobility&#34;: {
+    &#34;train&#34;: 0.7366843896876353,
+    &#34;test&#34;: 0.7369037614281713,
+    &#34;validation&#34;: 0.7358002054311933
+  },
+  &#34;ACSEmployment&#34;: {
+    &#34;train&#34;: 0.5401004328892394,
+    &#34;test&#34;: 0.5415303116248027,
+    &#34;validation&#34;: 0.5397890715398488
+  },
+  &#34;ACSTravelTime&#34;: {
+    &#34;train&#34;: 0.5622398192707292,
+    &#34;test&#34;: 0.5624768352647576,
+    &#34;validation&#34;: 0.5620214827548473
+  }
+}
+</pre></div></div>
+</div>
+<hr class="docutils" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

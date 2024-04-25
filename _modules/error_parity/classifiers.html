@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity.classifiers &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/custom.js?v=882eb7ae"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">error_parity.classifiers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for error_parity.classifiers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Helper functions to construct and use randomized classifiers.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
+
+
+<div class="viewcode-block" id="Classifier">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.Classifier">[docs]</a>
+<span class="k">class</span> <span class="nc">Classifier</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return predicted class, Y, for the given input features, X.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+
+<div class="viewcode-block" id="BinaryClassifier">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.BinaryClassifier">[docs]</a>
+<span class="k">class</span> <span class="nc">BinaryClassifier</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constructs a deterministic binary classifier, by thresholding a</span>
+<span class="sd">    real-valued score predictor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">score_predictor</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructs a deterministic binary classifier from the given</span>
+<span class="sd">        real-valued score predictor and a threshold in {0, 1}.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_predictor</span> <span class="o">=</span> <span class="n">score_predictor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes predictions for the given samples, X.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            The input samples, in shape (num_samples, num_features).</span>
+<span class="sd">        group : None, optional</span>
+<span class="sd">            None. This argument will be ignored by this classifier as it does</span>
+<span class="sd">            not consider sensitive attributes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        y_pred_binary : np.ndarray[int]</span>
+<span class="sd">            The predicted class for each input sample.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score_predictor</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BinaryClassifierAtROCDiagonal">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.BinaryClassifierAtROCDiagonal">[docs]</a>
+<span class="k">class</span> <span class="nc">BinaryClassifierAtROCDiagonal</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A dummy classifier whose predictions have no correlation with the input</span>
+<span class="sd">    features, but achieves whichever target FPR or TPR you want (on ROC diag.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">target_fpr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target_tpr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Must provide exactly one of &#39;target_fpr&#39; or &#39;target_tpr&#39;, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got target_fpr=</span><span class="si">{</span><span class="n">target_fpr</span><span class="si">}</span><span class="s2">, target_tpr=</span><span class="si">{</span><span class="n">target_tpr</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">target_fpr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_tpr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="c1"># Provided FPR</span>
+        <span class="k">if</span> <span class="n">target_fpr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_fpr</span> <span class="o">=</span> <span class="n">target_fpr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_tpr</span> <span class="o">=</span> <span class="n">target_fpr</span>
+
+        <span class="c1"># Provided TPR</span>
+        <span class="k">elif</span> <span class="n">target_tpr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_tpr</span> <span class="o">=</span> <span class="n">target_tpr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_fpr</span> <span class="o">=</span> <span class="n">target_tpr</span>
+
+        <span class="c1"># Provided neither!</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="c1"># Initiate random number generator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_fpr</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EnsembleGroupwiseClassifiers">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.EnsembleGroupwiseClassifiers">[docs]</a>
+<span class="k">class</span> <span class="nc">EnsembleGroupwiseClassifiers</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constructs a classifier from a set of group-specific classifiers.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_to_clf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructs a classifier from a set of group-specific classifiers.</span>
+
+<span class="sd">        Must be provided exactly one classifier per unique group value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group_to_clf : dict[int | str, callable]</span>
+<span class="sd">            A mapping of group value to the classifier that should handle</span>
+<span class="sd">            predictions for that specific group.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_to_clf</span> <span class="o">=</span> <span class="n">group_to_clf</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute predictions for the given input samples X, given their</span>
+<span class="sd">        sensitive attributes, group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            Input samples, with shape (num_samples, num_features).</span>
+<span class="sd">        group : np.ndarray, optional</span>
+<span class="sd">            The sensitive attribute value for each input sample.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        y_pred : np.ndarray</span>
+<span class="sd">            The predictions, where the prediction for each sample is handed off</span>
+<span class="sd">            to a group-specific classifier for that sample.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid input sizes: len(X) != len(group), </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Array to store predictions</span>
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span>
+
+        <span class="c1"># Filter to keep track of all samples that received a prediction</span>
+        <span class="n">cumulative_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">group_value</span><span class="p">,</span> <span class="n">group_clf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_to_clf</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">group_filter</span> <span class="o">=</span> <span class="n">group</span> <span class="o">==</span> <span class="n">group_value</span>
+            <span class="n">y_pred</span><span class="p">[</span><span class="n">group_filter</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_clf</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">group_filter</span><span class="p">])</span>
+            <span class="n">cumulative_filter</span> <span class="o">|=</span> <span class="n">group_filter</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cumulative_filter</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_samples</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Computed group-wise predictions for </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cumulative_filter</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;samples, but got </span><span class="si">{</span><span class="n">num_samples</span><span class="si">}</span><span class="s2"> input samples.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y_pred</span></div>
+
+
+
+<div class="viewcode-block" id="RandomizedClassifier">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.RandomizedClassifier">[docs]</a>
+<span class="k">class</span> <span class="nc">RandomizedClassifier</span><span class="p">(</span><span class="n">Classifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constructs a randomized classifier from the given  classifiers and</span>
+<span class="sd">    their probabilities.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">classifiers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Classifier</span><span class="p">],</span>
+        <span class="n">probabilities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructs a randomized classifier from the given  classifiers and</span>
+<span class="sd">        their probabilities.</span>
+
+<span class="sd">        This classifier will compute predictions for the whole input dataset at</span>
+<span class="sd">        once, which will in general be faster for larger inputs (when compared</span>
+<span class="sd">        to predicting each sample separately).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        classifiers : list[callable]</span>
+<span class="sd">            A list of classifiers</span>
+<span class="sd">        probabilities : list[float]</span>
+<span class="sd">            A list of probabilities for each given classifier, where</span>
+<span class="sd">            probabilities[idx] is the probability of using the prediction from</span>
+<span class="sd">            classifiers[idx].</span>
+<span class="sd">        seed : int, optional</span>
+<span class="sd">            A random seed, by default 42.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        callable</span>
+<span class="sd">            The corresponding randomized classifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">classifiers</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">probabilities</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid arguments: len(classifiers) != len(probabilities); &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">classifiers</span><span class="p">)</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">probabilities</span><span class="p">)</span><span class="si">}</span><span class="s2">);&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifiers</span> <span class="o">=</span> <span class="n">classifiers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="n">probabilities</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># Assign each sample to a classifier</span>
+        <span class="n">clf_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classifiers</span><span class="p">)),</span>  <span class="c1"># possible choices</span>
+            <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>  <span class="c1"># size of output array</span>
+            <span class="n">p</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span><span class="p">,</span>  <span class="c1"># prob. of each choice</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Run predictions for all classifiers on all samples</span>
+        <span class="n">y_pred_choices</span> <span class="o">=</span> <span class="p">[</span><span class="n">clf</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">for</span> <span class="n">clf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifiers</span><span class="p">]</span>
+        <span class="c1"># TODO improvement:</span>
+        <span class="c1"># we could actually just run the classifier for the samples that get</span>
+        <span class="c1"># matched with it... similar to the EnsembleGroupwiseClassifiers call</span>
+        <span class="c1"># method.</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">choose</span><span class="p">(</span><span class="n">clf_idx</span><span class="p">,</span> <span class="n">y_pred_choices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RandomizedClassifier.find_weights_given_two_points">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.RandomizedClassifier.find_weights_given_two_points">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">find_weights_given_two_points</span><span class="p">(</span>
+        <span class="n">point_A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">point_B</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">target_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Given two ROC points corresponding to existing binary classifiers,</span>
+<span class="sd">        find the weights that result in a classifier whose ROC point is target_point.</span>
+
+<span class="sd">        May need to interpolate the two given points with a third point corresponding</span>
+<span class="sd">        to a random classifier (random uniform distribution with different thresholds).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[np.ndarray, np.ndarray]</span>
+<span class="sd">            Returns a tuple of numpy arrays (Ws, Ps), such that Ws @ Ps == target_point.</span>
+<span class="sd">            The 1st array, Ws, corresponds to the weights of each point in the 2nd array, Ps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if the target point is actually point A or B</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">point_A</span><span class="p">,</span> <span class="n">target_point</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">point_A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">point_B</span><span class="p">,</span> <span class="n">target_point</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">point_B</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># If not, we&#39;ll have to triangulate the target using A and B</span>
+        <span class="n">point_A_fpr</span><span class="p">,</span> <span class="n">point_A_tpr</span> <span class="o">=</span> <span class="n">point_A</span>
+        <span class="n">point_B_fpr</span><span class="p">,</span> <span class="n">point_B_tpr</span> <span class="o">=</span> <span class="n">point_B</span>
+        <span class="n">target_fpr</span><span class="p">,</span> <span class="n">target_tpr</span> <span class="o">=</span> <span class="n">target_point</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">point_A_fpr</span> <span class="o">&lt;=</span> <span class="n">target_fpr</span> <span class="o">&lt;=</span> <span class="n">point_B_fpr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid input. FPR should fulfill: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">point_A_fpr</span><span class="si">}</span><span class="s2"> point_A_FPR) &lt;= (</span><span class="si">{</span><span class="n">target_fpr</span><span class="si">}</span><span class="s2"> target_fpr) &lt;= &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">point_B_fpr</span><span class="si">}</span><span class="s2"> point_B_fpr)&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Calculate weights for points A and B</span>
+        <span class="n">weight_A</span> <span class="o">=</span> <span class="p">(</span><span class="n">target_fpr</span> <span class="o">-</span> <span class="n">point_B_fpr</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">point_A_fpr</span> <span class="o">-</span> <span class="n">point_B_fpr</span><span class="p">)</span>
+
+        <span class="c1"># Result of projecting target point P directly UPWARDS towards the AB line</span>
+        <span class="n">weights_AB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weight_A</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">weight_A</span><span class="p">])</span>
+        <span class="n">point_P_upwards</span> <span class="o">=</span> <span class="n">weights_AB</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">point_A</span><span class="p">,</span> <span class="n">point_B</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">point_P_upwards</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">target_fpr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Failed projecting target_fpr to ROC hull frontier. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Got proj. FPR=</span><span class="si">{</span><span class="n">point_P_upwards</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">; target FPR=</span><span class="si">{</span><span class="n">target_fpr</span><span class="si">}</span><span class="s2">;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check if the target point lies in the AB line (and return if so)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">point_P_upwards</span><span class="p">,</span> <span class="n">target_point</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">weights_AB</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">point_A</span><span class="p">,</span> <span class="n">point_B</span><span class="p">))</span>
+
+        <span class="c1"># Result of projecting target point P directly DOWNWARDS towards the diagonal tpr==fpr</span>
+        <span class="n">point_P_downwards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">target_fpr</span><span class="p">,</span> <span class="n">target_fpr</span><span class="p">])</span>
+
+        <span class="c1"># Calculate weights for P upwards and P downwards</span>
+        <span class="n">weight_P_upwards</span> <span class="o">=</span> <span class="p">(</span><span class="n">target_tpr</span> <span class="o">-</span> <span class="n">point_P_downwards</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="n">point_P_upwards</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">point_P_downwards</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Sanity checks...</span>
+        <span class="n">all_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">point_A</span><span class="p">,</span> <span class="n">point_B</span><span class="p">,</span> <span class="n">point_P_downwards</span><span class="p">))</span>
+        <span class="n">all_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">weight_P_upwards</span> <span class="o">*</span> <span class="n">weights_AB</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">weight_P_upwards</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">all_weights</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Sum of linear interpolation weights was </span><span class="si">{</span><span class="n">all_weights</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;should be 1!&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">target_point</span><span class="p">,</span> <span class="n">all_weights</span> <span class="o">@</span> <span class="n">all_points</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Triangulation of target point failed. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Target was </span><span class="si">{</span><span class="n">target_point</span><span class="si">}</span><span class="s2">; got </span><span class="si">{</span><span class="n">all_weights</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">all_points</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">all_weights</span><span class="p">,</span> <span class="n">all_points</span></div>
+
+
+<div class="viewcode-block" id="RandomizedClassifier.construct_at_target_ROC">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.RandomizedClassifier.construct_at_target_ROC">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">construct_at_target_ROC</span><span class="p">(</span>    <span class="c1"># noqa: C901</span>
+        <span class="n">predictor</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+        <span class="n">roc_curve_data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">target_roc_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;RandomizedClassifier&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructs a randomized classifier in the interior of the</span>
+<span class="sd">        convex hull of the classifier&#39;s ROC curve, at a given target</span>
+<span class="sd">        ROC point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        predictor : callable</span>
+<span class="sd">            A predictor that outputs real-valued scores in range [0; 1].</span>
+<span class="sd">        roc_curve_data : tuple[np.array...]</span>
+<span class="sd">            The ROC curve of the given classifier, as a tuple of</span>
+<span class="sd">            (FPR values; TPR values; threshold values).</span>
+<span class="sd">        target_roc_point : np.ndarray</span>
+<span class="sd">            The target ROC point in (FPR, TPR).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rand_clf : callable</span>
+<span class="sd">            A (randomized) binary classifier whose expected FPR and TPR</span>
+<span class="sd">            corresponds to the given target ROC point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Unpack useful constants</span>
+        <span class="n">target_fpr</span><span class="p">,</span> <span class="n">target_tpr</span> <span class="o">=</span> <span class="n">target_roc_point</span>
+        <span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thrs</span> <span class="o">=</span> <span class="n">roc_curve_data</span>
+
+        <span class="c1"># Check if we have more than two ROC points</span>
+        <span class="c1"># (3 minimum to compute convex hull)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fpr</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid ROC curve data (only has one point): &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;fpr:</span><span class="si">{</span><span class="n">fpr</span><span class="si">}</span><span class="s2">; tpr:</span><span class="si">{</span><span class="n">tpr</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fpr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Got ROC data with only 2 points: producing a random classifier...&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">target_roc_point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">target_roc_point</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid target ROC point (</span><span class="si">{</span><span class="n">target_roc_point</span><span class="si">}</span><span class="s2">) is not in &quot;</span>
+                    <span class="s2">&quot;diagonal ROC line, but a random-classifier ROC was provided.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">BinaryClassifierAtROCDiagonal</span><span class="p">(</span><span class="n">target_fpr</span><span class="o">=</span><span class="n">target_roc_point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Compute hull of ROC curve</span>
+        <span class="n">roc_curve_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">roc_curve_points</span><span class="p">)</span>
+
+        <span class="c1"># Filter out ROC points in the interior of the convex hull and other suboptimal points</span>
+        <span class="n">points_above_diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">tpr</span> <span class="o">&gt;=</span> <span class="n">fpr</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">useful_points_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">points_above_diagonal</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="n">fpr</span> <span class="o">=</span> <span class="n">fpr</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">]</span>
+        <span class="n">tpr</span> <span class="o">=</span> <span class="n">tpr</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">]</span>
+        <span class="n">thrs</span> <span class="o">=</span> <span class="n">thrs</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">]</span>
+
+        <span class="c1"># Find points A and B to construct the randomized classifier from</span>
+        <span class="c1"># &gt; point A is the last point with FPR smaller or equal to the target</span>
+        <span class="n">point_A_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">target_fpr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">point_A_idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">fpr</span> <span class="o">&lt;=</span> <span class="n">target_fpr</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="n">point_A_roc</span> <span class="o">=</span> <span class="n">roc_curve_points</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">][</span><span class="n">point_A_idx</span><span class="p">]</span>
+
+        <span class="c1"># &gt; point B is the first point with FPR larger than the target</span>
+        <span class="n">point_B_idx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">point_A_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">thrs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">point_B_roc</span> <span class="o">=</span> <span class="n">roc_curve_points</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">][</span><span class="n">point_B_idx</span><span class="p">]</span>
+
+        <span class="n">weights</span><span class="p">,</span> <span class="n">points</span> <span class="o">=</span> <span class="n">RandomizedClassifier</span><span class="o">.</span><span class="n">find_weights_given_two_points</span><span class="p">(</span>
+            <span class="n">point_A</span><span class="o">=</span><span class="n">point_A_roc</span><span class="p">,</span>
+            <span class="n">point_B</span><span class="o">=</span><span class="n">point_B_roc</span><span class="p">,</span>
+            <span class="n">target_point</span><span class="o">=</span><span class="n">target_roc_point</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got triangulation weights over 100%: w=</span><span class="si">{</span><span class="n">weights</span><span class="si">}</span><span class="s2">;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Instantiate classifiers for points A and B</span>
+        <span class="n">clf_a</span> <span class="o">=</span> <span class="n">BinaryClassifier</span><span class="p">(</span><span class="n">predictor</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">thrs</span><span class="p">[</span><span class="n">point_A_idx</span><span class="p">])</span>
+        <span class="n">clf_b</span> <span class="o">=</span> <span class="n">BinaryClassifier</span><span class="p">(</span><span class="n">predictor</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">thrs</span><span class="p">[</span><span class="n">point_B_idx</span><span class="p">])</span>
+
+        <span class="c1"># Check if most of the probability mass is on a single classifier</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">weights</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">target_roc_point</span><span class="p">,</span> <span class="n">point_A_roc</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">clf_a</span>
+
+            <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">target_roc_point</span><span class="p">,</span> <span class="n">point_B_roc</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">clf_b</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># differences from target point to A or B are significant enough</span>
+                <span class="c1"># to warrant triangulating between multiple points</span>
+                <span class="k">pass</span>
+
+        <span class="c1"># If only one point returned, then that point should have weight==1.0</span>
+        <span class="c1"># (hence, should&#39;ve been caught by the previous if statement)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Invalid triangulation.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If there are two points, return a randomized classifier between the two</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RandomizedClassifier</span><span class="p">(</span>
+                <span class="n">classifiers</span><span class="o">=</span><span class="p">[</span><span class="n">clf_a</span><span class="p">,</span> <span class="n">clf_b</span><span class="p">],</span>
+                <span class="n">probabilities</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+                <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># If it&#39;s in the interior of the ROC curve, requires instantiating a randomized classifier at the diagonal</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">fpr_rand</span><span class="p">,</span> <span class="n">tpr_rand</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">fpr_rand</span><span class="p">,</span> <span class="n">tpr_rand</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Triangulation point at ROC diagonal has FPR != TPR &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">fpr_rand</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="n">tpr_rand</span><span class="si">}</span><span class="s2">); &quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># &gt;&gt;&gt; BUG this would be better but for some reason it doesn&#39;t work!</span>
+            <span class="c1"># rng = np.random.default_rng(42)</span>
+            <span class="c1"># clf_rand = lambda X: (rng.random(size=len(X)) &gt;= (1 - fpr_rand)).astype(int)</span>
+            <span class="c1"># # or...</span>
+            <span class="c1"># clf_rand = BinaryClassifierAtROCDiagonal(target_fpr=fpr_rand)</span>
+            <span class="c1"># &lt;&lt;&lt;</span>
+            <span class="n">clf_rand</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">X</span><span class="p">:</span> <span class="p">(</span>  <span class="c1"># noqa</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fpr_rand</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">RandomizedClassifier</span><span class="p">(</span>
+                <span class="n">classifiers</span><span class="o">=</span><span class="p">[</span><span class="n">clf_a</span><span class="p">,</span> <span class="n">clf_b</span><span class="p">,</span> <span class="n">clf_rand</span><span class="p">],</span> <span class="n">probabilities</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid triangulation of classifiers; &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;weights: </span><span class="si">{</span><span class="n">weights</span><span class="si">}</span><span class="s2">; points: </span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2">;&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RandomizedClassifier.find_points_for_target_ROC">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.classifiers.RandomizedClassifier.find_points_for_target_ROC">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">find_points_for_target_ROC</span><span class="p">(</span><span class="n">roc_curve_data</span><span class="p">,</span> <span class="n">target_roc_point</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieves a set of realizable points (and respective weights) in the</span>
+<span class="sd">        provided ROC curve that can be used to realize any target ROC in the</span>
+<span class="sd">        interior of the ROC curve.</span>
+
+<span class="sd">        NOTE: this method is a bit redundant -- has functionality in common with</span>
+<span class="sd">        RandomizedClassifier.construct_at_target_ROC()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Unpack useful constants</span>
+        <span class="n">target_fpr</span><span class="p">,</span> <span class="n">target_tpr</span> <span class="o">=</span> <span class="n">target_roc_point</span>
+        <span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thrs</span> <span class="o">=</span> <span class="n">roc_curve_data</span>
+
+        <span class="c1"># Compute hull of ROC curve</span>
+        <span class="n">roc_curve_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">roc_curve_points</span><span class="p">)</span>
+
+        <span class="c1"># Filter out ROC points in the interior of the convex hull and other suboptimal points</span>
+        <span class="n">points_above_diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">tpr</span> <span class="o">&gt;=</span> <span class="n">fpr</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">useful_points_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">points_above_diagonal</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="n">fpr</span> <span class="o">=</span> <span class="n">fpr</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">]</span>
+        <span class="n">tpr</span> <span class="o">=</span> <span class="n">tpr</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">]</span>
+        <span class="n">thrs</span> <span class="o">=</span> <span class="n">thrs</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">]</span>
+
+        <span class="c1"># Find points A and B to construct the randomized classifier from</span>
+        <span class="c1"># &gt; point A is the last point with FPR smaller or equal to the target</span>
+        <span class="n">point_A_idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">fpr</span> <span class="o">&lt;=</span> <span class="n">target_fpr</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="c1"># &gt; point B is the first point with FPR larger than the target</span>
+        <span class="n">point_B_idx</span> <span class="o">=</span> <span class="n">point_A_idx</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">weights</span><span class="p">,</span> <span class="n">points</span> <span class="o">=</span> <span class="n">RandomizedClassifier</span><span class="o">.</span><span class="n">find_weights_given_two_points</span><span class="p">(</span>
+            <span class="n">point_A</span><span class="o">=</span><span class="n">roc_curve_points</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">][</span><span class="n">point_A_idx</span><span class="p">],</span>
+            <span class="n">point_B</span><span class="o">=</span><span class="n">roc_curve_points</span><span class="p">[</span><span class="n">useful_points_idx</span><span class="p">][</span><span class="n">point_B_idx</span><span class="p">],</span>
+            <span class="n">target_point</span><span class="o">=</span><span class="n">target_roc_point</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">points</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

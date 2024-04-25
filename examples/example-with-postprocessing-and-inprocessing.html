@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example usage of error-parity with other fairness-constrained classifiers &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/custom.js?v=882eb7ae"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Achieving different fairness constraints on synthetic data" href="usage-example-for-other-constraints.synthetic-data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">API reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../notebooks.html">Example notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-folktables.html">Achieving <em>equalized odds</em> on real-world ACS data (ACSIncome)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-folktables.html#Fairness-vs-Performance-trade-off">Fairness vs Performance trade-off</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-folktables.html#Fit-and-plot-similar-example-but-using-%22Equal-Opportunity%22-fairness-metric">Fit and plot similar example but using “Equal Opportunity” fairness metric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-synthetic-data.html">Achieving <em>equalized odds</em> on synthetic data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relaxed-equalized-odds.usage-example-synthetic-data.html#Plot-postprocessing-Pareto-frontier">Plot postprocessing Pareto frontier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage-example-for-other-constraints.synthetic-data.html">Achieving different fairness constraints on synthetic data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage-example-for-other-constraints.synthetic-data.html#Plot-Fairness-Accuracy-Pareto-frontier-achievable-by-postprocessing">Plot Fairness-Accuracy Pareto frontier achievable by postprocessing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Example usage of <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> with other fairness-constrained classifiers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Fetch-UCI-Adult-data">Fetch UCI Adult data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Train-a-standard-(unconstrained)-classifier">Train a standard (unconstrained) classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Map-attainable-fairness-accuracy-trade-offs-via-(relaxed)-post-processing">Map attainable fairness-accuracy trade-offs via (relaxed) post-processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plot-post-processing-adjustment-frontier">Plot post-processing adjustment frontier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Let's-train-another-type-of-fairness-aware-model">Let’s train another type of fairness-aware model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../notebooks.html">Notebooks Gallery</a></li>
+      <li class="breadcrumb-item active">Example usage of <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> with other fairness-constrained classifiers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/example-with-postprocessing-and-inprocessing.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Example-usage-of-error-parity-with-other-fairness-constrained-classifiers">
+<h1>Example usage of <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> with other fairness-constrained classifiers<a class="headerlink" href="#Example-usage-of-error-parity-with-other-fairness-constrained-classifiers" title="Link to this heading"></a></h1>
+<p>Contents: 1. Train a standard (unconstrained) model; 2. Check attainable fairness-accuracy trade-offs via post-processing, with the <code class="docutils literal notranslate"><span class="pre">error-parity</span></code> package; 3. Train fairness-constrained model (in-processing fairness intervention), with the <code class="docutils literal notranslate"><span class="pre">fairlearn</span></code> package; 5. Map results for post-processing + in-processing interventions;</p>
+<hr class="docutils" />
+<p><strong>NOTE</strong>: This notebook has the following extra requirements: <code class="docutils literal notranslate"><span class="pre">fairlearn</span></code> <code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>.</p>
+<p>Install them with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">fairlearn</span> <span class="pre">lightgbm</span></code></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error-parity==</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+error-parity==0.3.11
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">palette</span><span class="o">=</span><span class="s2">&quot;colorblind&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;whitegrid&quot;</span><span class="p">,</span> <span class="n">rc</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;grid.linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;figure.dpi&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;figure.figsize&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)})</span>
+</pre></div>
+</div>
+</div>
+<p>Some useful global constants:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SEED</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="n">TEST_SIZE</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">VALIDATION_SIZE</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">PERF_METRIC</span> <span class="o">=</span> <span class="s2">&quot;accuracy&quot;</span>
+<span class="n">DISP_METRIC</span> <span class="o">=</span> <span class="s2">&quot;equalized_odds_diff&quot;</span>
+
+<span class="n">N_JOBS</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">SEED</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Fetch-UCI-Adult-data">
+<h2>Fetch UCI Adult data<a class="headerlink" href="#Fetch-UCI-Adult-data" title="Link to this heading"></a></h2>
+<p>We’ll use the <code class="docutils literal notranslate"><span class="pre">sex</span></code> column as the sensitive attribute. That is, false positive (FP) and false negative (FN) errors should not disproportionately impact individuals based on their sex.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SENSITIVE_COL</span> <span class="o">=</span> <span class="s2">&quot;sex&quot;</span>
+<span class="n">sensitive_col_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Male&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Female&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+<span class="c1"># NOTE: You can also try to run this using the `race` column as sensitive attribute (as commented below).</span>
+<span class="c1"># SENSITIVE_COL = &quot;race&quot;</span>
+<span class="c1"># sensitive_col_map = {&quot;White&quot;: 0, &quot;Black&quot;: 1, &quot;Asian-Pac-Islander&quot;: 1, &quot;Amer-Indian-Eskimo&quot;: 1, &quot;Other&quot;: 1}</span>
+
+<span class="n">sensitive_col_inverse</span> <span class="o">=</span> <span class="p">{</span><span class="n">val</span><span class="p">:</span> <span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">sensitive_col_map</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<span class="n">POS_LABEL</span> <span class="o">=</span> <span class="s2">&quot;&gt;50K&quot;</span>
+</pre></div>
+</div>
+</div>
+<p>Download data.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fairlearn.datasets</span> <span class="kn">import</span> <span class="n">fetch_adult</span>
+
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">fetch_adult</span><span class="p">(</span>
+    <span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Map labels and sensitive column to numeric data</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span> <span class="o">==</span> <span class="n">POS_LABEL</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">sensitive_col_map</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">X</span><span class="p">[</span><span class="n">SENSITIVE_COL</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Split in train/test/validation data.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_other</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_other</span><span class="p">,</span> <span class="n">s_train</span><span class="p">,</span> <span class="n">s_other</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span>
+    <span class="n">test_size</span><span class="o">=</span><span class="n">TEST_SIZE</span> <span class="o">+</span> <span class="p">(</span><span class="n">VALIDATION_SIZE</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">stratify</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">VALIDATION_SIZE</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">VALIDATION_SIZE</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">X_val</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">s_val</span><span class="p">,</span> <span class="n">s_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+        <span class="n">X_other</span><span class="p">,</span> <span class="n">y_other</span><span class="p">,</span> <span class="n">s_other</span><span class="p">,</span>
+        <span class="n">test_size</span><span class="o">=</span><span class="n">TEST_SIZE</span> <span class="o">/</span> <span class="p">(</span><span class="n">TEST_SIZE</span> <span class="o">+</span> <span class="n">VALIDATION_SIZE</span><span class="p">),</span>
+        <span class="n">stratify</span><span class="o">=</span><span class="n">y_other</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">s_test</span> <span class="o">=</span> <span class="n">X_other</span><span class="p">,</span> <span class="n">y_other</span><span class="p">,</span> <span class="n">s_other</span>
+    <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">s_val</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">s_train</span>
+</pre></div>
+</div>
+</div>
+<p>Log the accuracy attainable by a dummy constant classifier.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">compute_constant_clf_accuracy</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">((</span><span class="n">labels</span> <span class="o">==</span> <span class="n">const_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">for</span> <span class="n">const_pred</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+
+<span class="n">constant_clf_accuracy</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">compute_constant_clf_accuracy</span><span class="p">(</span><span class="n">y_train</span><span class="p">),</span>
+    <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">compute_constant_clf_accuracy</span><span class="p">(</span><span class="n">y_test</span><span class="p">),</span>
+    <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="n">compute_constant_clf_accuracy</span><span class="p">(</span><span class="n">y_val</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="n">constant_clf_accuracy</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;train&#39;: 0.7607125098715961,
+ &#39;test&#39;: 0.7607315908005187,
+ &#39;validation&#39;: 0.7607125098715961}
+</pre></div></div>
+</div>
+</section>
+<section id="Train-a-standard-(unconstrained)-classifier">
+<h2>Train a standard (unconstrained) classifier<a class="headerlink" href="#Train-a-standard-(unconstrained)-classifier" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">lightgbm</span> <span class="kn">import</span> <span class="n">LGBMClassifier</span>
+
+<span class="n">unconstr_clf</span> <span class="o">=</span> <span class="n">LGBMClassifier</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">unconstr_clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>LGBMClassifier(verbosity=-1)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">LGBMClassifier</label><div class="sk-toggleable__content"><pre>LGBMClassifier(verbosity=-1)</pre></div></div></div></div></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.evaluation</span> <span class="kn">import</span> <span class="n">evaluate_predictions_bootstrap</span>
+
+<span class="n">unconstr_test_results</span> <span class="o">=</span> <span class="n">evaluate_predictions_bootstrap</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
+    <span class="n">y_pred_scores</span><span class="o">=</span><span class="n">unconstr_clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">SEED</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+    <span class="n">sensitive_attribute</span><span class="o">=</span><span class="n">s_test</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;In-processing model: </span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;&gt;       accuracy = </span><span class="si">{</span><span class="n">unconstr_test_results</span><span class="p">[</span><span class="s1">&#39;accuracy_mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;&gt; equalized odds = </span><span class="si">{</span><span class="n">unconstr_test_results</span><span class="p">[</span><span class="s1">&#39;equalized_odds_diff_mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+In-processing model:
+&gt;       accuracy = 0.87
+&gt; equalized odds = 0.0673
+
+</pre></div></div>
+</div>
+</section>
+<section id="Map-attainable-fairness-accuracy-trade-offs-via-(relaxed)-post-processing">
+<h2>Map attainable fairness-accuracy trade-offs via (relaxed) post-processing<a class="headerlink" href="#Map-attainable-fairness-accuracy-trade-offs-via-(relaxed)-post-processing" title="Link to this heading"></a></h2>
+<p>By varying the tolerance (or slack) of the fairness constraint we can map the different trade-offs attainable by the same model (each trade-off corresponds to a different post-processing intervention).</p>
+<p><strong>Post-processing</strong> fairness methods intervene on the predictions of an already trained model, using different (possibly randomized) thresholds to binarize predictions of different groups.</p>
+<p>We’ll be using the <code class="docutils literal notranslate"><span class="pre">`error-parity</span></code> &lt;<a class="reference external" href="https://github.com/socialfoundations/error-parity">https://github.com/socialfoundations/error-parity</a>&gt;`__ package <a class="reference external" href="https://arxiv.org/abs/2306.07261">[Cruz and Hardt, 2023]</a>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.pareto_curve</span> <span class="kn">import</span> <span class="n">compute_postprocessing_curve</span>
+
+<span class="c1"># Data to fit postprocessing adjustment</span>
+<span class="n">fit_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">s_train</span><span class="p">)</span>
+<span class="c1"># fit_data = (X_val, y_val, s_val)</span>
+
+<span class="c1"># Common kwargs for the `compute_postprocessing_curve` call</span>
+<span class="n">compute_postproc_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">fit_data</span><span class="o">=</span><span class="n">fit_data</span><span class="p">,</span>
+    <span class="n">eval_data</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">s_val</span><span class="p">),</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">s_test</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">fairness_constraint</span><span class="o">=</span><span class="s2">&quot;equalized_odds&quot;</span><span class="p">,</span>
+    <span class="n">tolerance_ticks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">),</span>
+    <span class="p">)),</span>
+    <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">postproc_results_df</span> <span class="o">=</span> <span class="n">compute_postprocessing_curve</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">unconstr_clf</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">compute_postproc_kwargs</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e0d9ac484c1b44dcb852da934dbb5e3a", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Plot-post-processing-adjustment-frontier">
+<h2>Plot post-processing adjustment frontier<a class="headerlink" href="#Plot-post-processing-adjustment-frontier" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SHOW_RESULTS_ON</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span>
+<span class="c1"># SHOW_RESULTS_ON = &quot;validation&quot;</span>
+
+<span class="n">ax_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">constant_clf_accuracy</span><span class="p">[</span><span class="n">SHOW_RESULTS_ON</span><span class="p">]</span> <span class="o">-</span> <span class="mf">5e-3</span><span class="p">,</span> <span class="mf">0.885</span><span class="p">),</span>
+    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Random Hyperparameter Search (val.)&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="n">PERF_METRIC</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;$\rightarrow$&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;equalized odds (diff.) $\leftarrow$&quot;</span> <span class="k">if</span> <span class="n">DISP_METRIC</span> <span class="o">==</span> <span class="s2">&quot;equalized_odds_diff&quot;</span> <span class="k">else</span> <span class="n">DISP_METRIC</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.plotting</span> <span class="kn">import</span> <span class="n">plot_postprocessing_frontier</span>
+
+<span class="c1"># Plot unconstrained model results with 95% CIs</span>
+<span class="n">unconstr_performance</span> <span class="o">=</span> <span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">]</span>
+<span class="n">unconstr_disparity</span> <span class="o">=</span> <span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">]</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">unconstr_performance</span><span class="p">],</span>
+    <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">unconstr_disparity</span><span class="p">],</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_low-percentile&quot;</span><span class="p">],</span> <span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_high-percentile&quot;</span><span class="p">]),</span>
+    <span class="p">(</span><span class="n">unconstr_disparity</span><span class="p">,</span> <span class="n">unconstr_disparity</span><span class="p">),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">unconstr_performance</span><span class="p">,</span> <span class="n">unconstr_performance</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_low-percentile&quot;</span><span class="p">],</span> <span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_high-percentile&quot;</span><span class="p">]),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot postprocessing of unconstrained model</span>
+<span class="n">plot_postprocessing_frontier</span><span class="p">(</span>
+    <span class="n">postproc_results_df</span><span class="p">,</span>
+    <span class="n">perf_metric</span><span class="o">=</span><span class="n">PERF_METRIC</span><span class="p">,</span>
+    <span class="n">disp_metric</span><span class="o">=</span><span class="n">DISP_METRIC</span><span class="p">,</span>
+    <span class="n">show_data_type</span><span class="o">=</span><span class="n">SHOW_RESULTS_ON</span><span class="p">,</span>
+    <span class="n">constant_clf_perf</span><span class="o">=</span><span class="n">constant_clf_accuracy</span><span class="p">[</span><span class="n">SHOW_RESULTS_ON</span><span class="p">],</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\bigstar$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Vertical line with minimum &quot;useful&quot; accuracy on this data</span>
+<span class="n">curr_const_clf_acc</span> <span class="o">=</span> <span class="n">constant_clf_accuracy</span><span class="p">[</span><span class="n">SHOW_RESULTS_ON</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">curr_const_clf_acc</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+    <span class="s2">&quot;constant predictor acc.&quot;</span><span class="p">,</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">curr_const_clf_acc</span><span class="p">,</span> <span class="n">ax_kwargs</span><span class="p">[</span><span class="s2">&quot;ylim&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
+    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
+
+<span class="p">)</span>
+
+<span class="c1"># Title and legend</span>
+<span class="n">ax_kwargs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Post-processing (</span><span class="si">{</span><span class="n">SHOW_RESULTS_ON</span><span class="si">}</span><span class="s2"> results)&quot;</span>
+<span class="n">ax_kwargs</span><span class="p">[</span><span class="s2">&quot;xlim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">curr_const_clf_acc</span> <span class="o">-</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">0.885</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span>
+    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.03</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">borderaxespad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_kwargs</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_example-with-postprocessing-and-inprocessing_21_0.png" src="../_images/examples_example-with-postprocessing-and-inprocessing_21_0.png" />
+</div>
+</div>
+</section>
+<section id="Let's-train-another-type-of-fairness-aware-model">
+<h2>Let’s train another type of fairness-aware model<a class="headerlink" href="#Let's-train-another-type-of-fairness-aware-model" title="Link to this heading"></a></h2>
+<p><strong>In-processing</strong> fairness methods introduce fairness criteria during model training.</p>
+<p><em>Main disadvantage</em>: state-of-the-art in-processing methods can be considerably slower to run (e.g., increasing training time by 20-100 times).</p>
+<p>We’ll be using the <code class="docutils literal notranslate"><span class="pre">`fairlearn</span></code> &lt;<a class="reference external" href="https://github.com/fairlearn/fairlearn">https://github.com/fairlearn/fairlearn</a>&gt;`__ package <a class="reference external" href="https://arxiv.org/abs/2303.16626">[Weerts et al., 2020]</a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fairlearn.reductions</span> <span class="kn">import</span> <span class="n">ExponentiatedGradient</span><span class="p">,</span> <span class="n">EqualizedOdds</span>
+
+<span class="n">inproc_clf</span> <span class="o">=</span> <span class="n">ExponentiatedGradient</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">unconstr_clf</span><span class="p">,</span>
+    <span class="n">constraints</span><span class="o">=</span><span class="n">EqualizedOdds</span><span class="p">(),</span>
+    <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Fit the <code class="docutils literal notranslate"><span class="pre">ExponentiatedGradient</span></code> <a class="reference external" href="https://proceedings.mlr.press/v80/agarwal18a.html">[Agarwal et al., 2018]</a> in-processing intervention (<strong>note</strong>: may take a few minutes to fit).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">inproc_clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">sensitive_features</span><span class="o">=</span><span class="n">s_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 49.1 s, sys: 1min 9s, total: 1min 58s
+Wall time: 1min 59s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<style>#sk-container-id-2 {color: black;background-color: white;}#sk-container-id-2 pre{padding: 0;}#sk-container-id-2 div.sk-toggleable {background-color: white;}#sk-container-id-2 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-2 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-2 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-2 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-2 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-2 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-2 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-2 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-2 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-2 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-2 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-2 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-2 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-2 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-2 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-2 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-2 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-2 div.sk-item {position: relative;z-index: 1;}#sk-container-id-2 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-2 div.sk-item::before, #sk-container-id-2 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-2 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-2 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-2 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-2 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-2 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-2 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-2 div.sk-label-container {text-align: center;}#sk-container-id-2 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-2 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-2" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>ExponentiatedGradient(constraints=&lt;fairlearn.reductions._moments.utility_parity.EqualizedOdds object at 0x16dac2650&gt;,
+                      estimator=LGBMClassifier(verbosity=-1), max_iter=10,
+                      nu=0.000851617415307666)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-2" type="checkbox" ><label for="sk-estimator-id-2" class="sk-toggleable__label sk-toggleable__label-arrow">ExponentiatedGradient</label><div class="sk-toggleable__content"><pre>ExponentiatedGradient(constraints=&lt;fairlearn.reductions._moments.utility_parity.EqualizedOdds object at 0x16dac2650&gt;,
+                      estimator=LGBMClassifier(verbosity=-1), max_iter=10,
+                      nu=0.000851617415307666)</pre></div></div></div><div class="sk-parallel"><div class="sk-parallel-item"><div class="sk-item"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-3" type="checkbox" ><label for="sk-estimator-id-3" class="sk-toggleable__label sk-toggleable__label-arrow">estimator: LGBMClassifier</label><div class="sk-toggleable__content"><pre>LGBMClassifier(verbosity=-1)</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-4" type="checkbox" ><label for="sk-estimator-id-4" class="sk-toggleable__label sk-toggleable__label-arrow">LGBMClassifier</label><div class="sk-toggleable__content"><pre>LGBMClassifier(verbosity=-1)</pre></div></div></div></div></div></div></div></div></div></div></div>
+</div>
+<p>Evaluate in-processing model on test data.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.evaluation</span> <span class="kn">import</span> <span class="n">evaluate_predictions_bootstrap</span>
+
+<span class="n">inproc_test_results</span> <span class="o">=</span> <span class="n">evaluate_predictions_bootstrap</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
+    <span class="n">y_pred_scores</span><span class="o">=</span><span class="n">inproc_clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">SEED</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+    <span class="n">sensitive_attribute</span><span class="o">=</span><span class="n">s_test</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;In-processing model: </span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;&gt;       accuracy = </span><span class="si">{</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="s1">&#39;accuracy_mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;&gt; equalized odds = </span><span class="si">{</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="s1">&#39;equalized_odds_diff_mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+In-processing model:
+&gt;       accuracy = 0.867
+&gt; equalized odds = 0.0498
+
+</pre></div></div>
+</div>
+<p><strong>We can go one step further and post-process this in-processing model :)</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">error_parity.pareto_curve</span> <span class="kn">import</span> <span class="n">compute_postprocessing_curve</span>
+
+<span class="n">inproc_postproc_results_df</span> <span class="o">=</span> <span class="n">compute_postprocessing_curve</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">inproc_clf</span><span class="p">,</span>
+    <span class="n">predict_method</span><span class="o">=</span><span class="s2">&quot;_pmf_predict&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">compute_postproc_kwargs</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e9c3a354bef24dbb84b96781fb28b9ad", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot unconstrained model results with 95% CIs</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">unconstr_performance</span><span class="p">],</span>
+    <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">unconstr_disparity</span><span class="p">],</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_low-percentile&quot;</span><span class="p">],</span> <span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_high-percentile&quot;</span><span class="p">]),</span>
+    <span class="p">(</span><span class="n">unconstr_disparity</span><span class="p">,</span> <span class="n">unconstr_disparity</span><span class="p">),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">unconstr_performance</span><span class="p">,</span> <span class="n">unconstr_performance</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_low-percentile&quot;</span><span class="p">],</span> <span class="n">unconstr_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_high-percentile&quot;</span><span class="p">]),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot postprocessing of unconstrained model</span>
+<span class="n">plot_postprocessing_frontier</span><span class="p">(</span>
+    <span class="n">postproc_results_df</span><span class="p">,</span>
+    <span class="n">perf_metric</span><span class="o">=</span><span class="n">PERF_METRIC</span><span class="p">,</span>
+    <span class="n">disp_metric</span><span class="o">=</span><span class="n">DISP_METRIC</span><span class="p">,</span>
+    <span class="n">show_data_type</span><span class="o">=</span><span class="n">SHOW_RESULTS_ON</span><span class="p">,</span>
+    <span class="n">constant_clf_perf</span><span class="o">=</span><span class="n">constant_clf_accuracy</span><span class="p">[</span><span class="n">SHOW_RESULTS_ON</span><span class="p">],</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\bigstar$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot inprocessing intervention results with 95% CIs</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">]],</span>
+    <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">]],</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;P&quot;</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_low-percentile&quot;</span><span class="p">],</span> <span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_high-percentile&quot;</span><span class="p">]),</span>
+    <span class="p">(</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">],</span> <span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">]),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">],</span> <span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PERF_METRIC</span><span class="si">}</span><span class="s2">_mean&quot;</span><span class="p">]),</span>
+    <span class="p">(</span><span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_low-percentile&quot;</span><span class="p">],</span> <span class="n">inproc_test_results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DISP_METRIC</span><span class="si">}</span><span class="s2">_high-percentile&quot;</span><span class="p">]),</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
+    <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot postprocessing of inprocessing model</span>
+<span class="n">plot_postprocessing_frontier</span><span class="p">(</span>
+    <span class="n">inproc_postproc_results_df</span><span class="p">,</span>
+    <span class="n">perf_metric</span><span class="o">=</span><span class="n">PERF_METRIC</span><span class="p">,</span>
+    <span class="n">disp_metric</span><span class="o">=</span><span class="n">DISP_METRIC</span><span class="p">,</span>
+    <span class="n">show_data_type</span><span class="o">=</span><span class="n">SHOW_RESULTS_ON</span><span class="p">,</span>
+    <span class="n">constant_clf_perf</span><span class="o">=</span><span class="n">constant_clf_accuracy</span><span class="p">[</span><span class="n">SHOW_RESULTS_ON</span><span class="p">],</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$+$&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Vertical line with minimum &quot;useful&quot; accuracy on this data</span>
+<span class="n">curr_const_clf_acc</span> <span class="o">=</span> <span class="n">constant_clf_accuracy</span><span class="p">[</span><span class="n">SHOW_RESULTS_ON</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">curr_const_clf_acc</span><span class="p">,</span>
+    <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+    <span class="s2">&quot;constant predictor acc.&quot;</span><span class="p">,</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">curr_const_clf_acc</span><span class="p">,</span> <span class="n">ax_kwargs</span><span class="p">[</span><span class="s2">&quot;ylim&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">zorder</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
+    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
+
+<span class="p">)</span>
+
+<span class="c1"># Title and legend</span>
+<span class="n">ax_kwargs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Post-processing (</span><span class="si">{</span><span class="n">SHOW_RESULTS_ON</span><span class="si">}</span><span class="s2">)&quot;</span>
+<span class="n">ax_kwargs</span><span class="p">[</span><span class="s2">&quot;xlim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">curr_const_clf_acc</span> <span class="o">-</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">0.885</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span>
+    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.03</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">borderaxespad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_kwargs</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_example-with-postprocessing-and-inprocessing_30_0.png" src="../_images/examples_example-with-postprocessing-and-inprocessing_30_0.png" />
+</div>
+</div>
+<hr class="docutils" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage-example-for-other-constraints.synthetic-data.html" class="btn btn-neutral float-left" title="Achieving different fairness constraints on synthetic data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

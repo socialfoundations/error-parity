@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>error_parity.binarize &mdash; error-parity 0.3.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=3b0e221d"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/custom.js?v=882eb7ae"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            error-parity
+          </a>
+              <div class="version">
+                0.3.11
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Readme file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example notebooks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">error_parity.binarize</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for error_parity.binarize</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module to binarize continuous-score predictions.</span>
+
+<span class="sd">Based on: https://github.com/AndreFCruz/hpt/blob/main/src/hpt/binarize.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="compute_binary_predictions">
+<a class="viewcode-back" href="../../error_parity.html#error_parity.binarize.compute_binary_predictions">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_binary_predictions</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y_pred_scores</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tpr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fpr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ppr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Discretizes the given score predictions into binary labels.</span>
+
+<span class="sd">    If necessary, will randomly untie binary predictions with equal score.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : np.ndarray</span>
+<span class="sd">        The true binary labels</span>
+<span class="sd">    y_pred_scores : np.ndarray</span>
+<span class="sd">        Predictions as a continuous score between 0 and 1</span>
+<span class="sd">    threshold : Optional[float], optional</span>
+<span class="sd">        Whether to use a specified (global) threshold, by default None</span>
+<span class="sd">    tpr : Optional[float], optional</span>
+<span class="sd">        Whether to target a specified TPR (true positive rate, or recall), by</span>
+<span class="sd">        default None</span>
+<span class="sd">    fpr : Optional[float], optional</span>
+<span class="sd">        Whether to target a specified FPR (false positive rate), by default None</span>
+<span class="sd">    ppr : Optional[float], optional</span>
+<span class="sd">        Whether to target a specified PPR (positive prediction rate), by default</span>
+<span class="sd">        None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The binarized predictions according to the specified target.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">{</span><span class="n">threshold</span><span class="p">,</span> <span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">ppr</span><span class="p">}</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Please provide exactly one of (threshold, fpr, tpr, ppr); got &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span><span class="w"> </span><span class="n">fpr</span><span class="p">,</span><span class="w"> </span><span class="n">tpr</span><span class="p">,</span><span class="w"> </span><span class="n">ppr</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># If threshold provided, just binarize it, no untying necessary</span>
+    <span class="k">if</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">y_pred_scores</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># Otherwise, we need to compute the allowed value for the numerator</span>
+    <span class="c1"># and corresponding threshold (plus, may require random untying)</span>
+    <span class="n">label_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">label_neg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y_true</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">total</span> <span class="o">:=</span> <span class="n">label_pos</span> <span class="o">+</span> <span class="n">label_neg</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>  <span class="c1"># sanity check</span>
+
+    <span class="c1"># Indices of predictions ordered by score, descending</span>
+    <span class="n">y_pred_sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">y_pred_scores</span><span class="p">)</span>
+
+    <span class="c1"># Labels ordered by descending prediction score</span>
+    <span class="n">y_true_sorted</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="n">y_pred_sorted_indices</span><span class="p">]</span>
+
+    <span class="c1"># Number of positive predictions allowed according to the given metric</span>
+    <span class="c1"># (the allowed budget for the metric&#39;s numerator)</span>
+    <span class="n">positive_preds_budget</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="c1"># Samples that count for the positive_preds_budget</span>
+    <span class="c1"># (LPs for TPR, LNs for FPR, and all samples for PPR)</span>
+    <span class="c1"># (related to the metric&#39;s denominator)</span>
+    <span class="n">target_samples_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="k">if</span> <span class="n">tpr</span><span class="p">:</span>
+        <span class="c1"># TPs budget to ensure &gt;= the target TPR</span>
+        <span class="n">positive_preds_budget</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">tpr</span> <span class="o">*</span> <span class="n">label_pos</span><span class="p">)</span>
+        <span class="n">target_samples_mask</span> <span class="o">=</span> <span class="n">y_true_sorted</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># label positive samples</span>
+        <span class="n">non_target_samples_mask</span> <span class="o">=</span> <span class="n">y_true_sorted</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># label negative samples</span>
+
+    <span class="k">elif</span> <span class="n">fpr</span><span class="p">:</span>
+        <span class="c1"># FPs budget to ensure &lt;= the target FPR</span>
+        <span class="n">positive_preds_budget</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">fpr</span> <span class="o">*</span> <span class="n">label_neg</span><span class="p">)</span>
+        <span class="n">target_samples_mask</span> <span class="o">=</span> <span class="n">y_true_sorted</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># label negative samples</span>
+        <span class="n">non_target_samples_mask</span> <span class="o">=</span> <span class="n">y_true_sorted</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># label positive samples</span>
+
+    <span class="k">elif</span> <span class="n">ppr</span><span class="p">:</span>
+        <span class="c1"># PPs budget to ensure &lt;= the target PPR</span>
+        <span class="n">positive_preds_budget</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ppr</span> <span class="o">*</span> <span class="n">total</span><span class="p">)</span>
+        <span class="n">target_samples_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">y_true_sorted</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>  <span class="c1"># all samples</span>
+
+    <span class="c1"># Indices of target samples (relevant for the target metric), ordered by descending score</span>
+    <span class="n">target_samples_indices</span> <span class="o">=</span> <span class="n">y_pred_sorted_indices</span><span class="p">[</span><span class="n">target_samples_mask</span><span class="p">]</span>
+
+    <span class="c1"># Find the threshold at which the specified numerator_budget is met</span>
+    <span class="n">threshold_idx</span> <span class="o">=</span> <span class="n">target_samples_indices</span><span class="p">[(</span><span class="n">positive_preds_budget</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">y_pred_scores</span><span class="p">[</span><span class="n">threshold_idx</span><span class="p">]</span>
+
+    <span class="c1">####################################</span>
+    <span class="c1"># Code for random untying follows: #</span>
+    <span class="c1">####################################</span>
+    <span class="n">y_pred_binary</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_pred_scores</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># 1. compute actual number of positive predictions (on relevant target samples)</span>
+    <span class="n">actual_pos_preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_pred_binary</span><span class="p">[</span><span class="n">target_samples_indices</span><span class="p">])</span>
+
+    <span class="c1"># 2. check if this number corresponds to the target</span>
+    <span class="k">if</span> <span class="n">actual_pos_preds</span> <span class="o">!=</span> <span class="n">positive_preds_budget</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Target metric for thresholding could not be met, will randomly &quot;</span>
+            <span class="s2">&quot;untie samples with the same predicted score to fulfill target.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">actual_pos_preds</span> <span class="o">&gt;</span> <span class="n">positive_preds_budget</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">&quot;Sanity check: actual number of positive predictions should always &quot;</span>
+            <span class="s2">&quot;be higher or equal to the target number when following this &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;algorithm; got actual=</span><span class="si">{</span><span class="n">actual_pos_preds</span><span class="si">}</span><span class="s2">, target=</span><span class="si">{</span><span class="n">positive_preds_budget</span><span class="si">}</span><span class="s2">;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># 2.1. if target was not met, compute number of extra predicted positives</span>
+        <span class="n">extra_pos_preds</span> <span class="o">=</span> <span class="n">actual_pos_preds</span> <span class="o">-</span> <span class="n">positive_preds_budget</span>
+
+        <span class="c1"># 2.2. randomly select extra_pos_preds among the relevant</span>
+        <span class="c1"># samples (either TPs or FPs or PPs) with the same score</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+
+        <span class="n">samples_at_target_threshold_mask</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">y_pred_scores</span><span class="p">[</span><span class="n">y_pred_sorted_indices</span><span class="p">]</span> <span class="o">==</span> <span class="n">threshold</span>
+        <span class="p">)</span>
+
+        <span class="n">target_samples_at_target_threshold_indices</span> <span class="o">=</span> <span class="n">y_pred_sorted_indices</span><span class="p">[</span>
+            <span class="n">samples_at_target_threshold_mask</span>
+            <span class="o">&amp;</span> <span class="n">target_samples_mask</span>  <span class="c1"># Filter for samples at target threshold  # Filter for relevant (target) samples</span>
+        <span class="p">]</span>
+
+        <span class="c1"># # The extra number of positive predictions must be fully explained by this score tie</span>
+        <span class="c1"># import ipdb; ipdb.set_trace()   # TODO: figure out why this assertion fails</span>
+        <span class="c1"># assert extra_pos_preds &lt; len(target_samples_at_target_threshold_indices)</span>
+
+        <span class="n">extra_pos_preds_indices</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+            <span class="n">target_samples_at_target_threshold_indices</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">extra_pos_preds</span><span class="p">,</span>
+            <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># 2.3. give extra_pos_preds_indices a negative prediction</span>
+        <span class="n">y_pred_binary</span><span class="p">[</span><span class="n">extra_pos_preds_indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># 2.4. Randomly sample the non-target labels at same rate</span>
+        <span class="k">if</span> <span class="n">tpr</span> <span class="ow">or</span> <span class="n">fpr</span><span class="p">:</span>
+            <span class="n">sampled_fraction</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">positive_preds_budget</span> <span class="o">/</span> <span class="n">actual_pos_preds</span><span class="p">)</span>
+
+            <span class="n">non_target_samples_at_target_threshold_indices</span> <span class="o">=</span> <span class="n">y_pred_sorted_indices</span><span class="p">[</span>
+                <span class="n">samples_at_target_threshold_mask</span>
+                <span class="o">&amp;</span> <span class="n">non_target_samples_mask</span>  <span class="c1"># Filter for samples at target threshold  # Filter for positive samples</span>
+            <span class="p">]</span>
+            <span class="n">num_samples</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">non_target_samples_at_target_threshold_indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="o">*</span> <span class="n">sampled_fraction</span>
+            <span class="p">)</span>
+
+            <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">num_samples</span><span class="p">:</span>
+                <span class="n">extra_neg_preds_indices</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                    <span class="n">non_target_samples_at_target_threshold_indices</span><span class="p">,</span>
+                    <span class="n">size</span><span class="o">=</span><span class="n">num_samples</span><span class="p">,</span>
+                    <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">y_pred_binary</span><span class="p">[</span><span class="n">extra_neg_preds_indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Sanity check: the number of positive_preds_budget should now be exactly fulfilled</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_pred_binary</span><span class="p">[</span><span class="n">target_samples_indices</span><span class="p">])</span> <span class="o">==</span> <span class="n">positive_preds_budget</span>
+
+    <span class="k">return</span> <span class="n">y_pred_binary</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
