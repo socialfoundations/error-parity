@@ -36,6 +36,7 @@ def eval_accuracy_and_equalized_odds(
     y_true: np.ndarray,
     y_pred_binary: np.ndarray,
     sensitive_attr: np.ndarray,
+    l_p_norm: int = np.inf,
     display: bool = False,
 ) -> tuple[float, float]:
     """Evaluate accuracy and equalized odds of the given predictions.
@@ -48,6 +49,8 @@ def eval_accuracy_and_equalized_odds(
         The predicted class labels.
     sensitive_attr : np.ndarray
         The sensitive attribute data.
+    l_p_norm : int, optional
+        The norm to use for the constraint violation, by default np.inf.
     display : bool, optional
         Whether to print results or not, by default False.
 
@@ -68,7 +71,7 @@ def eval_accuracy_and_equalized_odds(
     roc_points = np.vstack(roc_points)
 
     linf_constraint_violation = [
-        np.linalg.norm(roc_points[i] - roc_points[j], ord=np.inf)
+        np.linalg.norm(roc_points[i] - roc_points[j], ord=l_p_norm)
         for i, j in product(range(n_groups), range(n_groups))
         if i < j
     ]

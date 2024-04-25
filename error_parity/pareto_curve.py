@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import os
+import copy
 import logging
 import traceback
 from functools import partial
@@ -25,42 +26,31 @@ DEFAULT_TOLERANCE_TICKS = np.hstack((
 
 
 def fit_and_evaluate_postprocessing(
-    predictor: callable,
+    postproc_template: RelaxedThresholdOptimizer,
     tolerance: float,
     fit_data: tuple,
     eval_data: tuple | dict[tuple],
-    fairness_constraint: str = "equalized_odds",
-    false_pos_cost: float = 1.,
-    false_neg_cost: float = 1.,
-    max_roc_ticks: int = 200,
     seed: int = 42,
     y_fit_pred_scores: np.ndarray = None,    # pre-computed predictions on the fit data
     bootstrap: bool = True,
-    bootstrap_kwargs: dict = None,
+    **bootstrap_kwargs: dict,
 ) -> dict[str, dict]:
     """Fit and evaluate a postprocessing intervention on the given predictor.
 
     Parameters
     ----------
-    predictor : callable
-        The callable predictor to fit postprocessing on.
+    postproc_template: RelaxedThresholdOptimizer
+        An object that serves as the template to copy when creating the
+        postprocessing optimizer.
     tolerance : float
-        The tolerance (or slack) for fairness constraint fulfillment.
+        The tolerance (or slack) for fairness constraint fulfillment. This value
+        will override the `tolerance` attribute of the `postproc_template` object.
     fit_data : tuple
         The data used to fit postprocessing.
     eval_data : tuple or dict[tuple]
         The data or sequence of data to evaluate postprocessing on.
         If a tuple is provided, will call it "eval" data in the returned results
         dictionary; if a dict is provided, will assume {<key_1>: <data_1>, ...}.
-    fairness_constraint : str, optional
-        The name of the fairness constraint to use, by default "equalized_odds".
-    false_pos_cost : float, optional
-        The cost of a false positive error, by default 1.
-    false_neg_cost : float, optional
-        The cost of a false negative error, by default 1.
-    max_roc_ticks : int, optional
-        The maximum number of ticks (precision) to use when computing
-        group-specific ROC curves, by default 200.
     seed : int, optional
         The random seed, by default 42
     y_fit_pred_scores : np.ndarray, optional
@@ -85,15 +75,8 @@ def fit_and_evaluate_postprocessing(
         >>>     "test": {"accuracy": 0.65, "...": "..."},
         >>> }
     """
-    clf = RelaxedThresholdOptimizer(
-        predictor=predictor,
-        constraint=fairness_constraint,
-        tolerance=tolerance,
-        false_pos_cost=false_pos_cost,
-        false_neg_cost=false_neg_cost,
-        max_roc_ticks=max_roc_ticks,
-        seed=seed,
-    )
+    clf = copy.copy(postproc_template)
+    clf.tolerance = tolerance
 
     # Unpack data
     X_fit, y_fit, s_fit = fit_data
@@ -105,7 +88,7 @@ def fit_and_evaluate_postprocessing(
     # (Theoretical) fit results
     results["fit-theoretical"] = {
         "accuracy": 1 - clf.cost(1.0, 1.0),
-        fairness_constraint: clf.constraint_violation(),
+        clf.constraint: clf.constraint_violation(),
     }
 
     ALLOWED_ABS_ERROR = 1e-5
@@ -123,11 +106,15 @@ def fit_and_evaluate_postprocessing(
         X, Y, S = data
 
         if bootstrap:
-            kwargs = bootstrap_kwargs or dict(
+            # Default kwargs for bootstrapping
+            kwargs = dict(
                 confidence_pct=95,
                 seed=seed,
                 threshold=0.50,
             )
+
+            # Update kwargs with any extra bootstrap kwargs
+            kwargs.update(bootstrap_kwargs)
 
             eval_func = partial(
                 evaluate_predictions_bootstrap,
@@ -156,8 +143,9 @@ def fit_and_evaluate_postprocessing(
 def compute_postprocessing_curve(
     model: object,
     fit_data: tuple,
-    eval_data: tuple or dict[tuple],
+    eval_data: tuple | dict[tuple],
     fairness_constraint: str = "equalized_odds",
+    l_p_norm: int = np.inf,
     bootstrap: bool = True,
     tolerance_ticks: list = DEFAULT_TOLERANCE_TICKS,
     tolerance_tick_step: float = None,
@@ -180,7 +168,10 @@ def compute_postprocessing_curve(
         format as `fit_data`), or a dictionary of <data_name>-><data_triplet>
         containing multiple datasets to evaluate on.
     fairness_constraint : str, optional
-        _description_, by default "equalized_odds"
+        The fairness constraint to use , by default "equalized_odds".
+    l_p_norm : int, optional
+        The norm to use when computing the fairness constraint, by default np.inf.
+        Note: only compatible with the "equalized odds" constraint.
     bootstrap : bool, optional
         Whether to compute uncertainty estimates via bootstrapping, by default
         False.
@@ -210,15 +201,25 @@ def compute_postprocessing_curve(
         assert 1 <= len(preds.shape) <= 2, f"Model outputs predictions in shape {preds.shape}"
         return preds if len(preds.shape) == 1 else preds[:, -1]
 
+    # Pre-compute predictions on the fit data
+    X_fit, _, _ = fit_data
+    y_fit_pred_scores = callable_predictor(X_fit)
+
+    postproc_template = RelaxedThresholdOptimizer(
+        predictor=callable_predictor,
+        constraint=fairness_constraint,
+        l_p_norm=l_p_norm,
+    )
+
     def _func_call(tol: float):
         try:
             return fit_and_evaluate_postprocessing(
-                predictor=callable_predictor,
+                postproc_template=postproc_template,
                 tolerance=tol,
                 fit_data=fit_data,
                 eval_data=eval_data,
-                fairness_constraint=fairness_constraint,
                 bootstrap=bootstrap,
+                y_fit_pred_scores=y_fit_pred_scores,
                 **kwargs)
 
         except Exception as exc:

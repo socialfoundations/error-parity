@@ -190,9 +190,14 @@ def plot_postprocessing_solution(
         )
 
     # Set axis settings
+    fairness_constr_str = postprocessed_clf.constraint.replace("_", " ")
+    if postprocessed_clf.constraint == "equalized_odds":
+        l_p_norm = postprocessed_clf.l_p_norm if postprocessed_clf.l_p_norm != np.inf else r"\infty"
+        fairness_constr_str += f" $\\ell_{l_p_norm}$"
+
     plt.suptitle(f"Solution to {postprocessed_clf.tolerance}-relaxed optimum", y=0.96)
     plt.title(
-        f"(fairness constraint: {postprocessed_clf.constraint.replace('_', ' ')})",
+        f"(fairness constraint: {fairness_constr_str})",
         fontsize="small",
     )
 
