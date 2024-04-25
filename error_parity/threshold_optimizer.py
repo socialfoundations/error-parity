@@ -519,7 +519,7 @@ class RelaxedThresholdOptimizer(Classifier):
         return self(X, group=group)
 
     def _check_fit_status(self, raise_error: bool = True) -> bool:
-        """Checks whether this classifier has been fit on some data.
+        """Check whether this classifier has been fit on some data.
 
         Parameters
         ----------
@@ -546,3 +546,19 @@ class RelaxedThresholdOptimizer(Classifier):
                 "This classifier has not yet been fitted to any data.")
 
         return True
+
+    def __copy__(self):
+        """Create a shallow copy of this object.
+        The returned copy is in a blank state, i.e., it has not been fit to any
+        data.
+        """
+        return self.__class__(
+            predictor=self.predictor,
+            constraint=self.constraint,
+            tolerance=self.tolerance,
+            false_pos_cost=self.false_pos_cost,
+            false_neg_cost=self.false_neg_cost,
+            l_p_norm=self.l_p_norm,
+            max_roc_ticks=self.max_roc_ticks,
+            seed=self.seed,
+        )
