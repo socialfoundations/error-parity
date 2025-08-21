@@ -416,6 +416,14 @@ def compute_fair_optimum(   # noqa: C901
 
     # Run solver
     prob.solve(solver=cp.ECOS, abstol=SOLUTION_TOLERANCE, feastol=SOLUTION_TOLERANCE)
+
+    # NOTE: ECOS solver has been deprecated in favor of CLARABEL in cvxpy 1.3.2+
+    # https://www.cvxpy.org/updates/index.html?h=ecos#ecos-deprecation
+    # prob.solve(
+    #     solver=cp.CLARABEL,
+    #     tol_gap_abs=SOLUTION_TOLERANCE,
+    #     tol_feas=SOLUTION_TOLERANCE,
+    # )
     # NOTE: these tolerances are supposed to be smaller than the default np.isclose tolerances
     # (useful when comparing if two points are the same, within the cvxpy accuracy tolerance)
 
