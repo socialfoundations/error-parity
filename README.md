@@ -1,10 +1,10 @@
 # error-parity    <!-- omit in toc -->
 
-![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg?branch=main)
-![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)
-![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg?branch=main)
-![PyPI version](https://badgen.net/pypi/v/error-parity)
-![OSI license](https://badgen.net/pypi/license/error-parity)
+[![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/socialfoundations/error-parity/actions)
+[![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)](https://pypi.org/project/error-parity/)
+[![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg?branch=main)](https://socialfoundations.github.io/error-parity/)
+[![PyPI version](https://badgen.net/pypi/v/error-parity)](https://pypi.org/project/error-parity/)
+[![License](https://img.shields.io/pypi/l/error-parity)](https://pypi.org/project/error-parity/)
 ![Python compatibility](https://badgen.net/pypi/python/error-parity)
 <!-- ![PyPI version](https://img.shields.io/pypi/v/error-parity) -->
 <!-- ![OSI license](https://img.shields.io/pypi/l/error-parity) -->
