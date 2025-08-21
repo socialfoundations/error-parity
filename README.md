@@ -1,7 +1,7 @@
 # error-parity    <!-- omit in toc -->
 
 ![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg?branch=main)
-![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg?branch=main)
+![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)
 ![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg?branch=main)
 ![PyPI version](https://badgen.net/pypi/v/error-parity)
 ![OSI license](https://badgen.net/pypi/license/error-parity)
