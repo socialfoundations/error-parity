@@ -18,7 +18,14 @@ Fast postprocessing of any score-based predictor to meet fairness criteria.
 The `error-parity` package can achieve strict or relaxed fairness constraint fulfillment,
 which can be useful to compare ML models at equal fairness levels.
 
-Package documentation available [here](https://socialfoundations.github.io/error-parity/).
+Full documentation: https://socialfoundations.github.io/error-parity/
+
+For API reference and more examples, see:
+
+Getting Started: https://socialfoundations.github.io/error-parity/quickstart.html
+Usage Guide: https://socialfoundations.github.io/error-parity/overview.html
+API Reference: https://socialfoundations.github.io/error-parity/modules.html
+**Notebooks:** https://socialfoundations.github.io/error-parity/notebooks.html
 
 Contents:
 - [Installing](#installing)
