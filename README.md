@@ -1,8 +1,8 @@
 # error-parity    <!-- omit in toc -->
 
-![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg)
-![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg)
-![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg)
+![Tests status](https://github.com/socialfoundations/error-parity/actions/workflows/python-tests.yml/badge.svg?branch=main)
+![PyPI status](https://github.com/socialfoundations/error-parity/actions/workflows/python-publish.yml/badge.svg?branch=main)
+![Documentation status](https://github.com/socialfoundations/error-parity/actions/workflows/python-docs.yml/badge.svg?branch=main)
 ![PyPI version](https://badgen.net/pypi/v/error-parity)
 ![OSI license](https://badgen.net/pypi/license/error-parity)
 ![Python compatibility](https://badgen.net/pypi/python/error-parity)
@@ -15,7 +15,7 @@
 
 Fast postprocessing of any score-based predictor to meet fairness criteria.
 
-The `error-parity` package can achieve strict or relaxed fairness constraint fulfillment, 
+The `error-parity` package can achieve strict or relaxed fairness constraint fulfillment,
 which can be useful to compare ML models at equal fairness levels.
 
 Package documentation available [here](https://socialfoundations.github.io/error-parity/).
@@ -45,7 +45,7 @@ pip install ./error-parity
 
 ## Getting started
 
-> See detailed example notebooks under the [**examples folder**](./examples/) 
+> See detailed example notebooks under the [**examples folder**](./examples/)
 > and on the [**package documentation**](https://socialfoundations.github.io/error-parity/notebooks.html).
 
 ```py
@@ -110,7 +110,7 @@ Currently implemented fairness constraints:
 ### Equalized odds relaxations
 
 When using `constraint="equalized_odds"`, different relaxations can be chosen by
-altering the `l_p_norm` parameter (which dictates how to compute the distance 
+altering the `l_p_norm` parameter (which dictates how to compute the distance
 between group-specific ROC points).
 
 A few useful values:
