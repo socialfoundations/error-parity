@@ -10,6 +10,7 @@ build/
 *.egg-info/
 
 .coverage
+.tox
 
 # Documentation artifacts
 _build/

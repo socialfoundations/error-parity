@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "error-parity"
 description = "Achieve error-rate parity between protected groups for any predictor"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "AndreFCruz" },
 ]
@@ -18,7 +19,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -37,8 +37,6 @@ dynamic = [
     "optional-dependencies",
 ]
 
-# Include license file(s) in built distributions
-license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 include = ["error_parity*"]
@@ -103,9 +101,6 @@ omit = ["error_parity/_version.py", "tests"]
 [tool.coverage.report]
 show_missing = true
 
-# Setuptools
-
-
 # MyPy
 [tool.mypy]
 ignore_missing_imports = true
@@ -137,7 +132,6 @@ description = run unit tests
 deps =
     pytest>=8
     coverage>=7
-    pytest-xdist>=3
 commands =
     coverage erase
     coverage run -m pytest {posargs:tests}
@@ -158,5 +152,3 @@ deps =
     flake8-pyproject
 commands = flake8 {posargs:error_parity tests}
 """
-
-
