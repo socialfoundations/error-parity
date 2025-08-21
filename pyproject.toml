@@ -1,0 +1,152 @@
+[build-system]
+requires = ["setuptools>=77.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "error-parity"
+description = "Achieve error-rate parity between protected groups for any predictor"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "AndreFCruz" },
+]
+
+# Keywords to be used by PyPI search
+keywords = ["ml", "optimization", "fairness", "error-parity", "equal-odds"]
+
+# PyPI classifiers, see https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+requires-python = ">=3.9"
+
+# These are defined below dynamically:
+dynamic = [
+    "version",
+    "readme",
+    "dependencies",
+    "optional-dependencies",
+]
+
+
+[tool.setuptools.packages.find]
+include = ["error_parity*"]
+exclude = ["tests*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "error_parity._version.__version__" }
+readme = { file = "README.md", content-type = "text/markdown" }
+
+# Main package dependencies
+dependencies = {file = "requirements/main.txt"}
+
+# Optional dependencies
+[tool.setuptools.dynamic.optional-dependencies]
+test = {file = "requirements/test.txt"}
+dev = {file = "requirements/dev.txt"}
+docs = {file = "requirements/docs.txt"}
+all = {file = [
+    "requirements/dev.txt",
+    "requirements/test.txt",
+    "requirements/docs.txt",
+]}
+
+[project.urls]
+homepage = "https://github.com/socialfoundations/error-parity"
+
+# flake8
+[tool.flake8]
+max-complexity = 10
+max-line-length = 120
+
+per-file-ignores = """
+# imported but unused
+**/__init__.py: F401
+"""
+
+exclude = [
+    "docs/",
+    ".tox/",
+    "build/",
+    "dist/",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = [
+    "tests",
+]
+
+# isort
+[tool.isort]
+profile = "hug"
+force_single_line = false
+src_paths = ["error_parity", "tests"]
+
+# Coverage
+[tool.coverage.run]
+branch = true
+source = ["error_parity"]
+omit = ["error_parity/_version.py", "tests"]
+
+[tool.coverage.report]
+show_missing = true
+
+# MyPy
+[tool.mypy]
+ignore_missing_imports = true
+no_implicit_optional = false
+strict_optional = false
+exclude = [
+    "build",
+    "doc",
+    "tests",
+    "notebooks",
+]
+python_version = "3.11"
+
+# Tox
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+env_list =
+    py39
+    py310
+    py311
+    py312
+    lint
+    type
+
+[testenv]
+description = run unit tests
+deps =
+    pytest>=8
+    coverage>=7
+commands =
+    coverage erase
+    coverage run -m pytest {posargs:tests}
+    coverage report -m
+
+[testenv:type]
+description = run type checks
+basepython = python3.11
+deps =
+    mypy>=1.0
+commands = mypy {posargs:error_parity}
+
+[testenv:lint]
+description = run linters
+skip_install = true
+deps =
+    flake8>=7.0
+    flake8-pyproject
+commands = flake8 {posargs:error_parity tests}
+"""

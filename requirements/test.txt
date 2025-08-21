@@ -1,5 +1,5 @@
-pytest
-coverage
+pytest>=8.0
+coverage>=7.0
 folktables
 tqdm
 mypy

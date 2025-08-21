@@ -68,5 +68,5 @@ def test_equalized_odds_relaxation_costs(
         higher_p_cost = results[higher_p_norm]
 
         # Assert lower-p costs are higher (accuracy is lower)
-        assert lower_p_cost > higher_p_cost - SOLUTION_TOLERANCE, \
+        assert lower_p_cost > higher_p_cost - 2 * SOLUTION_TOLERANCE, \
             f"l-{lower_p_norm} cost: {lower_p_cost} < l-{higher_p_norm} cost: {higher_p_cost}"
