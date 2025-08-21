@@ -6,6 +6,10 @@
 Welcome to error-parity's documentation!
 ========================================
 
+.. important::
+
+   This documentation was authored and extensively updated with assistance from GPT-5.
+
 The :code:`error-parity` package allows you to easily achieve error-rate
 fairness between societal groups.
 It's compatible with any score-based predictor, and can map out all of its
