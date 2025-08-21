@@ -6,12 +6,16 @@
 Welcome to error-parity's documentation!
 ========================================
 
-The :code:`error-parity` package allows you to easily achieve error-rate 
+.. important::
+
+   This documentation was authored and extensively updated with assistance from GPT-5.
+
+The :code:`error-parity` package allows you to easily achieve error-rate
 fairness between societal groups.
-It's compatible with any score-based predictor, and can map out all of its 
+It's compatible with any score-based predictor, and can map out all of its
 attainable fairness-accuracy trade-offs.
 
-Full code available on the `GitHub repository`_, 
+Full code available on the `GitHub repository`_,
 including various `jupyter notebook examples`_ .
 
 Check out the following sub-pages:
@@ -19,9 +23,21 @@ Check out the following sub-pages:
 .. toctree::
    :maxdepth: 1
 
-   Readme file <readme>
+   Overview <overview>
+   Installation <installation>
+   Quickstart <quickstart>
+   Concepts <concepts>
+   Constraints <constraints>
+   Usage: Threshold optimizer <usage_threshold_optimizer>
+   Usage: Postprocessing frontier <usage_pareto_curve>
+   Usage: Evaluation <usage_evaluation>
+   Usage: Plotting <usage_plotting>
+   Metrics reference <metrics_reference>
    API reference <modules>
-   Example notebooks <notebooks>
+   Notebooks Gallery <notebooks>
+   FAQ <faq>
+   Glossary <glossary>
+   Readme file <readme>
 
 
 Citing
