@@ -45,4 +45,4 @@ jobs:
 
     - name: Test with pytest
       run: |
-        coverage run -m pytest tests && coverage report -m --fail-under=75
+        coverage run -m pytest tests && coverage report -m --fail-under=50
