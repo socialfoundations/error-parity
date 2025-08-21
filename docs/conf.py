@@ -28,6 +28,7 @@ shutil.copytree(src="../examples", dst="examples", dirs_exist_ok=True)
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
@@ -48,6 +49,24 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 autoclass_content = 'both'
+autosummary_generate = True
+autodoc_typehints = 'description'
+napoleon_numpy_docstring = True
+napoleon_google_docstring = False
+napoleon_use_param = True
+napoleon_use_rtype = True
+
+autosectionlabel_prefix_document = True
+
+myst_heading_anchors = 3
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
