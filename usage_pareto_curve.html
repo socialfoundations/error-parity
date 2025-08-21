@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Postprocessing frontier (Pareto curve) &mdash; error-parity 0.3.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=0cf6a877"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="_static/custom.js?v=882eb7ae"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Evaluation and metrics" href="usage_evaluation.html" />
+    <link rel="prev" title="Using the RelaxedThresholdOptimizer" href="usage_threshold_optimizer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            error-parity
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_threshold_optimizer.html">Usage: Threshold optimizer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage: Postprocessing frontier</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#api">API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#error_parity.pareto_curve.compute_postprocessing_curve"><code class="docutils literal notranslate"><span class="pre">compute_postprocessing_curve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#related-utilities">Related utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#error_parity.pareto_curve.fit_and_evaluate_postprocessing"><code class="docutils literal notranslate"><span class="pre">fit_and_evaluate_postprocessing()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error_parity.pareto_curve.get_envelope_of_postprocessing_frontier"><code class="docutils literal notranslate"><span class="pre">get_envelope_of_postprocessing_frontier()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci"><code class="docutils literal notranslate"><span class="pre">compute_inner_and_outer_adjustment_ci()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage_evaluation.html">Usage: Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_plotting.html">Usage: Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics_reference.html">Metrics reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks.html">Notebooks Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Readme file</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Postprocessing frontier (Pareto curve)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage_pareto_curve.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="postprocessing-frontier-pareto-curve">
+<h1>Postprocessing frontier (Pareto curve)<a class="headerlink" href="#postprocessing-frontier-pareto-curve" title="Link to this heading"></a></h1>
+<p>Use <a class="reference internal" href="#error_parity.pareto_curve.compute_postprocessing_curve" title="error_parity.pareto_curve.compute_postprocessing_curve"><code class="xref py py-func docutils literal notranslate"><span class="pre">error_parity.pareto_curve.compute_postprocessing_curve()</span></code></a> to compute the fairness–performance frontier across tolerances.</p>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.compute_postprocessing_curve">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">compute_postprocessing_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fairness_constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'equalized_odds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_p_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">0.01,</span> <span class="pre">0.02,</span> <span class="pre">0.03,</span> <span class="pre">0.04,</span> <span class="pre">0.05,</span> <span class="pre">0.06,</span> <span class="pre">0.07,</span> <span class="pre">0.08,</span> <span class="pre">0.09,</span> <span class="pre">0.1,</span> <span class="pre">0.11,</span> <span class="pre">0.12,</span> <span class="pre">0.13,</span> <span class="pre">0.14,</span> <span class="pre">0.15,</span> <span class="pre">0.16,</span> <span class="pre">0.17,</span> <span class="pre">0.18,</span> <span class="pre">0.19,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.4,</span> <span class="pre">0.5,</span> <span class="pre">0.6,</span> <span class="pre">0.7,</span> <span class="pre">0.8,</span> <span class="pre">0.9])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance_tick_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predict_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'predict_proba'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#compute_postprocessing_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.compute_postprocessing_curve" title="Link to this definition"></a></dt>
+<dd><p>Computes the fairness and performance of the given classifier after
+adjusting (postprocessing) for varying levels of fairness tolerance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><em>object</em></a>) – The model to use.</p></li>
+<li><p><strong>fit_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>) – Data triplet to use to fit postprocessing intervention, (X, Y, S),
+respectively containing the features, labels, and sensitive attribute.</p></li>
+<li><p><strong>eval_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>]</em>) – Data triplet to use to evaluate postprocessing intervention on (same
+format as <cite>fit_data</cite>), or a dictionary of &lt;data_name&gt;-&gt;&lt;data_triplet&gt;
+containing multiple datasets to evaluate on.</p></li>
+<li><p><strong>fairness_constraint</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – The fairness constraint to use , by default “equalized_odds”.</p></li>
+<li><p><strong>l_p_norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The norm to use when computing the fairness constraint, by default np.inf.
+Note: only compatible with the “equalized odds” constraint.</p></li>
+<li><p><strong>bootstrap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to compute uncertainty estimates via bootstrapping, by default
+False.</p></li>
+<li><p><strong>tolerance_ticks</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><em>optional</em>) – List of constraint tolerances to use when computing adjustment curve.
+By default will use higher granularity/precision for lower levels of
+disparity, and lower granularity for higher levels of disparity.
+Should correspond to a sorted list of values between 0 and 1.
+Will be ignored if <cite>tolerance_tick_step</cite> is provided.</p></li>
+<li><p><strong>tolerance_tick_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Distance between constraint tolerances in the adjustment curve.
+Will override <cite>tolerance_ticks</cite> if provided!</p></li>
+<li><p><strong>predict_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Which method to call to obtain predictions out of the given model.
+Use <cite>predict_method=”__call__”</cite> for a callable predictor, or the default
+<cite>predict_method=”predict_proba”</cite> for a predictor with sklearn interface.</p></li>
+<li><p><strong>n_jobs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Number of parallel jobs to use, if omitted will use <cite>os.cpu_count()-1</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>postproc_results_df</strong> – A DataFrame containing the results, one row per tolerance tick.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="interpretation">
+<h2>Interpretation<a class="headerlink" href="#interpretation" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The returned <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> has one row per tolerance tick and columns for each metric and dataset split.</p></li>
+<li><p>Use <a class="reference internal" href="usage_plotting.html#error_parity.plotting.plot_postprocessing_frontier" title="error_parity.plotting.plot_postprocessing_frontier"><code class="xref py py-func docutils literal notranslate"><span class="pre">error_parity.plotting.plot_postprocessing_frontier()</span></code></a> to visualize the envelope of the frontier and optional bootstrap confidence intervals.</p></li>
+</ul>
+</section>
+<section id="related-utilities">
+<h2>Related utilities<a class="headerlink" href="#related-utilities" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.fit_and_evaluate_postprocessing">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">fit_and_evaluate_postprocessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_fit_pred_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">bootstrap_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#fit_and_evaluate_postprocessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.fit_and_evaluate_postprocessing" title="Link to this definition"></a></dt>
+<dd><p>Fit and evaluate a postprocessing intervention on the given predictor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postproc_template</strong> (<a class="reference internal" href="usage_threshold_optimizer.html#error_parity.threshold_optimizer.RelaxedThresholdOptimizer" title="error_parity.threshold_optimizer.RelaxedThresholdOptimizer"><em>RelaxedThresholdOptimizer</em></a>) – An object that serves as the template to copy when creating the
+postprocessing optimizer.</p></li>
+<li><p><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The tolerance (or slack) for fairness constraint fulfillment. This value
+will override the <cite>tolerance</cite> attribute of the <cite>postproc_template</cite> object.</p></li>
+<li><p><strong>fit_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>) – The data used to fit postprocessing.</p></li>
+<li><p><strong>eval_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>]</em>) – The data or sequence of data to evaluate postprocessing on.
+If a tuple is provided, will call it “eval” data in the returned results
+dictionary; if a dict is provided, will assume {&lt;key_1&gt;: &lt;data_1&gt;, …}.</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The random seed, by default 42</p></li>
+<li><p><strong>y_fit_pred_scores</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The pre-computed predicted scores for the <cite>fit_data</cite>; if provided, will
+avoid re-computing these predictions for each function call.</p></li>
+<li><p><strong>bootstrap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use bootstrapping when computing metric results for
+postprocessing, by default True.</p></li>
+<li><p><strong>bootstrap_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>, </em><em>optional</em>) – Any extra arguments to pass on to the bootstrapping function, by default
+None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>results</strong> – A dictionary of results, whose keys are the data type, and values the
+metric values obtained by postprocessing on that data type.</p>
+<p>For example:
+&gt;&gt;&gt; {
+&gt;&gt;&gt;     “validation”: {“accuracy”: 0.7, “…”: “…”},
+&gt;&gt;&gt;     “test”: {“accuracy”: 0.65, “…”: “…”},
+&gt;&gt;&gt; }</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.get_envelope_of_postprocessing_frontier">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">get_envelope_of_postprocessing_frontier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_results_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perf_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'accuracy_mean_test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'equalized_odds_diff_mean_test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_perf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_disp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#get_envelope_of_postprocessing_frontier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.get_envelope_of_postprocessing_frontier" title="Link to this definition"></a></dt>
+<dd><p>Computes points in envelope of the given postprocessing frontier results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postproc_results_df</strong> (<em>pd.DataFrame</em>) – The postprocessing frontier results DF.</p></li>
+<li><p><strong>perf_col</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the column containing performance results, by default “accuracy_mean_test”</p></li>
+<li><p><strong>disp_col</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Name of column containing disparity results, by default “equalized_odds_diff_mean_test”</p></li>
+<li><p><strong>constant_clf_perf</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The performance of a dummy constant classifier (in the same metric as
+<cite>perf_col</cite>), by default 0.5.</p></li>
+<li><p><strong>constant_clf_disp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The disparity of a dummy constant classifier (in the same metric as
+<cite>disp_col</cite>), by default 0.0; assumes a constant classifier fulfills
+fairness!</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2-D array containing the points in the convex hull of the Pareto curve.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci">
+<span class="sig-prename descclassname"><span class="pre">error_parity.pareto_curve.</span></span><span class="sig-name descname"><span class="pre">compute_inner_and_outer_adjustment_ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">postproc_results_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perf_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_clf_perf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/error_parity/pareto_curve.html#compute_inner_and_outer_adjustment_ci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#error_parity.pareto_curve.compute_inner_and_outer_adjustment_ci" title="Link to this definition"></a></dt>
+<dd><p>Computes the interior/inner and exterior/outer adjustment curves,
+corresponding to the confidence intervals (by default 95% c.i.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>postproc_results_df</strong> – A tuple containing (xticks, inner_yticks, outer_yticks).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)">tuple</a>[np.array, np.array, np.array]</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>perf_metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>disp_metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>data_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>constant_clf_perf</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage_threshold_optimizer.html" class="btn btn-neutral float-left" title="Using the RelaxedThresholdOptimizer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usage_evaluation.html" class="btn btn-neutral float-right" title="Evaluation and metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

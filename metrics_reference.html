@@ -1,0 +1,169 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metrics reference &mdash; error-parity 0.3.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=0cf6a877"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="_static/custom.js?v=882eb7ae"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API reference" href="modules.html" />
+    <link rel="prev" title="Plotting utilities" href="usage_plotting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            error-parity
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">Constraints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_threshold_optimizer.html">Usage: Threshold optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_pareto_curve.html">Usage: Postprocessing frontier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_evaluation.html">Usage: Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_plotting.html">Usage: Plotting</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Metrics reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#performance-metrics">Performance metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fairness-aggregations">Fairness aggregations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#equalized-odds">Equalized odds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#groupwise-outputs">Groupwise outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks.html">Notebooks Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Readme file</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">error-parity</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Metrics reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/metrics_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="metrics-reference">
+<h1>Metrics reference<a class="headerlink" href="#metrics-reference" title="Link to this heading"></a></h1>
+<p>This page summarizes metrics produced by <a class="reference internal" href="api/error_parity.evaluation.html#module-error_parity.evaluation" title="error_parity.evaluation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">error_parity.evaluation</span></code></a>.</p>
+<section id="performance-metrics">
+<h2>Performance metrics<a class="headerlink" href="#performance-metrics" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>accuracy</strong>: fraction of correct predictions.</p></li>
+<li><p><strong>tpr (recall)</strong>: true positive rate.</p></li>
+<li><p><strong>fnr</strong>: false negative rate (1 - TPR).</p></li>
+<li><p><strong>fpr</strong>: false positive rate.</p></li>
+<li><p><strong>tnr</strong>: true negative rate (1 - FPR).</p></li>
+<li><p><strong>precision</strong>: TP / predicted positives.</p></li>
+<li><p><strong>ppr</strong>: positive prediction rate.</p></li>
+<li><p><strong>squared_loss</strong>: mean squared error on scores vs. labels.</p></li>
+<li><p><strong>log_loss</strong>: logistic loss on scores vs. labels.</p></li>
+</ul>
+</section>
+<section id="fairness-aggregations">
+<h2>Fairness aggregations<a class="headerlink" href="#fairness-aggregations" title="Link to this heading"></a></h2>
+<p>For each metric <code class="docutils literal notranslate"><span class="pre">m</span></code> and groups <code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b</span></code>, we compute:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">m_ratio</span> <span class="pre">=</span> <span class="pre">min(m_a,</span> <span class="pre">m_b,</span> <span class="pre">...)</span> <span class="pre">/</span> <span class="pre">max(m_a,</span> <span class="pre">m_b,</span> <span class="pre">...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_diff</span> <span class="pre">=</span> <span class="pre">max(m_a,</span> <span class="pre">m_b,</span> <span class="pre">...)</span> <span class="pre">-</span> <span class="pre">min(m_a,</span> <span class="pre">m_b,</span> <span class="pre">...)</span></code></p></li>
+</ul>
+</section>
+<section id="equalized-odds">
+<h2>Equalized odds<a class="headerlink" href="#equalized-odds" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">equalized_odds_ratio</span> <span class="pre">=</span> <span class="pre">min(fnr_ratio,</span> <span class="pre">fpr_ratio)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">equalized_odds_diff</span> <span class="pre">=</span> <span class="pre">max(tpr_diff,</span> <span class="pre">fpr_diff)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">equalized_odds_diff_l{1,2,inf}</span></code> via (ell_1), (ell_2), (ell_infty) norms over (TPR, FPR) pairwise differences.</p></li>
+</ul>
+</section>
+<section id="groupwise-outputs">
+<h2>Groupwise outputs<a class="headerlink" href="#groupwise-outputs" title="Link to this heading"></a></h2>
+<p>Set <code class="docutils literal notranslate"><span class="pre">return_groupwise_metrics=True</span></code> in <a class="reference internal" href="usage_evaluation.html#error_parity.evaluation.evaluate_fairness" title="error_parity.evaluation.evaluate_fairness"><code class="xref py py-func docutils literal notranslate"><span class="pre">error_parity.evaluation.evaluate_fairness()</span></code></a> or <a class="reference internal" href="usage_evaluation.html#error_parity.evaluation.evaluate_predictions" title="error_parity.evaluation.evaluate_predictions"><code class="xref py py-func docutils literal notranslate"><span class="pre">error_parity.evaluation.evaluate_predictions()</span></code></a> to include per-group metrics like <code class="docutils literal notranslate"><span class="pre">tpr_group=0</span></code>, <code class="docutils literal notranslate"><span class="pre">fpr_group=1</span></code>, etc.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage_plotting.html" class="btn btn-neutral float-left" title="Plotting utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AndreFCruz.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
